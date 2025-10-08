@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.agustin.tarati.localization.AppLanguage
+import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.screens.main.MainScreen
 import com.agustin.tarati.ui.screens.settings.SettingsScreen
 import com.agustin.tarati.ui.screens.splash.SplashScreen

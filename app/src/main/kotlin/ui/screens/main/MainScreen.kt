@@ -51,7 +51,7 @@ import com.agustin.tarati.game.GameState
 import com.agustin.tarati.game.Move
 import com.agustin.tarati.game.TaratiAI
 import com.agustin.tarati.game.applyMoveToBoard
-import com.agustin.tarati.localization.LocalizedText
+import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.components.Board
 import com.agustin.tarati.ui.components.Sidebar
 import com.agustin.tarati.ui.components.TurnIndicator

@@ -12,7 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import com.agustin.tarati.localization.LanguageAwareApp
+import com.agustin.tarati.ui.localization.LanguageAwareApp
 import com.agustin.tarati.ui.navigation.NavigationScreen
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme

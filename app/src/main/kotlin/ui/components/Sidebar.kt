@@ -21,11 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -48,8 +48,8 @@ import com.agustin.tarati.game.Color.WHITE
 import com.agustin.tarati.game.Difficulty
 import com.agustin.tarati.game.GameState
 import com.agustin.tarati.game.Move
-import com.agustin.tarati.localization.LocalizedText
-import com.agustin.tarati.localization.localizedString
+import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.localization.localizedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,7 +144,7 @@ fun Sidebar(
                     },
                     // Enfoque compatible - sin textFieldColors específico
                     modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
                 )
 

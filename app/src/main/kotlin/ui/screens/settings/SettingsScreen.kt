@@ -30,9 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
-import com.agustin.tarati.localization.AppLanguage
-import com.agustin.tarati.localization.LocalizedText
-import com.agustin.tarati.localization.localizedString
+import com.agustin.tarati.ui.localization.AppLanguage
+import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

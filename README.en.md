@@ -1,8 +1,10 @@
-# 🎮 Tarati - A Board Game by George Spencer Brown
+# 🎮 Tarati — A Board Game by George Spencer Brown
 
 <div align="center">
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](https://kotlinlang.org)
+[![Logo](screenshots/logo.png)](screenshots/logo.png)
+
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20-purple.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11.0-blue.svg)](https://developer.android.com/jetpack/compose)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://www.android.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -62,7 +64,7 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 **System Requirements:**
 
 - Android 8.0 (API 26) or higher
-- 10-15 MB free space
+- 15-20 MB free space
 - Touch screen
 
 **Installation:**
@@ -103,9 +105,11 @@ Control the board by converting your opponent's pieces through strategic moves.
 
 ```kotlin
 // Complete technical stack
--Kotlin 2.0.21
+-Kotlin 2.2.20
 -Jetpack Compose 1.11.0
 -Material Design 3
+-Koin 4.1.1
+-DataStore 1.1.7
 -Coroutines for asynchronous operations
         -MVVM Architecture
         -Minimax algorithm with Alpha -Beta pruning
@@ -118,6 +122,7 @@ app/
 ├── ui/
 │   ├── components/       # Reusable components
 │   ├── screens/          # Main screens
+│   ├── localization/     # Localization manager
 │   └── theme/            # Design system
 ├── game/
 │   ├── AI.kt             # Artificial intelligence logic
@@ -141,8 +146,9 @@ The Tarati board represents a deep symbolic structure:
 
 ## 🖼️ Screenshots
 
-| <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot3.jpeg" alt="Tarati Screenshot" width="300"/> |
 |--------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| <img src="/screenshots/screenshot4.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
 
 * Intuitive and simple interface designed with Jetpack Compose
 
@@ -201,8 +207,8 @@ Contributions are welcome. Please:
 
 ### ⭐ Enjoying the game? Give the repository a star!
 
-_"To teach pride in knowledge is to put up an effective barrier against any advance upon what is already known."_ — *
-*George Spencer-Brown**
+_"To teach pride in knowledge is to put up an effective barrier against any advance upon what is already known."_
+—**George Spencer-Brown**
 
 </div>
 

@@ -1,8 +1,10 @@
-# 🎮 Tarati - Un Juego de Tablero por George Spencer Brown
+# 🎮 Tarati — Un Juego de Tablero por George Spencer Brown
 
 <div align="center">
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](https://kotlinlang.org)
+[![Logo](screenshots/logo.png)](screenshots/logo.png)
+
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20-purple.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11.0-blue.svg)](https://developer.android.com/jetpack/compose)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://www.android.com)
 [![License](https://img.shields.io/badge/Licencia-MIT-yellow.svg)](LICENSE)
@@ -62,7 +64,7 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 **Requisitos del sistema:**
 
 - Android 8.0 (API 26) o superior
-- 10-15 MB de espacio libre
+- 15-20 MB de espacio libre
 - Pantalla táctil
 
 **Instalación:**
@@ -103,9 +105,11 @@ Controlar el tablero convirtiendo las piezas del oponente mediante movimientos e
 
 ```kotlin
 // Stack técnico completo
--Kotlin 2.0.21
+-Kotlin 2.2.20
 -Jetpack Compose 1.11.0
 -Material Design 3
+-Koin 4.1.1
+-DataStore 1.1.7
 -Corrutinas para operaciones asíncronas
         -Arquitectura MVVM
         -Algoritmo Minimax con Alpha -Beta pruning
@@ -118,6 +122,7 @@ app/
 ├── ui/
 │   ├── components/       # Componentes reutilizables
 │   ├── screens/          # Pantallas principales
+│   ├── localization/     # Administrador de idiomas
 │   └── theme/            # Sistema de diseño
 ├── game/
 │   ├── AI.kt             # Lógica de inteligencia artificial
@@ -141,8 +146,9 @@ El tablero de Tarati representa una estructura simbólica profunda:
 
 ## 🖼️ Capturas de Pantalla
 
-| <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot3.jpeg" alt="Tarati Screenshot" width="300"/> |
 |--------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| <img src="/screenshots/screenshot4.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
 
 * Interfaz intuitiva y sencilla diseñada con Jetpack Compose
 
@@ -201,8 +207,8 @@ Las contribuciones son bienvenidas. Por favor:
 
 ### ⭐ ¿Disfrutas del juego? ¡Dale una estrella al repositorio!
 
-_“To teach pride in knowledge is to put up an effective barrier against any advance upon what is already known.”_ —
-**George Spencer-Brown**
+_“Enseñar el orgullo en el conocimiento es poner una barrera efectiva contra cualquier avance sobre lo que ya se
+conoce.”_ —**George Spencer-Brown**
 
 </div>
 
