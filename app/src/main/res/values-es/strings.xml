@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tarati</string>
+    <string name="game_over_wins">¡Juego Terminado! ¡%1$s gana!</string>
+    <string name="black">NEGRO</string>
+    <string name="white">BLANCO</string>
+    <string name="about_tarati">Acerca de Tarati</string>
+    <string name="tarati_is_a_strategic_board_game_created_by_george_spencer_brown">Tarati es un juego de mesa
+        estratégico
+        creado por George Spencer Brown, basado en su trabajo \"Leyes de la Forma\". El juego combina elementos de
+        juegos
+        de mesa tradicionales con mecánicas únicas de movimiento y captura.
+    </string>
+    <string name="game_rules">Reglas del Juego:</string>
+    <string name="players_2_white_vs_black_objective_control_the_board">• Jugadores: 2 (BLANCO vs NEGRO)\n • Objetivo:
+        Controlar el tablero convirtiendo las piezas del oponente\n • Movimiento: Las piezas se mueven por las aristas
+        hacia vértices adyacentes\n •
+        Mejoras: Las piezas se mejoran en la base del oponente\n • Captura: Moverse adyacente a piezas oponentes las
+        convierte
+    </string>
+    <string name="credits">Créditos:</string>
+    <string name="original_concept_george_spencer_brown">• Concepto original: George Spencer Brown\n • Implementación en
+        React: Adam Blvck\n • Adaptación a Kotlin/Android: Agustín Gomila
+    </string>
+    <string name="close">Cerrar</string>
+    <string name="game_over">Juego Terminado</string>
+    <string name="new_game">Nuevo Juego</string>
+    <string name="continue_">Continuar</string>
+    <string name="are_you_sure_you_want_to_start_a_new_game">¿Estás seguro de que quieres comenzar un nuevo juego? Se
+        perderá
+        el progreso actual.
+    </string>
+    <string name="tarati">Tarati</string>
+    <string name="menu">Menú</string>
+    <string name="a_board_game_by_george_spencer_brown">Un Juego de Mesa de George Spencer Brown</string>
+    <string name="difficulty_easy">Fácil</string>
+    <string name="difficulty_medium">Medio</string>
+    <string name="difficulty_hard">Difícil</string>
+    <string name="difficulty_champion">Campeón</string>
+    <string name="ai_difficulty">Dificultad de la IA</string>
+    <string name="disable_ai">Desactivar IA</string>
+    <string name="enable_ai">Activar IA</string>
+    <string name="move_history">Historial</string>
+    <string name="back">Atrás</string>
+    <string name="forward">Adelante</string>
+    <string name="move_to_current">Mover al Actual</string>
+    <string name="about">Acerca de</string>
+    <string name="settings">Configuración</string>
+    <string name="language">Idioma</string>
+    <string name="spanish">Español</string>
+    <string name="english">Inglés</string>
+    <string name="dark_theme">Tema oscuro</string>
+    <string name="appearance">Apariencia</string>
+    <string name="current_turn">Turno Actual: %1$s</string>
+    <string name="yes">Sí</string>
+    <string name="cancel">Cancelar</string>
+</resources>

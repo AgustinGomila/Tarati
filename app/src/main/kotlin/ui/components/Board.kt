@@ -101,7 +101,7 @@ fun Board(
                                 ) {
                                     onMove(selectedPiece!!, vertexId)
                                 } else {
-                                    println("Invalid move from ${selectedPiece} to $vertexId")
+                                    println("Invalid move from $selectedPiece to $vertexId")
                                 }
                                 selectedPiece = null
                                 highlightedMoves = emptyList()

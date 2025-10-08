@@ -1,8 +1,6 @@
 package com.agustin.tarati.game
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import com.agustin.tarati.R
 
 data class Difficulty(
@@ -18,9 +16,4 @@ data class Difficulty(
         val ALL = listOf(EASY, MEDIUM, HARD, CHAMPION)
         val DEFAULT = MEDIUM
     }
-}
-
-@Composable
-fun Difficulty.displayName(): String {
-    return stringResource(this.displayNameRes)
 }

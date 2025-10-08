@@ -50,15 +50,21 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.compose.material.icons.extended)
+
+    // DataStore
+    implementation(libs.datastore)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+
+    // ViewModels
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.navigation.compose)
 
     // Testing
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.espresso.core)
-
-    // Compose Testing BOM
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)

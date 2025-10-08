@@ -25,10 +25,10 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,15 +37,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.agustin.tarati.R
 import com.agustin.tarati.game.Checker
 import com.agustin.tarati.game.Color.BLACK
 import com.agustin.tarati.game.Color.WHITE
 import com.agustin.tarati.game.Difficulty
 import com.agustin.tarati.game.GameState
 import com.agustin.tarati.game.Move
+import com.agustin.tarati.localization.LocalizedText
+import com.agustin.tarati.localization.localizedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +59,7 @@ fun Sidebar(
     currentMoveIndex: Int,
     isAIEnabled: Boolean,
     difficulty: Difficulty,
+    onSettings: () -> Unit,
     onNewGame: () -> Unit,
     onToggleAI: () -> Unit,
     onDifficultyChange: (Difficulty) -> Unit,
@@ -65,6 +70,7 @@ fun Sidebar(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -75,11 +81,22 @@ fun Sidebar(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Tarati",
+        LocalizedText(
+            id = R.string.tarati,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
+
+        Button(
+            onClick = onSettings,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        ) {
+            LocalizedText(R.string.settings)
+        }
 
         Button(
             onClick = onNewGame,
@@ -89,7 +106,7 @@ fun Sidebar(
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text("New Game")
+            LocalizedText(id = R.string.new_game)
         }
 
         Button(
@@ -100,13 +117,16 @@ fun Sidebar(
                 contentColor = MaterialTheme.colorScheme.onSecondary
             )
         ) {
-            Text(if (isAIEnabled) "Disable AI" else "Enable AI")
+            LocalizedText(
+                if (isAIEnabled) R.string.disable_ai
+                else R.string.enable_ai
+            )
         }
 
         // Selector de dificultad
         Column {
-            Text(
-                text = "AI Difficulty",
+            LocalizedText(
+                id = R.string.ai_difficulty,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -124,7 +144,7 @@ fun Sidebar(
                     },
                     // Enfoque compatible - sin textFieldColors específico
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
                 )
 
@@ -135,8 +155,8 @@ fun Sidebar(
                     Difficulty.ALL.forEach { difficultyOption ->
                         DropdownMenuItem(
                             text = {
-                                Text(
-                                    stringResource(difficultyOption.displayNameRes),
+                                LocalizedText(
+                                    difficultyOption.displayNameRes,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             },
@@ -164,8 +184,16 @@ fun Sidebar(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
+            val t = localizedString(R.string.current_turn)
+            val t2 = localizedString(
+                when (gameState.currentTurn) {
+                    BLACK -> R.string.black
+                    else -> R.string.white
+                }
+            )
+
             Text(
-                text = "Current Turn: ${gameState.currentTurn}",
+                String.format(t, t2),
                 color = if (gameState.currentTurn == BLACK)
                     MaterialTheme.colorScheme.onSecondary
                 else
@@ -174,8 +202,8 @@ fun Sidebar(
             )
         }
 
-        Text(
-            text = "Move History",
+        LocalizedText(
+            id = R.string.move_history,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -195,7 +223,7 @@ fun Sidebar(
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             ) {
-                Text("Back")
+                LocalizedText(R.string.back)
             }
 
             Button(
@@ -209,7 +237,7 @@ fun Sidebar(
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             ) {
-                Text("Forward")
+                LocalizedText(R.string.forward)
             }
         }
 
@@ -222,35 +250,49 @@ fun Sidebar(
                     contentColor = MaterialTheme.colorScheme.onTertiary
                 )
             ) {
-                Text("Move to Current")
+                LocalizedText(R.string.move_to_current)
             }
         }
 
         // Historial de movimientos
-        Column {
-            moveHistory.reversed().forEachIndexed { index, move ->
-                val actualIndex = moveHistory.size - 1 - index
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                if (actualIndex == currentMoveIndex)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${actualIndex + 1} · ${move.from} → ${move.to}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+        Box(
+            modifier = Modifier
+                .height(200.dp) // Altura fija para el historial
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            val scrollState = rememberScrollState()
+
+            Column(
+                modifier = Modifier
+                    .verticalScroll(scrollState)
+                    .padding(12.dp)
+            ) {
+                moveHistory.reversed().forEachIndexed { index, move ->
+                    val actualIndex = moveHistory.size - 1 - index
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(
+                                    if (actualIndex == currentMoveIndex)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${actualIndex + 1} · ${move.from} → ${move.to}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
@@ -270,11 +312,11 @@ fun Sidebar(
         ) {
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = "About",
+                contentDescription = context.getString(R.string.about),
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("About Tarati")
+            LocalizedText(R.string.about_tarati)
         }
     }
 }
@@ -312,15 +354,15 @@ fun SidebarPreview() {
             moveHistory = exampleMoveHistory,
             currentMoveIndex = 2,
             isAIEnabled = true,
-            difficulty = Difficulty.MEDIUM,
+            difficulty = Difficulty.DEFAULT,
+            onSettings = { },
             onNewGame = { },
             onToggleAI = { },
             onDifficultyChange = { },
             onUndo = { },
             onRedo = { },
             onMoveToCurrent = { },
-            onAboutClick = { },
-            modifier = Modifier.fillMaxHeight()
+            onAboutClick = { }
         )
     }
 }
@@ -354,14 +396,14 @@ fun SidebarPreview_Dark() {
             currentMoveIndex = 1,
             isAIEnabled = false,
             difficulty = Difficulty.HARD,
+            onSettings = { },
             onNewGame = { },
             onToggleAI = { },
             onDifficultyChange = { },
             onUndo = { },
             onRedo = { },
             onMoveToCurrent = { },
-            onAboutClick = { },
-            modifier = Modifier.fillMaxHeight()
+            onAboutClick = { }
         )
     }
 }

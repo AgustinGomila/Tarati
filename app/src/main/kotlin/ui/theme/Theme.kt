@@ -10,6 +10,12 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+enum class AppTheme {
+    MODE_AUTO,
+    MODE_DAY,
+    MODE_NIGHT
+}
+
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
