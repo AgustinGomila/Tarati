@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Tarati</string>
+    <string name="game_over_wins">Game Over! %1$s wins!</string>
+    <string name="black">BLACK</string>
+    <string name="white">WHITE</string>
+    <string name="about_tarati">About Tarati</string>
+    <string name="tarati_is_a_strategic_board_game_created_by_george_spencer_brown">Tarati is a strategic board game
+        created by George Spencer Brown, based on his work \'Laws of Form\'. The game combines elements of traditional
+        board games with unique movement and capture mechanics.
+    </string>
+    <string name="game_rules">Game Rules:</string>
+    <string name="players_2_white_vs_black_objective_control_the_board">• Players: 2 (WHITE vs BLACK)\n • Objective:
+        Control the board by converting opponent pieces\n • Movement: Pieces move along edges to adjacent vertices\n •
+        Upgrades: Pieces become upgraded in opponent\'s home base\n • Capture: Moving adjacent to opponent pieces
+        converts them
+    </string>
+    <string name="credits">Credits:</string>
+    <string name="original_concept_george_spencer_brown">• Original concept: George Spencer Brown\n • React
+        implementation: Adam Blvck\n • Kotlin/Android port: Agustín Gomila
+    </string>
+    <string name="close">Close</string>
+    <string name="game_over">Game Over</string>
+    <string name="new_game">New Game</string>
+    <string name="continue_">Continue</string>
+    <string name="are_you_sure_you_want_to_start_a_new_game">Are you sure you want to start a new game? Current progress
+        will be lost.
+    </string>
+    <string name="tarati">Tarati</string>
+    <string name="menu">Menu</string>
+    <string name="a_board_game_by_george_spencer_brown">A Board Game by George Spencer Brown</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="difficulty_champion">Champion</string>
+    <string name="ai_difficulty">AI Difficulty</string>
+    <string name="disable_ai">Disable AI</string>
+    <string name="enable_ai">Enable AI</string>
+    <string name="move_history">Move History</string>
+    <string name="back">Back</string>
+    <string name="forward">Forward</string>
+    <string name="move_to_current">Move to Current</string>
+    <string name="about">About</string>
+</resources>
