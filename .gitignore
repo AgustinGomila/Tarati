@@ -18,5 +18,6 @@ local.properties
 .idea/androidTestResultsUserPreferences.xml
 app/release
 app/build
+app/version.properties
 tarati.jks
 tarati.secret

@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.agustin.tarati.ui.components.BoardViewModel
 import com.agustin.tarati.ui.screens.main.ScreenViewModel
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import com.agustin.tarati.ui.screens.settings.SettingsRepositoryImpl
@@ -48,5 +49,6 @@ class App : Application() {
     private val viewModelModule = module {
         viewModel { SettingsViewModel() }
         viewModel { ScreenViewModel() }
+        viewModel { BoardViewModel() }
     }
 }

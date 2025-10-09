@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -21,6 +19,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agustin.tarati.game.Color
 import com.agustin.tarati.game.Color.BLACK
 import com.agustin.tarati.game.Color.WHITE
@@ -45,8 +44,12 @@ fun Board(
     playerSide: Color,
     modifier: Modifier = Modifier
 ) {
-    var selectedPiece by remember { mutableStateOf<String?>(null) }
-    var highlightedMoves by remember { mutableStateOf<List<String>>(emptyList()) }
+    // ViewModel que guarda estado, historial y dificultad
+    val viewModel: BoardViewModel = viewModel()
+
+    // Observamos el gameState del ViewModel. Si es null, creamos un estado inicial
+    val vmSelectedPiece by viewModel.selectedPiece.collectAsState(null as String?)
+    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState(emptyList())
 
     // Colores del tema
     val backgroundColor = MaterialTheme.colorScheme.surface
@@ -70,7 +73,7 @@ fun Board(
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
-            .pointerInput(gameState, selectedPiece, playerSide) {
+            .pointerInput(gameState, vmSelectedPiece, playerSide) {
                 detectTapGestures { offset ->
                     val canvasWidth = size.width.toFloat()
                     val canvasHeight = size.height.toFloat()
@@ -92,13 +95,13 @@ fun Board(
                         println("Visual: $visualVertexId -> Logical: $logicalVertexId")
                         println("Game state checkers: ${gameState.checkers.keys}")
 
-                        if (selectedPiece == null) {
+                        if (vmSelectedPiece == null) {
                             // Intentar seleccionar una pieza
                             val checker = gameState.checkers[logicalVertexId]
                             println("Checker at $logicalVertexId: $checker, currentTurn: ${gameState.currentTurn}")
 
                             if (checker != null && checker.color == gameState.currentTurn) {
-                                selectedPiece = logicalVertexId
+                                viewModel.updateSelectedPiece(logicalVertexId)
 
                                 // Resaltar movimientos válidos
                                 val logicalMoves = GameBoard.adjacencyMap[logicalVertexId]
@@ -111,27 +114,27 @@ fun Board(
                                                 ))
                                     } ?: emptyList()
 
-                                highlightedMoves = logicalMoves.map {
+                                viewModel.updateHighlightedMoves(logicalMoves.map {
                                     CoordinateSystem.logicalToVisual(it, playerSide)
-                                }
+                                })
 
                                 println("Selected piece: $logicalVertexId")
                                 println("Logical moves: $logicalMoves")
-                                println("Visual highlights: $highlightedMoves")
+                                println("Visual highlights: $vmHighlightedMoves")
                             }
                         } else {
                             // Intentar mover la pieza seleccionada
-                            if (logicalVertexId != selectedPiece) {
-                                println("Attempting move from $selectedPiece to $logicalVertexId")
+                            if (logicalVertexId != vmSelectedPiece) {
+                                println("Attempting move from $vmSelectedPiece to $logicalVertexId")
 
-                                if (TaratiAI.isValidMove(gameState, selectedPiece!!, logicalVertexId)) {
-                                    onMove(selectedPiece!!, logicalVertexId)
+                                if (TaratiAI.isValidMove(gameState, vmSelectedPiece!!, logicalVertexId)) {
+                                    onMove(vmSelectedPiece!!, logicalVertexId)
                                 }
-                                selectedPiece = null
-                                highlightedMoves = emptyList()
+                                viewModel.updateSelectedPiece(null)
+                                viewModel.updateHighlightedMoves(emptyList())
                             } else {
-                                selectedPiece = null
-                                highlightedMoves = emptyList()
+                                viewModel.updateSelectedPiece(null)
+                                viewModel.updateHighlightedMoves(emptyList())
                             }
                         }
                     }
@@ -190,8 +193,8 @@ fun Board(
 
                 val checker = gameState.checkers[logicalVertexId]
                 val vertexColor = when {
-                    logicalVertexId == selectedPiece -> vertexSelectedColor
-                    highlightedMoves.contains(visualVertexId) -> vertexHighlightColor
+                    logicalVertexId == vmSelectedPiece -> vertexSelectedColor
+                    vmHighlightedMoves.contains(visualVertexId) -> vertexHighlightColor
                     checker != null -> vertexOccupiedColor
                     else -> vertexDefaultColor
                 }
@@ -269,7 +272,7 @@ fun Board(
                 }
 
                 // Resaltado de selección
-                if (logicalVertexId == selectedPiece) {
+                if (logicalVertexId == vmSelectedPiece) {
                     drawCircle(
                         color = selectionIndicatorColor,
                         center = pos,
