@@ -26,8 +26,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,8 +40,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.Checker
 import com.agustin.tarati.game.Color
@@ -55,6 +55,7 @@ import com.agustin.tarati.ui.components.Sidebar
 import com.agustin.tarati.ui.components.TurnIndicator
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
+import com.agustin.tarati.ui.screens.main.ScreenViewModel.Companion.initialGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -70,27 +71,17 @@ fun MainScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
     val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Estados del juego
-    fun initialGameState(): GameState {
-        val map = mapOf(
-            "C1" to Checker(Color.WHITE, false),
-            "C2" to Checker(Color.WHITE, false),
-            "D1" to Checker(Color.WHITE, false),
-            "D2" to Checker(Color.WHITE, false),
-            "C7" to Checker(Color.BLACK, false),
-            "C8" to Checker(Color.BLACK, false),
-            "D3" to Checker(Color.BLACK, false),
-            "D4" to Checker(Color.BLACK, false)
-        )
-        return GameState(checkers = map, currentTurn = Color.WHITE)
-    }
+    // ViewModel que guarda estado, historial y dificultad
+    val viewModel: ScreenViewModel = viewModel()
 
-    var gameState by remember { mutableStateOf(initialGameState()) }
-    var moveHistory by remember { mutableStateOf<List<Pair<Move, GameState>>>(emptyList()) }
-    var currentMoveIndex by remember { mutableIntStateOf(-1) }
-    var isAIEnabled by remember { mutableStateOf(true) }
+    // Observamos el gameState del ViewModel. Si es null, creamos un estado inicial
+    val vmGameState by viewModel.gameState.collectAsState(initialGameState())
+    val vmHistory by viewModel.history.collectAsState(emptyList())
+    val vmDifficulty by viewModel.difficulty.collectAsState(Difficulty.DEFAULT)
+    val vmMoveIndex by viewModel.moveIndex.collectAsState(-1)
+    val vmAIEnabled by viewModel.aIEnabled.collectAsState(true)
+
     var stopAI by remember { mutableStateOf(false) }
-    var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var boardSize by remember { mutableStateOf(500.dp) }
 
     // Estados para diálogos
@@ -115,19 +106,23 @@ fun MainScreen(navController: NavController) {
 
     fun applyMove(from: String, to: String) {
         stopAI = false
-        val newBoardState = applyMoveToBoard(gameState, from, to)
+        val newBoardState = applyMoveToBoard(vmGameState, from, to)
         val nextState = newBoardState.copy(
-            currentTurn = if (gameState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
+            currentTurn = if (vmGameState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
         )
 
         val newEntry = Pair(Move(from, to), nextState)
-        val truncated = if (currentMoveIndex < moveHistory.size - 1) {
-            moveHistory.take(currentMoveIndex + 1)
-        } else moveHistory
+        val truncated =
+            if (vmMoveIndex < vmHistory.size - 1) {
+                vmHistory.take(vmMoveIndex + 1)
+            } else vmHistory
+
         val newMoveHistory = truncated + newEntry
-        moveHistory = newMoveHistory
-        currentMoveIndex = newMoveHistory.size - 1
-        gameState = nextState
+        viewModel.updateMoveIndex(newMoveHistory.size - 1)
+
+        // Actualizamos el ViewModel (fuente de verdad)
+        viewModel.updateHistory(newMoveHistory)
+        viewModel.updateGameState(nextState)
 
         if (isGameOverLocal(nextState)) {
             gameOverMessage = context.getString(
@@ -139,14 +134,14 @@ fun MainScreen(navController: NavController) {
     }
 
     // IA Logic
-    LaunchedEffect(gameState.currentTurn, isAIEnabled, stopAI, difficulty) {
-        if (!isAIEnabled || stopAI) return@LaunchedEffect
+    LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty) {
+        if (!vmAIEnabled || stopAI) return@LaunchedEffect
 
-        if (gameState.currentTurn == Color.BLACK) {
+        if (vmGameState.currentTurn == Color.BLACK) {
             delay(1000)
             val result = try {
                 withContext(Dispatchers.Default) {
-                    TaratiAI.getNextBestMove(gameState, depth = difficulty.depth, isMaximizingPlayer = true)
+                    TaratiAI.getNextBestMove(vmGameState, depth = vmDifficulty.depth, isMaximizingPlayer = true)
                 }
             } catch (t: Throwable) {
                 t.printStackTrace()
@@ -160,9 +155,9 @@ fun MainScreen(navController: NavController) {
     }
 
     fun clearHistory() {
-        moveHistory = emptyList()
-        currentMoveIndex = -1
-        gameState = initialGameState()
+        viewModel.updateHistory(emptyList())
+        viewModel.updateMoveIndex(-1)
+        viewModel.updateGameState(initialGameState())
         showNewGameDialog = false
     }
 
@@ -176,28 +171,30 @@ fun MainScreen(navController: NavController) {
     }
 
     fun undoMove() {
-        if (currentMoveIndex >= 0) {
-            currentMoveIndex--
-            gameState = if (currentMoveIndex >= 0 && currentMoveIndex < moveHistory.size) {
-                moveHistory[currentMoveIndex].second
+        if (vmMoveIndex >= 0) {
+            viewModel.decrementMoveIndex()
+            val newState = if (vmMoveIndex < vmHistory.size) {
+                vmHistory[vmMoveIndex].second
             } else {
                 initialGameState()
             }
+            viewModel.updateGameState(newState)
         }
         stopAI = true
     }
 
     fun redoMove() {
-        if (currentMoveIndex < moveHistory.size - 1) {
-            currentMoveIndex++
-            gameState = moveHistory[currentMoveIndex].second
+        if (vmMoveIndex < vmHistory.size - 1) {
+            viewModel.incrementMoveIndex()
+            val newState = vmHistory[vmMoveIndex].second
+            viewModel.updateGameState(newState)
         }
     }
 
     fun moveToCurrentState() {
-        if (moveHistory.isNotEmpty()) {
-            currentMoveIndex = moveHistory.size - 1
-            gameState = moveHistory.last().second
+        if (vmHistory.isNotEmpty()) {
+            viewModel.updateMoveIndex(vmHistory.size - 1)
+            viewModel.updateGameState(vmHistory.last().second)
         }
     }
 
@@ -227,15 +224,15 @@ fun MainScreen(navController: NavController) {
         drawerState = drawerState,
         drawerContent = {
             Sidebar(
-                gameState = gameState,
-                moveHistory = moveHistory.map { it.first },
-                currentMoveIndex = currentMoveIndex,
-                isAIEnabled = isAIEnabled,
-                difficulty = difficulty,
+                gameState = vmGameState,
+                moveHistory = vmHistory.map { it.first },
+                currentMoveIndex = vmMoveIndex,
+                isAIEnabled = vmAIEnabled,
+                difficulty = vmDifficulty,
                 onSettings = { navController.navigate(SettingsScreenDest.route) },
                 onNewGame = { showNewGameDialog = true },
-                onToggleAI = { isAIEnabled = !isAIEnabled },
-                onDifficultyChange = { difficulty = it },
+                onToggleAI = { viewModel.updateAIEnabled(!vmAIEnabled) },
+                onDifficultyChange = { viewModel.updateDifficulty(it) },
                 onUndo = ::undoMove,
                 onRedo = ::redoMove,
                 onMoveToCurrent = ::moveToCurrentState,
@@ -296,7 +293,7 @@ fun MainScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Board(
-                            gameState = gameState,
+                            gameState = vmGameState,
                             boardSize = boardSize,
                             vWidth = vWidth,
                             onMove = { from, to -> applyMove(from, to) },
@@ -310,7 +307,7 @@ fun MainScreen(navController: NavController) {
                                 .align(Alignment.TopEnd)
                                 .size(60.dp)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            currentTurn = gameState.currentTurn,
+                            currentTurn = vmGameState.currentTurn,
                             size = 60.dp
                         )
                     }
@@ -431,7 +428,6 @@ private fun MainScreenPreviewContent(
     TaratiTheme(darkTheme = darkTheme) {
         val drawerState = rememberDrawerState(initialValue = drawerStateValue)
         val scope = rememberCoroutineScope()
-        val navController = rememberNavController()
 
         // Reutilizamos la misma función de initialGameState del código principal
         fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
