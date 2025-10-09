@@ -1,10 +1,21 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.*
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Función para leer la versión desde el archivo properties
+fun getVersionProperties(): Properties {
+    val versionFile = file("version.properties")
+    val versionProps = Properties()
+    versionProps.load(versionFile.reader())
+    return versionProps
+}
+
+val versionProps = getVersionProperties()
 
 android {
     namespace = "com.agustin.tarati"
@@ -14,15 +25,20 @@ android {
         applicationId = "com.agustin.tarati"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.compileSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionProps.getProperty("versionCode").toInt()
+        versionName = versionProps.getProperty("versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        release {
+        debug {
             isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -73,4 +89,42 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Tareas para gestionar versiones
+tasks.register("incrementVersionCode") {
+    doLast {
+        val versionFile = file("version.properties")
+        val versionProps = Properties()
+        versionProps.load(versionFile.reader())
+
+        val currentCode = versionProps.getProperty("versionCode").toInt()
+        versionProps.setProperty("versionCode", (currentCode + 1).toString())
+        versionProps.store(versionFile.writer(), null)
+
+        println("✅ VersionCode incrementado a: ${currentCode + 1}")
+    }
+}
+
+tasks.register("setVersionName") {
+    doLast {
+        val versionName = project.findProperty("newVersionName") as? String
+            ?: throw GradleException("Debes proporcionar newVersionName: ./gradlew setVersionName -PnewVersionName=1.1.0")
+
+        val versionFile = file("version.properties")
+        val versionProps = Properties()
+        versionProps.load(versionFile.reader())
+
+        versionProps.setProperty("versionName", versionName)
+        versionProps.store(versionFile.writer(), null)
+
+        println("✅ VersionName actualizado a: $versionName")
+    }
+}
+
+tasks.register("showVersion") {
+    doLast {
+        val versionProps = getVersionProperties()
+        println("📱 Versión actual: ${versionProps.getProperty("versionName")} (${versionProps.getProperty("versionCode")})")
+    }
 }

@@ -27,8 +27,8 @@ fun TurnIndicator(
     }
 
     val borderColor = when (currentTurn) {
-        SideColor.WHITE -> MaterialTheme.colorScheme.primary
-        SideColor.BLACK -> MaterialTheme.colorScheme.onSecondary
+        SideColor.WHITE -> MaterialTheme.colorScheme.secondary
+        SideColor.BLACK -> MaterialTheme.colorScheme.onPrimary
     }
 
     Box(
@@ -36,7 +36,7 @@ fun TurnIndicator(
             .size(size)
             .clip(CircleShape)
             .background(borderColor)
-            .padding(2.dp)
+            .padding(1.dp)
             .clip(CircleShape)
             .background(indicatorColor)
     )

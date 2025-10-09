@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
-import com.agustin.tarati.game.Checker
 import com.agustin.tarati.game.Color
 import com.agustin.tarati.game.Difficulty
 import com.agustin.tarati.game.GameState
@@ -80,6 +79,7 @@ fun MainScreen(navController: NavController) {
     val vmDifficulty by viewModel.difficulty.collectAsState(Difficulty.DEFAULT)
     val vmMoveIndex by viewModel.moveIndex.collectAsState(-1)
     val vmAIEnabled by viewModel.aIEnabled.collectAsState(true)
+    val vmPlayerSide by viewModel.playerSide.collectAsState(Color.WHITE)
 
     var stopAI by remember { mutableStateOf(false) }
     var boardSize by remember { mutableStateOf(500.dp) }
@@ -106,12 +106,20 @@ fun MainScreen(navController: NavController) {
 
     fun applyMove(from: String, to: String) {
         stopAI = false
-        val newBoardState = applyMoveToBoard(vmGameState, from, to)
+
+        // No rotar las coordenadas aquí, el Board ya maneja la conversión.
+        // Las coordenadas from/to ya están en el sistema lógico correcto
+        val actualFrom = from
+        val actualTo = to
+
+        println("Applying move: $actualFrom -> $actualTo")
+
+        val newBoardState = applyMoveToBoard(vmGameState, actualFrom, actualTo)
         val nextState = newBoardState.copy(
             currentTurn = if (vmGameState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
         )
 
-        val newEntry = Pair(Move(from, to), nextState)
+        val newEntry = Pair(Move(actualFrom, actualTo), nextState)
         val truncated =
             if (vmMoveIndex < vmHistory.size - 1) {
                 vmHistory.take(vmMoveIndex + 1)
@@ -120,7 +128,6 @@ fun MainScreen(navController: NavController) {
         val newMoveHistory = truncated + newEntry
         viewModel.updateMoveIndex(newMoveHistory.size - 1)
 
-        // Actualizamos el ViewModel (fuente de verdad)
         viewModel.updateHistory(newMoveHistory)
         viewModel.updateGameState(nextState)
 
@@ -134,11 +141,17 @@ fun MainScreen(navController: NavController) {
     }
 
     // IA Logic
-    LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty) {
+    // En MainScreen.kt, corregir el LaunchedEffect de la IA:
+    LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty, vmPlayerSide) {
         if (!vmAIEnabled || stopAI) return@LaunchedEffect
 
-        if (vmGameState.currentTurn == Color.BLACK) {
-            delay(1000)
+        // La IA juega cuando no es el turno del humano
+        val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide
+
+        println("AI Check: enabled=${true}, playerSide=$vmPlayerSide, currentTurn=${vmGameState.currentTurn}, shouldPlay=$shouldAIPlay")
+
+        if (shouldAIPlay) {
+            delay(500)
             val result = try {
                 withContext(Dispatchers.Default) {
                     TaratiAI.getNextBestMove(vmGameState, depth = vmDifficulty.depth, isMaximizingPlayer = true)
@@ -148,26 +161,34 @@ fun MainScreen(navController: NavController) {
                 null
             }
 
+            println("AI calculated move: ${result?.move}")
+
             result?.move?.let { move ->
                 applyMove(move.from, move.to)
             }
         }
     }
 
-    fun clearHistory() {
+    fun startNewGame(playerSide: Color) {
+        viewModel.updatePlayerSide(playerSide)
         viewModel.updateHistory(emptyList())
         viewModel.updateMoveIndex(-1)
-        viewModel.updateGameState(initialGameState())
+
+        // Siempre empezar con BLANCAS, sin importar el lado del jugador
+        // Esto es importante para la lógica del juego
+        val initialTurn = Color.WHITE
+
+        viewModel.updateGameState(initialGameState(initialTurn))
         showNewGameDialog = false
-    }
 
-    fun startNewGame() {
-        clearHistory()
+        // Reiniciar estado de IA
+        stopAI = false
 
-        // Cerrar el drawer
         scope.launch {
             drawerState.close()
         }
+
+        println("New game started: playerSide=$playerSide, initialTurn=$initialTurn")
     }
 
     fun undoMove() {
@@ -200,23 +221,26 @@ fun MainScreen(navController: NavController) {
 
     // Diálogo About
     if (showAboutDialog) {
-        aboutDialog(showAboutDialog = { showAboutDialog = it })
+        AboutDialog(showAboutDialog = { showAboutDialog = it })
     }
 
     // Diálogo de fin de juego
     if (showGameOverDialog) {
-        gameOverDialog(
+        GameOverDialog(
             gameOverMessage = gameOverMessage,
-            showGameOverDialog = { showGameOverDialog = it },
-            onConfirmed = ::startNewGame
+            onConfirmed = {
+                showGameOverDialog = false
+                startNewGame(vmPlayerSide)
+            },
+            onDismissed = { showGameOverDialog = false }
         )
     }
 
     // Diálogo de confirmación de nueva partida
     if (showNewGameDialog) {
-        newGameDialog(
-            showNewGameDialog = { showNewGameDialog = it },
-            onConfirmed = ::startNewGame
+        NewGameDialog(
+            onConfirmed = { startNewGame(vmPlayerSide) },
+            onDismissed = { showNewGameDialog = false }
         )
     }
 
@@ -229,8 +253,12 @@ fun MainScreen(navController: NavController) {
                 currentMoveIndex = vmMoveIndex,
                 isAIEnabled = vmAIEnabled,
                 difficulty = vmDifficulty,
+                playerSide = vmPlayerSide,
                 onSettings = { navController.navigate(SettingsScreenDest.route) },
-                onNewGame = { showNewGameDialog = true },
+                onNewGame = { playerSide ->
+                    viewModel.updatePlayerSide(playerSide)
+                    showNewGameDialog = true
+                },
                 onToggleAI = { viewModel.updateAIEnabled(!vmAIEnabled) },
                 onDifficultyChange = { viewModel.updateDifficulty(it) },
                 onUndo = ::undoMove,
@@ -297,6 +325,7 @@ fun MainScreen(navController: NavController) {
                             boardSize = boardSize,
                             vWidth = vWidth,
                             onMove = { from, to -> applyMove(from, to) },
+                            playerSide = vmPlayerSide,
                             modifier = Modifier
                                 .fillMaxWidth(0.95f)
                                 .padding(8.dp)
@@ -318,7 +347,7 @@ fun MainScreen(navController: NavController) {
 }
 
 @Composable
-fun aboutDialog(showAboutDialog: (Boolean) -> Unit) {
+fun AboutDialog(showAboutDialog: (Boolean) -> Unit) {
     AlertDialog(
         onDismissRequest = { showAboutDialog(false) },
         title = { LocalizedText(id = (R.string.about_tarati)) },
@@ -364,29 +393,25 @@ fun aboutDialog(showAboutDialog: (Boolean) -> Unit) {
 }
 
 @Composable
-fun gameOverDialog(
+fun GameOverDialog(
     gameOverMessage: String,
-    showGameOverDialog: (Boolean) -> Unit,
     onConfirmed: () -> Unit,
     onDismissed: () -> Unit = {},
 ) {
     AlertDialog(
-        onDismissRequest = { showGameOverDialog(false) },
+        onDismissRequest = onDismissed,
         title = { LocalizedText(id = (R.string.game_over)) },
         text = { Text(gameOverMessage) },
         confirmButton = {
             Button(
-                onClick = {
-                    showGameOverDialog(false)
-                    onConfirmed()
-                }
+                onClick = onConfirmed
             ) {
                 LocalizedText(id = (R.string.new_game))
             }
         },
         dismissButton = {
             Button(
-                onClick = { showGameOverDialog(false) }
+                onClick = onDismissed
             ) {
                 LocalizedText(id = (R.string.continue_))
             }
@@ -395,9 +420,9 @@ fun gameOverDialog(
 }
 
 @Composable
-fun newGameDialog(showNewGameDialog: (Boolean) -> Unit, onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
+fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
     AlertDialog(
-        onDismissRequest = { showNewGameDialog(false) },
+        onDismissRequest = onDismissed,
         title = { LocalizedText(id = (R.string.new_game)) },
         text = { LocalizedText(id = (R.string.are_you_sure_you_want_to_start_a_new_game)) },
         confirmButton = {
@@ -409,7 +434,7 @@ fun newGameDialog(showNewGameDialog: (Boolean) -> Unit, onConfirmed: () -> Unit,
         },
         dismissButton = {
             Button(
-                onClick = { showNewGameDialog(false) }
+                onClick = onDismissed
             ) {
                 LocalizedText(R.string.cancel)
             }
@@ -423,26 +448,12 @@ fun newGameDialog(showNewGameDialog: (Boolean) -> Unit, onConfirmed: () -> Unit,
 private fun MainScreenPreviewContent(
     darkTheme: Boolean = false,
     drawerStateValue: DrawerValue = DrawerValue.Open,
+    playerSide: Color = Color.WHITE,
     landScape: Boolean,
 ) {
     TaratiTheme(darkTheme = darkTheme) {
         val drawerState = rememberDrawerState(initialValue = drawerStateValue)
         val scope = rememberCoroutineScope()
-
-        // Reutilizamos la misma función de initialGameState del código principal
-        fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
-            val map = mapOf(
-                "C1" to Checker(Color.WHITE, false),
-                "C2" to Checker(Color.WHITE, false),
-                "D1" to Checker(Color.WHITE, false),
-                "D2" to Checker(Color.WHITE, false),
-                "C7" to Checker(Color.BLACK, false),
-                "C8" to Checker(Color.BLACK, false),
-                "D3" to Checker(Color.BLACK, false),
-                "D4" to Checker(Color.BLACK, false)
-            )
-            return GameState(map, currentTurn)
-        }
 
         val exampleMoveHistory = listOf(
             Move("C1", "B1"),
@@ -454,6 +465,7 @@ private fun MainScreenPreviewContent(
         // Estado del juego para el preview
         var previewGameState by remember { mutableStateOf(initialGameState()) }
         var boardSize by remember { mutableStateOf(500.dp) }
+        var playerSide by remember { mutableStateOf(playerSide) }
 
         // Función auxiliar para calcular vWidth (igual que en MainScreen)
         fun getBoardWidth(size: Dp): Float {
@@ -471,12 +483,13 @@ private fun MainScreenPreviewContent(
                     currentMoveIndex = 2, // Índice intermedio para mostrar funcionalidad
                     isAIEnabled = true,
                     difficulty = Difficulty.MEDIUM,
+                    playerSide = playerSide,
                     onSettings = { },
                     onNewGame = { },
                     onToggleAI = { },
                     onDifficultyChange = { },
-                    onUndo = { previewGameState = initialGameState(Color.BLACK) },
-                    onRedo = { previewGameState = initialGameState(Color.WHITE) },
+                    onUndo = { },
+                    onRedo = { },
                     onMoveToCurrent = ::initialGameState,
                     onAboutClick = { },
                     modifier = Modifier.systemBarsPadding()
@@ -542,6 +555,7 @@ private fun MainScreenPreviewContent(
                                             Color.WHITE
                                     )
                                 },
+                                playerSide = playerSide,
                                 modifier = Modifier
                                     .fillMaxWidth(0.95f)
                                     .padding(8.dp)

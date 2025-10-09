@@ -16,5 +16,7 @@
 local.properties
 .idea/deploymentTargetDropDown.xml
 .idea/androidTestResultsUserPreferences.xml
+app/release
+app/build
 tarati.jks
 tarati.secret

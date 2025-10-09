@@ -15,19 +15,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.agustin.tarati.game.Checker
+import com.agustin.tarati.game.Color
 import com.agustin.tarati.game.Color.BLACK
 import com.agustin.tarati.game.Color.WHITE
 import com.agustin.tarati.game.GameBoard
 import com.agustin.tarati.game.GameState
 import com.agustin.tarati.game.TaratiAI
-import com.agustin.tarati.game.TaratiAI.isForwardMove
-import com.agustin.tarati.helpers.PositionHelper
+import com.agustin.tarati.game.createGameState
+import com.agustin.tarati.helpers.AdaptivePositionHelper
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -41,6 +42,7 @@ fun Board(
     boardSize: Dp,
     vWidth: Float,
     onMove: (from: String, to: String) -> Unit,
+    playerSide: Color,
     modifier: Modifier = Modifier
 ) {
     var selectedPiece by remember { mutableStateOf<String?>(null) }
@@ -68,56 +70,66 @@ fun Board(
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
-            .pointerInput(gameState, selectedPiece) {
+            .pointerInput(gameState, selectedPiece, playerSide) {
                 detectTapGestures { offset ->
-                    // En el handler de taps, calculamos el "offset lógico" rotando el tap
-                    // en sentido inverso si el canvas está rotado.
                     val canvasWidth = size.width.toFloat()
                     val canvasHeight = size.height.toFloat()
                     val isLandscape = canvasWidth > canvasHeight
 
-                    val adjustedTap = if (isLandscape) {
-                        inverseRotateAroundCenter(offset, canvasWidth, canvasHeight, PI / 2)
-                    } else offset
+                    println("=== TAP DETECTED ===")
+                    println("Canvas: ${canvasWidth}x$canvasHeight, Landscape: $isLandscape")
+                    println("Raw offset: $offset")
 
-                    val tappedVertex = findClosestVertex(adjustedTap, canvasWidth, canvasHeight, vWidth)
-                    println("Tapped vertex: $tappedVertex at $offset (adjusted: $adjustedTap)")
+                    // Manejo de landscape
+                    val tappedVisualVertex =
+                        findClosestVertex(offset, canvasWidth, canvasHeight, vWidth, playerSide, isLandscape)
+                    println("Tapped visual vertex: $tappedVisualVertex")
 
-                    tappedVertex?.let { vertexId ->
+                    tappedVisualVertex?.let { visualVertexId ->
+                        // Convertir coordenada visual a lógica
+                        val logicalVertexId = CoordinateSystem.visualToLogical(visualVertexId, playerSide)
+
+                        println("Visual: $visualVertexId -> Logical: $logicalVertexId")
+                        println("Game state checkers: ${gameState.checkers.keys}")
+
                         if (selectedPiece == null) {
                             // Intentar seleccionar una pieza
-                            val checker = gameState.checkers[vertexId]
-                            if (checker != null && checker.color == gameState.currentTurn) {
-                                selectedPiece = vertexId
+                            val checker = gameState.checkers[logicalVertexId]
+                            println("Checker at $logicalVertexId: $checker, currentTurn: ${gameState.currentTurn}")
 
-                                // Resaltar solo vértices adyacentes que estén vacíos
-                                highlightedMoves = GameBoard.adjacencyMap[vertexId]
+                            if (checker != null && checker.color == gameState.currentTurn) {
+                                selectedPiece = logicalVertexId
+
+                                // Resaltar movimientos válidos
+                                val logicalMoves = GameBoard.adjacencyMap[logicalVertexId]
                                     ?.filter { to ->
-                                        // Verificar que el destino esté vacío
                                         !gameState.checkers.containsKey(to) &&
-                                                // Verificar dirección si no está mejorada
-                                                (checker.isUpgraded || isForwardMove(checker.color, vertexId, to))
+                                                (checker.isUpgraded || TaratiAI.isForwardMove(
+                                                    checker.color,
+                                                    logicalVertexId,
+                                                    to
+                                                ))
                                     } ?: emptyList()
 
-                                println("Selected piece: $vertexId, adjacent valid moves: $highlightedMoves")
+                                highlightedMoves = logicalMoves.map {
+                                    CoordinateSystem.logicalToVisual(it, playerSide)
+                                }
+
+                                println("Selected piece: $logicalVertexId")
+                                println("Logical moves: $logicalMoves")
+                                println("Visual highlights: $highlightedMoves")
                             }
                         } else {
                             // Intentar mover la pieza seleccionada
-                            if (vertexId != selectedPiece) {
-                                if (TaratiAI.isValidMove(
-                                        gameState,
-                                        selectedPiece!!,
-                                        vertexId
-                                    )
-                                ) {
-                                    onMove(selectedPiece!!, vertexId)
-                                } else {
-                                    println("Invalid move from $selectedPiece to $vertexId")
+                            if (logicalVertexId != selectedPiece) {
+                                println("Attempting move from $selectedPiece to $logicalVertexId")
+
+                                if (TaratiAI.isValidMove(gameState, selectedPiece!!, logicalVertexId)) {
+                                    onMove(selectedPiece!!, logicalVertexId)
                                 }
                                 selectedPiece = null
                                 highlightedMoves = emptyList()
                             } else {
-                                // Deseleccionar si se toca la misma pieza
                                 selectedPiece = null
                                 highlightedMoves = emptyList()
                             }
@@ -129,12 +141,23 @@ fun Board(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
             val canvasHeight = size.height
-
-            // Detectar orientación del canvas
             val isLandscape = canvasWidth > canvasHeight
+
+            if (isLandscape) {
+                // En landscape, rotar 90 grados y centrar
+                rotate(90f, pivot = Offset(canvasWidth / 2, canvasHeight / 2)) { }
+            } else if (playerSide == BLACK) {
+                // En portrait, rotar 180 grados si el jugador es negro
+                rotate(180f, pivot = Offset(canvasWidth / 2, canvasHeight / 2)) {}
+            }
 
             // Fondo completo
             drawRect(color = backgroundColor)
+
+            // Rotación visual del tablero
+            if (playerSide == BLACK) {
+                rotate(180f, pivot = Offset(canvasWidth / 2, canvasHeight / 2)) {}
+            }
 
             // Fondo circular del tablero
             val maxRadius = minOf(canvasWidth, canvasHeight) * 0.45f
@@ -146,66 +169,52 @@ fun Board(
 
             // Draw edges
             GameBoard.edges.forEach { edge ->
-                val fromPos = PositionHelper.getPosition(edge.first, canvasWidth to canvasHeight, vWidth)
-                val toPos = PositionHelper.getPosition(edge.second, canvasWidth to canvasHeight, vWidth)
+                val fromVisual = CoordinateSystem.logicalToVisual(edge.first, playerSide)
+                val toVisual = CoordinateSystem.logicalToVisual(edge.second, playerSide)
 
-                val displayFrom = if (isLandscape) rotateAroundCenter(
-                    Offset(fromPos.x, fromPos.y),
-                    canvasWidth,
-                    canvasHeight,
-                    PI / 2
-                ) else Offset(fromPos.x, fromPos.y)
-                val displayTo = if (isLandscape) rotateAroundCenter(
-                    Offset(toPos.x, toPos.y),
-                    canvasWidth,
-                    canvasHeight,
-                    PI / 2
-                ) else Offset(toPos.x, toPos.y)
+                val fromPos = getVisualPosition(fromVisual, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
+                val toPos = getVisualPosition(toVisual, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
                 drawLine(
                     color = edgeColor,
-                    start = displayFrom,
-                    end = displayTo,
+                    start = fromPos,
+                    end = toPos,
                     strokeWidth = 2f
                 )
             }
 
             // Draw vertices
-            GameBoard.vertices.forEach { vertexId ->
-                val pos = PositionHelper.getPosition(vertexId, canvasWidth to canvasHeight, vWidth)
-                val displayPos = if (isLandscape) rotateAroundCenter(
-                    Offset(pos.x, pos.y),
-                    canvasWidth,
-                    canvasHeight,
-                    PI / 2
-                ) else Offset(pos.x, pos.y)
+            GameBoard.vertices.forEach { logicalVertexId ->
+                val visualVertexId = CoordinateSystem.logicalToVisual(logicalVertexId, playerSide)
+                val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
+                val checker = gameState.checkers[logicalVertexId]
                 val vertexColor = when {
-                    vertexId == selectedPiece -> vertexSelectedColor
-                    highlightedMoves.contains(vertexId) -> vertexHighlightColor
-                    gameState.checkers[vertexId] != null -> vertexOccupiedColor
+                    logicalVertexId == selectedPiece -> vertexSelectedColor
+                    highlightedMoves.contains(visualVertexId) -> vertexHighlightColor
+                    checker != null -> vertexOccupiedColor
                     else -> vertexDefaultColor
                 }
 
                 // Vértice
-                drawCircle(color = vertexColor, center = displayPos, radius = vWidth / 10)
+                drawCircle(color = vertexColor, center = pos, radius = vWidth / 10)
 
                 // Borde del vértice
                 drawCircle(
                     color = textColor.copy(alpha = 0.3f),
-                    center = displayPos,
+                    center = pos,
                     radius = vWidth / 10,
                     style = Stroke(width = 1f)
                 )
 
-                // Etiqueta del vértice
+                // Etiqueta del vértice - mostrar coordenada VISUAL
                 drawContext.canvas.nativeCanvas.apply {
                     drawText(
-                        vertexId,
-                        displayPos.x - vWidth / 6,
-                        displayPos.y - vWidth / 6,
+                        visualVertexId,
+                        pos.x - vWidth / 6,
+                        pos.y - vWidth / 6,
                         android.graphics.Paint().apply {
-                            color = textColor.hashCode() // Convertir Color a Int
+                            color = textColor.hashCode()
                             textSize = vWidth / 8
                             isAntiAlias = true
                         }
@@ -214,14 +223,9 @@ fun Board(
             }
 
             // Draw checkers
-            gameState.checkers.forEach { (vertexId, checker) ->
-                val pos = PositionHelper.getPosition(vertexId, canvasWidth to canvasHeight, vWidth)
-                val displayPos = if (isLandscape) rotateAroundCenter(
-                    Offset(pos.x, pos.y),
-                    canvasWidth,
-                    canvasHeight,
-                    PI / 2
-                ) else Offset(pos.x, pos.y)
+            gameState.checkers.forEach { (logicalVertexId, checker) ->
+                val visualVertexId = CoordinateSystem.logicalToVisual(logicalVertexId, playerSide)
+                val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
                 val (checkerColor, borderColor) = when (checker.color) {
                     WHITE -> whitePieceColor to whitePieceBorderColor
@@ -231,7 +235,7 @@ fun Board(
                 // Borde exterior de la pieza
                 drawCircle(
                     color = borderColor,
-                    center = displayPos,
+                    center = pos,
                     radius = vWidth / 5,
                     style = Stroke(width = 3f)
                 )
@@ -239,38 +243,36 @@ fun Board(
                 // Pieza principal
                 drawCircle(
                     color = checkerColor,
-                    center = displayPos,
+                    center = pos,
                     radius = vWidth / 6
                 )
 
-                // Indicador de pieza
+                // Indicador de pieza mejorada
                 if (checker.isUpgraded) {
                     val upgradeColor = when (checker.color) {
                         WHITE -> blackPieceColor
                         BLACK -> whitePieceColor
                     }
 
-                    // Anillo para pieza
                     drawCircle(
                         color = upgradeColor,
-                        center = displayPos,
+                        center = pos,
                         radius = vWidth / 7,
                         style = Stroke(width = 3f)
                     )
 
-                    // Círculo interior para pieza
                     drawCircle(
                         color = upgradeColor,
-                        center = displayPos,
+                        center = pos,
                         radius = vWidth / 10
                     )
                 }
 
                 // Resaltado de selección
-                if (vertexId == selectedPiece) {
+                if (logicalVertexId == selectedPiece) {
                     drawCircle(
                         color = selectionIndicatorColor,
-                        center = displayPos,
+                        center = pos,
                         radius = vWidth / 4,
                         style = Stroke(width = 3f)
                     )
@@ -280,75 +282,79 @@ fun Board(
     }
 }
 
-private fun findClosestVertex(tapOffset: Offset, canvasWidth: Float, canvasHeight: Float, vWidth: Float): String? {
+// Función para obtener posición visual considerando landscape
+private fun getVisualPosition(
+    visualVertexId: String,
+    canvasWidth: Float,
+    canvasHeight: Float,
+    vWidth: Float,
+    isLandscape: Boolean,
+    playerSide: Color
+): Offset {
+    val basePos = AdaptivePositionHelper.getPosition(visualVertexId, canvasWidth to canvasHeight, vWidth, isLandscape)
+
+    // Aplicar rotación adicional si el jugador es negro
+    return if (playerSide == BLACK && !isLandscape) {
+        rotateAroundCenter(basePos, canvasWidth, canvasHeight)
+    } else {
+        basePos
+    }
+}
+
+// Función para encontrar vértice más cercano considerando playerSide y orientación
+private fun findClosestVertex(
+    tapOffset: Offset,
+    canvasWidth: Float,
+    canvasHeight: Float,
+    vWidth: Float,
+    playerSide: Color,
+    isLandscape: Boolean
+): String? {
     var closestVertex: String? = null
     var minDistance = Float.MAX_VALUE
     val maxTapDistance = vWidth / 2
 
-    GameBoard.vertices.forEach { vertexId ->
-        val pos = PositionHelper.getPosition(vertexId, canvasWidth to canvasHeight, vWidth)
+    val visualVertices = CoordinateSystem.getVisualCoordinates(playerSide)
+
+    visualVertices.forEach { visualVertexId ->
+        val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
         val distance = sqrt((tapOffset.x - pos.x).pow(2) + (tapOffset.y - pos.y).pow(2))
 
         if (distance < maxTapDistance && distance < minDistance) {
             minDistance = distance
-            closestVertex = vertexId
+            closestVertex = visualVertexId
         }
     }
 
     return closestVertex
 }
 
-// Rotación auxiliar: rota 'point' alrededor del centro del canvas (width/2, height/2) por angleRad (radianes)
-private fun rotateAroundCenter(point: Offset, width: Float, height: Float, angleRad: Double): Offset {
+// Funciones de rotación (mantener las existentes)
+private fun rotateAroundCenter(point: Offset, width: Float, height: Float, angleRad: Double = PI): Offset {
     val cx = width / 2f
     val cy = height / 2f
-
-    // Translate to origin
     val tx = point.x - cx
     val ty = point.y - cy
-
-    // Rotate
     val cosA = cos(angleRad)
     val sinA = sin(angleRad)
     val rx = (tx * cosA - ty * sinA).toFloat()
     val ry = (tx * sinA + ty * cosA).toFloat()
-
-    // Translate back
     return Offset(rx + cx, ry + cy)
 }
 
-// Inversa para los taps (rotación en sentido contrario)
-private fun inverseRotateAroundCenter(point: Offset, width: Float, height: Float, angleRad: Double): Offset {
-    // Rotar con -angleRad
-    return rotateAroundCenter(point, width, height, -angleRad)
-}
-
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
-fun BoardPreview() {
+fun BoardPreview_WithUpgrades() {
     TaratiTheme {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, false),
-                "D1" to Checker(WHITE, false),
-                "D2" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, false),
-                "D3" to Checker(BLACK, false),
-                "D4" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
+        val exampleGameState = initialGameStateWithUpgrades()
 
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
                 boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
-                onMove = { from, to ->
-                    println("Move from $from to $to")
-                },
+                onMove = { from, to -> println("Move from $from to $to") },
+                playerSide = WHITE,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
@@ -359,30 +365,17 @@ fun BoardPreview() {
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
-fun BoardPreview_Dark() {
+fun BoardPreview_MidGame() {
     TaratiTheme(true) {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, true),
-                "D1" to Checker(WHITE, false),
-                "D2" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, true),
-                "D3" to Checker(BLACK, false),
-                "D4" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
+        val exampleGameState = midGameState()
 
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
                 boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
-                onMove = { from, to ->
-                    println("Move from $from to $to")
-                },
+                onMove = { from, to -> println("Move from $from to $to") },
+                playerSide = BLACK,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
@@ -391,58 +384,41 @@ fun BoardPreview_Dark() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 500, heightDp = 400)
+@Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
-fun BoardPreview_Dark_Landscape() {
-    TaratiTheme(true) {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, true),
-                "D1" to Checker(WHITE, false),
-                "D2" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, true),
-                "D3" to Checker(BLACK, false),
-                "D4" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                boardSize = 350.dp,
-                vWidth = ((500.dp) / 3f).value,
-                onMove = { from, to ->
-                    println("Move from $from to $to")
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 500, heightDp = 400)
-@Composable
-fun BoardPreview_Landscape() {
+fun BoardPreview_Custom() {
     TaratiTheme {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, false),
-                "D1" to Checker(WHITE, false),
-                "D2" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, false),
-                "D3" to Checker(BLACK, false),
-                "D4" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
+        val exampleGameState = createGameState {
+            setTurn(WHITE)
+            setChecker("C2", WHITE, true)
+            setChecker("C8", BLACK, true)
+            setChecker("B1", WHITE, false)
+            setChecker("B4", BLACK, false)
+            // Agregar piezas extra para testing
+            setChecker("C5", WHITE, true)
+            setChecker("C11", BLACK, true)
+        }
 
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                gameState = exampleGameState,
+                boardSize = 350.dp,
+                vWidth = ((500.dp) / 3f).value,
+                onMove = { from, to -> println("Move from $from to $to") },
+                playerSide = WHITE,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 500)
+@Composable
+fun BoardPreview_BlackPlayer() {
+    TaratiTheme(true) {
+        val exampleGameState = createGameState { setTurn(BLACK) }
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
@@ -451,6 +427,51 @@ fun BoardPreview_Landscape() {
                 onMove = { from, to ->
                     println("Move from $from to $to")
                 },
+                playerSide = BLACK, // Jugador como negras
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, heightDp = 400)
+@Composable
+fun BoardPreview_Landscape_BlackPlayer() {
+    TaratiTheme {
+        val exampleGameState = createGameState { setTurn(BLACK) }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                gameState = exampleGameState,
+                boardSize = 350.dp,
+                vWidth = ((500.dp) / 3f).value,
+                onMove = { from, to ->
+                    println("Move from $from to $to")
+                },
+                playerSide = BLACK,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, heightDp = 400)
+@Composable
+fun BoardPreview_Landscape_Debug() {
+    TaratiTheme(true) {
+        val exampleGameState = createGameState {}
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                gameState = exampleGameState,
+                boardSize = 350.dp,
+                vWidth = ((500.dp) / 3f).value,
+                onMove = { from, to ->
+                    println("Move from $from to $to")
+                },
+                playerSide = WHITE,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
