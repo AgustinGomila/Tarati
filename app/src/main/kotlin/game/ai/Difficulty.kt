@@ -15,5 +15,8 @@ data class Difficulty(
 
         val ALL = listOf(EASY, MEDIUM, HARD, CHAMPION)
         val DEFAULT = MEDIUM
+
+        fun getByDepth(depth: Int): Difficulty =
+            ALL.firstOrNull { it.depth == depth } ?: MEDIUM
     }
 }

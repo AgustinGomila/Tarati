@@ -37,8 +37,8 @@ class SettingsRepositoryImpl() : SettingsRepository {
 
     override val difficulty: Flow<Difficulty> = dataStore.data
         .map { preferences ->
-            preferences[DIFFICULTY_KEY]?.let { index ->
-                Difficulty.ALL[index]
+            preferences[DIFFICULTY_KEY]?.let { depth ->
+                Difficulty.getByDepth(depth)
             } ?: Difficulty.DEFAULT
         }
 

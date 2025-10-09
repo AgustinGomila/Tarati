@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.dsl.NdkOptions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
@@ -40,6 +41,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            ndk.debugSymbolLevel = NdkOptions.DebugSymbolLevel.FULL.toString()
         }
     }
     compileOptions {
