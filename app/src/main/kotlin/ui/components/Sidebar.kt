@@ -142,7 +142,7 @@ fun Sidebar(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
-                    // Enfoque compatible - sin textFieldColors específico
+                    // Enfoque compatible
                     modifier = Modifier
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
