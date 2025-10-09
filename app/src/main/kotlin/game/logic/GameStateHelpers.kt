@@ -1,4 +1,8 @@
-package com.agustin.tarati.game
+package com.agustin.tarati.game.logic
+
+import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameState
 
 // Función de extensión para modificar piezas
 fun GameState.modifyChecker(position: String, color: Color? = null, isUpgraded: Boolean? = null): GameState {

@@ -59,7 +59,7 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 
 ### Latest Version: v1.0.0
 
-[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/blob/master/app/release/app-release.apk)
+[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/releases)
 
 **System Requirements:**
 
@@ -118,19 +118,24 @@ Control the board by converting your opponent's pieces through strategic moves.
 ### Project Structure
 
 ```
-app/
-├── ui/
-│   ├── components/       # Reusable components
-│   ├── screens/          # Main screens
-│   ├── localization/     # Localization manager
-│   └── theme/            # Design system
 ├── game/
-│   ├── AI.kt             # Artificial intelligence logic
-│   ├── GameBoard.kt      # Board definition
-│   ├── Difficulty.kt     # Difficulty data class
-│   └── GameState.kt      # State model
-└── helpers/
-    └── PositionHelper.kt # Position calculations
+│   ├── core/           # Game definitions
+│   ├── ai/             # Artificial intelligence logic
+│   ├── logic/          # Position and state logic
+│   └── utils/          # Coordinators and utilities
+└── ui/
+    ├── components/     # Reusable components
+    │   ├── board/
+    │   ├── sidebar/
+    │   └── common/     # Common components
+    ├── screens/        # Main screens
+    │   ├── main/
+    │   ├── settings/
+    │   └── splash/
+    ├── navigation/     # Navigation system
+    ├── localization/   # Language manager
+    ├── theme/          # Design system
+    └── preview/        # Preview utilities
 ```
 
 ## 🧠 Symbols and Meaning
@@ -198,8 +203,8 @@ Contributions are welcome. Please:
 
 ## 📞 Contact
 
-**Developer**: [Agustín Gomila](https://github.com/AgustinGomila)  
-**Email**: [gomila.agustin@gmail.com]  
+**Developer**: [Agustín Gomila](https://github.com/AgustinGomila)
+**Email**: [gomila.agustin@gmail.com]
 **Project**: [Tarati](https://github.com/AgustinGomila/Tarati)
 
 ---

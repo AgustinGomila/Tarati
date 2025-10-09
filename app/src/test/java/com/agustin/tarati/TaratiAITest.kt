@@ -1,10 +1,10 @@
 package com.agustin.tarati
 
-import com.agustin.tarati.game.Checker
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.TaratiAI
-import com.agustin.tarati.game.applyMoveToBoard
+import com.agustin.tarati.game.ai.TaratiAI
+import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.applyMoveToBoard
 import org.junit.Assert
 import org.junit.Test
 

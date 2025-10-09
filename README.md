@@ -59,7 +59,7 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 
 ### Última Versión: v1.0.0
 
-[![Descargar APK](https://img.shields.io/badge/Descargar_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/blob/master/app/release/app-release.apk)
+[![Descargar APK](https://img.shields.io/badge/Descargar_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/releases)
 
 **Requisitos del sistema:**
 
@@ -118,19 +118,23 @@ Controlar el tablero convirtiendo las piezas del oponente mediante movimientos e
 ### Estructura del Proyecto
 
 ```
-app/
-├── ui/
-│   ├── components/       # Componentes reutilizables
-│   ├── screens/          # Pantallas principales
-│   ├── localization/     # Administrador de idiomas
-│   └── theme/            # Sistema de diseño
 ├── game/
-│   ├── AI.kt             # Lógica de inteligencia artificial
-│   ├── GameBoard.kt      # Definición del tablero
-│   ├── Difficulty.kt     # Clase de datos de dificultades
-│   └── GameState.kt      # Modelo de estado
-└── helpers/
-    └── PositionHelper.kt # Cálculo de posiciones
+│   ├── core/          # Definiciones del juego
+│   ├── ai/            # Lógica de inteligencia artificial
+│   ├── logic/         # Lógica de posiciones y estado
+│   └── utils/         # Coordinadores
+└── ui/
+    ├── components/    # Componentes reutilizables
+    │   ├── board/
+    │   ├── sidebar/
+    ├── screens/       # Pantallas principales
+    │   ├── main/
+    │   ├── settings/
+    │   └── splash/
+    ├── navigation/     # Sistema de navegación
+    ├── localization/   # Administrador de idiomas
+    ├── theme/          # Sistema de diseño
+    └── preview/        # Utilidades para vistas previas
 ```
 
 ## 🧠 Símbolos y Significado
@@ -198,8 +202,8 @@ Las contribuciones son bienvenidas. Por favor:
 
 ## 📞 Contacto
 
-**Desarrollador**: [Agustín Gomila](https://github.com/AgustinGomila)  
-**Email**: [gomila.agustin@gmail.com]  
+**Desarrollador**: [Agustín Gomila](https://github.com/AgustinGomila)
+**Email**: [gomila.agustin@gmail.com]
 **Proyecto**: [Tarati](https://github.com/AgustinGomila/Tarati)
 
 ---

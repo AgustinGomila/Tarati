@@ -1,12 +1,13 @@
-package com.agustin.tarati.ui.components
+package com.agustin.tarati.ui.preview
 
-import com.agustin.tarati.game.Color.BLACK
-import com.agustin.tarati.game.Color.WHITE
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.createGameState
-import com.agustin.tarati.game.modifyChecker
-import com.agustin.tarati.game.withTurn
-import com.agustin.tarati.ui.screens.main.ScreenViewModel.Companion.initialGameState
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.logic.createGameState
+import com.agustin.tarati.game.logic.modifyChecker
+import com.agustin.tarati.game.logic.withTurn
+import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 
 /**
  * Estados de juego predefinidos para previews
@@ -31,10 +32,9 @@ fun midGameState(): GameState {
     }
 }
 
-@Suppress("unused")
-fun endGameState(): GameState {
+fun endGameState(turn: Color): GameState {
     return createGameState {
-        setTurn(WHITE)
+        setTurn(turn)
         // Pocas piezas restantes
         setChecker("A1", WHITE, true)
         setChecker("B3", WHITE, false)

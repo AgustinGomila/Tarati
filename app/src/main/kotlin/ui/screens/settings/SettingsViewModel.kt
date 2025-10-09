@@ -2,7 +2,7 @@ package com.agustin.tarati.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agustin.tarati.game.Difficulty
+import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableStateFlow

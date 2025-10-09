@@ -1,4 +1,4 @@
-package com.agustin.tarati.game
+package com.agustin.tarati.game.ai
 
 import androidx.annotation.StringRes
 import com.agustin.tarati.R

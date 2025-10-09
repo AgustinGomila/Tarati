@@ -1,6 +1,7 @@
-package com.agustin.tarati.game
+package com.agustin.tarati.game.core
 
-data class Checker(val color: Color, val isUpgraded: Boolean = false)
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
 
 data class GameState(
     val checkers: Map<String, Checker>,
@@ -28,11 +29,11 @@ fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState 
     var placedChecker = movedChecker
 
     // Check for upgrades when moved into opponent home base
-    val whiteBase = GameBoard.homeBases[Color.WHITE] ?: emptyList()
-    val blackBase = GameBoard.homeBases[Color.BLACK] ?: emptyList()
-    if (whiteBase.contains(to) && movedChecker.color == Color.BLACK) {
+    val whiteBase = GameBoard.homeBases[WHITE] ?: emptyList()
+    val blackBase = GameBoard.homeBases[BLACK] ?: emptyList()
+    if (whiteBase.contains(to) && movedChecker.color == BLACK) {
         placedChecker = movedChecker.copy(isUpgraded = true)
-    } else if (blackBase.contains(to) && movedChecker.color == Color.WHITE) {
+    } else if (blackBase.contains(to) && movedChecker.color == WHITE) {
         placedChecker = movedChecker.copy(isUpgraded = true)
     }
     mutable[to] = placedChecker
@@ -46,9 +47,9 @@ fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState 
             if (adjChecker != null && adjChecker.color != placedChecker.color) {
                 var newAdj = adjChecker.copy(color = placedChecker.color)
                 // Check for upgrades for flipped piece
-                if (whiteBase.contains(adjacent) && newAdj.color == Color.BLACK) {
+                if (whiteBase.contains(adjacent) && newAdj.color == BLACK) {
                     newAdj = newAdj.copy(isUpgraded = true)
-                } else if (blackBase.contains(adjacent) && newAdj.color == Color.WHITE) {
+                } else if (blackBase.contains(adjacent) && newAdj.color == WHITE) {
                     newAdj = newAdj.copy(isUpgraded = true)
                 }
                 mutable[adjacent] = newAdj

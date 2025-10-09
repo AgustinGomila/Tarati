@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components
+package com.agustin.tarati.ui.components.sidebar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,10 +27,12 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,14 +46,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.Color.BLACK
-import com.agustin.tarati.game.Color.WHITE
-import com.agustin.tarati.game.Difficulty
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.Move
+import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
+import com.agustin.tarati.ui.preview.customGameState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,7 +204,7 @@ fun Sidebar(
 
             // Botón de toggle AI (icono solamente)
             Spacer(modifier = Modifier.width(8.dp))
-            androidx.compose.material3.IconButton(
+            IconButton(
                 onClick = onToggleAI,
                 modifier = Modifier.size(48.dp)
             ) {
@@ -374,9 +377,6 @@ fun Sidebar(
         }
     }
 }
-
-// Función auxiliar para crear un tema oscuro en los previews
-private fun darkColorScheme() = androidx.compose.material3.darkColorScheme()
 
 @Preview(showBackground = true, widthDp = 280, heightDp = 800)
 @Composable

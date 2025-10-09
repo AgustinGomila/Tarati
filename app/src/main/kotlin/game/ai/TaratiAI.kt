@@ -1,12 +1,15 @@
-package com.agustin.tarati.game
+package com.agustin.tarati.game.ai
 
-import com.agustin.tarati.helpers.PositionHelper
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.applyMoveToBoard
+import com.agustin.tarati.game.logic.PositionHelper.getPosition
 import kotlin.math.max
 import kotlin.math.min
-
-data class Move(val from: String, val to: String)
-
-data class Result(val score: Double, val move: Move?)
 
 // --- IA: constantes y tabla de trasposición ---
 object TaratiAI {
@@ -84,8 +87,8 @@ object TaratiAI {
     private fun quickEvaluate(gameState: GameState): Double {
         var score = 0.0
         for ((_, checker) in gameState.checkers) {
-            score += if (checker.color == Color.BLACK) 1.0 else -1.0
-            if (checker.isUpgraded) score += if (checker.color == Color.BLACK) 0.5 else -0.5
+            score += if (checker.color == BLACK) 1.0 else -1.0
+            if (checker.isUpgraded) score += if (checker.color == BLACK) 0.5 else -0.5
         }
         return score
     }
@@ -106,7 +109,7 @@ object TaratiAI {
 
         for ((_, checker) in gameState.checkers) {
             val pieceValue = if (checker.isUpgraded) 1.5 else 1.0
-            if (checker.color == Color.WHITE) {
+            if (checker.color == WHITE) {
                 whitePieces += pieceValue
                 if (checker.isUpgraded) whiteUpgrades++
             } else {
@@ -141,17 +144,17 @@ object TaratiAI {
         // Apply move using the board mutator (does NOT toggle turn)
         val newState = applyMoveToBoard(boardState, from, to)
         // toggle turn (Does this outside applyMoveToBoard; AI.ApplyMoveAI must toggle)
-        val nextTurn = if (boardState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
+        val nextTurn = if (boardState.currentTurn == WHITE) BLACK else WHITE
         return newState.copy(currentTurn = nextTurn)
     }
 
     fun isForwardMove(color: Color, from: String, to: String): Boolean {
         val boardCenter = 250f to 250f
         val vWidth = 250f
-        val fromPos = PositionHelper.getPosition(from, boardCenter, vWidth)
-        val toPos = PositionHelper.getPosition(to, boardCenter, vWidth)
+        val fromPos = getPosition(from, boardCenter, vWidth)
+        val toPos = getPosition(to, boardCenter, vWidth)
 
-        return if (color == Color.WHITE) {
+        return if (color == WHITE) {
             fromPos.y - toPos.y > 10
         } else {
             toPos.y - fromPos.y > 10
@@ -177,10 +180,10 @@ object TaratiAI {
             val boardCenter = 250f to 250f
             val vWidth = 250f
 
-            val fromPos = PositionHelper.getPosition(from, boardCenter, vWidth)
-            val toPos = PositionHelper.getPosition(to, boardCenter, vWidth)
+            val fromPos = getPosition(from, boardCenter, vWidth)
+            val toPos = getPosition(to, boardCenter, vWidth)
 
-            return if (checker.color == Color.WHITE) {
+            return if (checker.color == WHITE) {
                 fromPos.y - toPos.y > 10
             } else {
                 toPos.y - fromPos.y > 10

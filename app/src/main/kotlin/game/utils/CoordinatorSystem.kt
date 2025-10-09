@@ -1,7 +1,7 @@
-package com.agustin.tarati.ui.components
+package com.agustin.tarati.game.utils
 
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.GameBoard
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameBoard
 
 object CoordinateSystem {
 

@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.screens.main
+package com.agustin.tarati.ui
 
 import android.content.Context
 import android.content.res.Configuration
@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import com.agustin.tarati.ui.localization.LanguageAwareApp
-import com.agustin.tarati.ui.navigation.NavigationScreen
+import com.agustin.tarati.ui.navigation.TaratiNavGraph
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
 import com.agustin.tarati.ui.theme.TaratiTheme
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        NavigationScreen(
+                        TaratiNavGraph(
                             onThemeChange = { viewModel.toggleDarkTheme(it == AppTheme.MODE_NIGHT) },
                             onLanguageChange = { viewModel.setLanguage(it) }
                         )

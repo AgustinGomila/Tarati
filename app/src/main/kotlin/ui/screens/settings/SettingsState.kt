@@ -1,6 +1,6 @@
 package com.agustin.tarati.ui.screens.settings
 
-import com.agustin.tarati.game.Difficulty
+import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
 

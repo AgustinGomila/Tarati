@@ -1,11 +1,10 @@
-package com.agustin.tarati.helpers
+package com.agustin.tarati.game.logic
 
 import androidx.compose.ui.geometry.Offset
+import com.agustin.tarati.game.core.Position
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-
-data class Position(val x: Float, val y: Float)
 
 object PositionHelper {
     fun getPosition(vertexId: String, boardSize: Pair<Float, Float>, vWidth: Float): Position {

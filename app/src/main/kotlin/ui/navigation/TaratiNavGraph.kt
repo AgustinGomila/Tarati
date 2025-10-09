@@ -11,7 +11,7 @@ import com.agustin.tarati.ui.screens.splash.SplashScreen
 import com.agustin.tarati.ui.theme.AppTheme
 
 @Composable
-fun NavigationScreen(
+fun TaratiNavGraph(
     onThemeChange: (AppTheme) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
 ) {

@@ -43,18 +43,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.Difficulty
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.Move
-import com.agustin.tarati.game.TaratiAI
-import com.agustin.tarati.game.applyMoveToBoard
-import com.agustin.tarati.ui.components.Board
-import com.agustin.tarati.ui.components.Sidebar
-import com.agustin.tarati.ui.components.TurnIndicator
+import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.TaratiAI
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.applyMoveToBoard
+import com.agustin.tarati.ui.components.board.Board
+import com.agustin.tarati.ui.components.board.TurnIndicator
+import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
-import com.agustin.tarati.ui.screens.main.ScreenViewModel.Companion.initialGameState
+import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -71,7 +71,7 @@ fun MainScreen(navController: NavController) {
     val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // ViewModel que guarda estado, historial y dificultad
-    val viewModel: ScreenViewModel = viewModel()
+    val viewModel: MainViewModel = viewModel()
 
     // Observamos el gameState del ViewModel. Si es null, creamos un estado inicial
     val vmGameState by viewModel.gameState.collectAsState(initialGameState())
@@ -322,7 +322,6 @@ fun MainScreen(navController: NavController) {
                     ) {
                         Board(
                             gameState = vmGameState,
-                            boardSize = boardSize,
                             vWidth = vWidth,
                             onMove = { from, to -> applyMove(from, to) },
                             playerSide = vmPlayerSide,
@@ -544,9 +543,8 @@ private fun MainScreenPreviewContent(
                             // Usamos el Board real en lugar de placeholder
                             Board(
                                 gameState = previewGameState,
-                                boardSize = boardSize,
                                 vWidth = vWidth,
-                                onMove = { from, to ->
+                                onMove = { _, _ ->
                                     // Simulación de movimiento para el preview
                                     previewGameState = initialGameState(
                                         if (previewGameState.currentTurn == Color.WHITE)

@@ -2,11 +2,11 @@ package com.agustin.tarati.ui.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agustin.tarati.game.Checker
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.Difficulty
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.Move
+import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext.get
 
-class ScreenViewModel : ViewModel() {
+class MainViewModel : ViewModel() {
 
     private val sr: SettingsRepository by lazy { get().get() }
 

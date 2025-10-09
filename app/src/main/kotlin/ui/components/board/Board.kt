@@ -1,5 +1,6 @@
-package com.agustin.tarati.ui.components
+package com.agustin.tarati.ui.components.board
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,17 +18,20 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agustin.tarati.game.Color
-import com.agustin.tarati.game.Color.BLACK
-import com.agustin.tarati.game.Color.WHITE
-import com.agustin.tarati.game.GameBoard
-import com.agustin.tarati.game.GameState
-import com.agustin.tarati.game.TaratiAI
-import com.agustin.tarati.game.createGameState
-import com.agustin.tarati.helpers.AdaptivePositionHelper
+import com.agustin.tarati.game.ai.TaratiAI
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.logic.AdaptivePositionHelper
+import com.agustin.tarati.game.logic.createGameState
+import com.agustin.tarati.game.utils.CoordinateSystem
+import com.agustin.tarati.ui.preview.endGameState
+import com.agustin.tarati.ui.preview.initialGameStateWithUpgrades
+import com.agustin.tarati.ui.preview.midGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -37,19 +41,20 @@ import kotlin.math.sqrt
 
 @Composable
 fun Board(
+    modifier: Modifier = Modifier,
     gameState: GameState,
-    boardSize: Dp,
     vWidth: Float,
     onMove: (from: String, to: String) -> Unit,
     playerSide: Color,
-    modifier: Modifier = Modifier
+    selectedPiece: String? = null,
+    highlightedMoves: List<String> = listOf()
 ) {
-    // ViewModel que guarda estado, historial y dificultad
+    // ViewModel que guarda la pieza seleccionada y las piezas resaltadas
     val viewModel: BoardViewModel = viewModel()
 
     // Observamos el gameState del ViewModel. Si es null, creamos un estado inicial
-    val vmSelectedPiece by viewModel.selectedPiece.collectAsState(null as String?)
-    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState(emptyList())
+    val vmSelectedPiece by viewModel.selectedPiece.collectAsState(selectedPiece)
+    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState(highlightedMoves)
 
     // Colores del tema
     val backgroundColor = MaterialTheme.colorScheme.surface
@@ -130,12 +135,9 @@ fun Board(
                                 if (TaratiAI.isValidMove(gameState, vmSelectedPiece!!, logicalVertexId)) {
                                     onMove(vmSelectedPiece!!, logicalVertexId)
                                 }
-                                viewModel.updateSelectedPiece(null)
-                                viewModel.updateHighlightedMoves(emptyList())
-                            } else {
-                                viewModel.updateSelectedPiece(null)
-                                viewModel.updateHighlightedMoves(emptyList())
                             }
+                            viewModel.updateSelectedPiece(null)
+                            viewModel.updateHighlightedMoves(emptyList())
                         }
                     }
                 }
@@ -193,10 +195,21 @@ fun Board(
 
                 val checker = gameState.checkers[logicalVertexId]
                 val vertexColor = when {
-                    logicalVertexId == vmSelectedPiece -> vertexSelectedColor
-                    vmHighlightedMoves.contains(visualVertexId) -> vertexHighlightColor
-                    checker != null -> vertexOccupiedColor
-                    else -> vertexDefaultColor
+                    logicalVertexId == vmSelectedPiece -> {
+                        vertexSelectedColor
+                    }
+
+                    vmHighlightedMoves.contains(visualVertexId) -> {
+                        vertexHighlightColor
+                    }
+
+                    checker != null -> {
+                        vertexOccupiedColor
+                    }
+
+                    else -> {
+                        vertexDefaultColor
+                    }
                 }
 
                 // Vértice
@@ -216,7 +229,7 @@ fun Board(
                         visualVertexId,
                         pos.x - vWidth / 6,
                         pos.y - vWidth / 6,
-                        android.graphics.Paint().apply {
+                        Paint().apply {
                             color = textColor.hashCode()
                             textSize = vWidth / 8
                             isAntiAlias = true
@@ -350,11 +363,9 @@ private fun rotateAroundCenter(point: Offset, width: Float, height: Float, angle
 fun BoardPreview_WithUpgrades() {
     TaratiTheme {
         val exampleGameState = initialGameStateWithUpgrades()
-
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to -> println("Move from $from to $to") },
                 playerSide = WHITE,
@@ -371,11 +382,9 @@ fun BoardPreview_WithUpgrades() {
 fun BoardPreview_MidGame() {
     TaratiTheme(true) {
         val exampleGameState = midGameState()
-
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to -> println("Move from $from to $to") },
                 playerSide = BLACK,
@@ -404,14 +413,15 @@ fun BoardPreview_Custom() {
 
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to -> println("Move from $from to $to") },
                 playerSide = WHITE,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                selectedPiece = "B1",
+                highlightedMoves = listOf("B2", "A1", "B6")
             )
         }
     }
@@ -421,19 +431,20 @@ fun BoardPreview_Custom() {
 @Composable
 fun BoardPreview_BlackPlayer() {
     TaratiTheme(true) {
-        val exampleGameState = createGameState { setTurn(BLACK) }
+        val exampleGameState = endGameState(BLACK)
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to ->
                     println("Move from $from to $to")
                 },
-                playerSide = BLACK, // Jugador como negras
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                playerSide = BLACK,
+                selectedPiece = "A1",
+                highlightedMoves = listOf("B1", "B2", "B3", "B4", "B5", "B6")
             )
         }
     }
@@ -446,16 +457,17 @@ fun BoardPreview_Landscape_BlackPlayer() {
         val exampleGameState = createGameState { setTurn(BLACK) }
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to ->
                     println("Move from $from to $to")
                 },
                 playerSide = BLACK,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                selectedPiece = "C2",
+                highlightedMoves = listOf("C9", "B4", "B5")
             )
         }
     }
@@ -468,16 +480,17 @@ fun BoardPreview_Landscape_Debug() {
         val exampleGameState = createGameState {}
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 gameState = exampleGameState,
-                boardSize = 350.dp,
                 vWidth = ((500.dp) / 3f).value,
                 onMove = { from, to ->
                     println("Move from $from to $to")
                 },
                 playerSide = WHITE,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                selectedPiece = "C2",
+                highlightedMoves = listOf("C3", "B2", "B1")
             )
         }
     }

@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components
+package com.agustin.tarati.ui.components.board
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,7 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.agustin.tarati.game.Color as SideColor
+import com.agustin.tarati.game.core.Color as SideColor
 
 @Composable
 fun TurnIndicator(

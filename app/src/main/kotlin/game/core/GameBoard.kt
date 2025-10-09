@@ -1,6 +1,4 @@
-package com.agustin.tarati.game
-
-enum class Color { WHITE, BLACK }
+package com.agustin.tarati.game.core
 
 object GameBoard {
     val vertices: List<String> = listOf(
