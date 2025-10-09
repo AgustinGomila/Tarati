@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -42,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
-import com.agustin.tarati.game.Checker
+import com.agustin.tarati.game.Color
 import com.agustin.tarati.game.Color.BLACK
 import com.agustin.tarati.game.Color.WHITE
 import com.agustin.tarati.game.Difficulty
@@ -59,8 +61,9 @@ fun Sidebar(
     currentMoveIndex: Int,
     isAIEnabled: Boolean,
     difficulty: Difficulty,
+    playerSide: Color,
     onSettings: () -> Unit,
-    onNewGame: () -> Unit,
+    onNewGame: (Color) -> Unit,
     onToggleAI: () -> Unit,
     onDifficultyChange: (Difficulty) -> Unit,
     onUndo: () -> Unit,
@@ -98,79 +101,126 @@ fun Sidebar(
             LocalizedText(R.string.settings)
         }
 
-        Button(
-            onClick = onNewGame,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            LocalizedText(id = R.string.new_game)
-        }
+        LocalizedText(
+            id = R.string.new_game,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
-        Button(
-            onClick = onToggleAI,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
-            )
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LocalizedText(
-                if (isAIEnabled) R.string.disable_ai
-                else R.string.enable_ai
-            )
-        }
-
-        // Selector de dificultad
-        Column {
-            LocalizedText(
-                id = R.string.ai_difficulty,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    value = stringResource(difficulty.displayNameRes),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    // Enfoque compatible
-                    modifier = Modifier
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth()
+            Button(
+                onClick = { onNewGame(WHITE) },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (playerSide == WHITE)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (playerSide == WHITE)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            ) {
+                LocalizedText(R.string.white)
+            }
 
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    Difficulty.ALL.forEach { difficultyOption ->
-                        DropdownMenuItem(
-                            text = {
-                                LocalizedText(
-                                    difficultyOption.displayNameRes,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            },
-                            onClick = {
-                                onDifficultyChange(difficultyOption)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
+            Button(
+                onClick = { onNewGame(BLACK) },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (playerSide == BLACK)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (playerSide == BLACK)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                LocalizedText(R.string.black)
             }
         }
 
-        // Indicador de turno
+        // Sección de IA y Dificultad en una fila
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Selector de dificultad
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                LocalizedText(
+                    id = R.string.ai_difficulty,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    TextField(
+                        value = stringResource(difficulty.displayNameRes),
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        Difficulty.ALL.forEach { difficultyOption ->
+                            DropdownMenuItem(
+                                text = {
+                                    LocalizedText(
+                                        difficultyOption.displayNameRes,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    onDifficultyChange(difficultyOption)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Botón de toggle AI (icono solamente)
+            Spacer(modifier = Modifier.width(8.dp))
+            androidx.compose.material3.IconButton(
+                onClick = onToggleAI,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector =
+                        if (isAIEnabled) Icons.Filled.SmartToy
+                        else Icons.Outlined.SmartToy,
+                    contentDescription = stringResource(
+                        if (isAIEnabled) R.string.disable_ai
+                        else R.string.enable_ai
+                    ),
+                    tint =
+                        if (isAIEnabled) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+
+        // Indicador de turno con información del jugador
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,8 +234,12 @@ fun Sidebar(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            val t = localizedString(R.string.current_turn)
-            val t2 = localizedString(
+            val currentPlayerText = when {
+                gameState.currentTurn == playerSide -> stringResource(R.string.your_turn)
+                else -> stringResource(R.string.opponent_turn)
+            }
+
+            val turnText = localizedString(
                 when (gameState.currentTurn) {
                     BLACK -> R.string.black
                     else -> R.string.white
@@ -193,7 +247,7 @@ fun Sidebar(
             )
 
             Text(
-                String.format(t, t2),
+                "$currentPlayerText: $turnText",
                 color = if (gameState.currentTurn == BLACK)
                     MaterialTheme.colorScheme.onSecondary
                 else
@@ -328,20 +382,7 @@ private fun darkColorScheme() = androidx.compose.material3.darkColorScheme()
 @Composable
 fun SidebarPreview() {
     MaterialTheme {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, false),
-                "D1" to Checker(WHITE, false),
-                "D2" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, false),
-                "D3" to Checker(BLACK, false),
-                "D4" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
-
+        val exampleGameState = customGameState()
         val exampleMoveHistory = listOf(
             Move("C1", "B1"),
             Move("C7", "B4"),
@@ -355,6 +396,7 @@ fun SidebarPreview() {
             currentMoveIndex = 2,
             isAIEnabled = true,
             difficulty = Difficulty.DEFAULT,
+            playerSide = WHITE,
             onSettings = { },
             onNewGame = { },
             onToggleAI = { },
@@ -373,18 +415,7 @@ fun SidebarPreview_Dark() {
     MaterialTheme(
         colorScheme = darkColorScheme()
     ) {
-        val exampleGameState = GameState(
-            checkers = mapOf(
-                "C1" to Checker(WHITE, false),
-                "C2" to Checker(WHITE, false),
-                "B1" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false),
-                "C8" to Checker(BLACK, false),
-                "B4" to Checker(BLACK, false)
-            ),
-            currentTurn = BLACK
-        )
-
+        val exampleGameState = customGameState()
         val exampleMoveHistory = listOf(
             Move("C1", "B1"),
             Move("C7", "B4")
@@ -396,6 +427,39 @@ fun SidebarPreview_Dark() {
             currentMoveIndex = 1,
             isAIEnabled = false,
             difficulty = Difficulty.HARD,
+            playerSide = BLACK,
+            onSettings = { },
+            onNewGame = { },
+            onToggleAI = { },
+            onDifficultyChange = { },
+            onUndo = { },
+            onRedo = { },
+            onMoveToCurrent = { },
+            onAboutClick = { }
+        )
+    }
+}
+
+
+@Preview(showBackground = true, widthDp = 280, heightDp = 800)
+@Composable
+fun SidebarPreview_CustomState() {
+    MaterialTheme {
+        val exampleGameState = customGameState()
+        val exampleMoveHistory = listOf(
+            Move("C1", "B1"),
+            Move("C7", "B4"),
+            Move("B1", "A1"),
+            Move("B4", "A1")
+        )
+
+        Sidebar(
+            gameState = exampleGameState,
+            moveHistory = exampleMoveHistory,
+            currentMoveIndex = 2,
+            isAIEnabled = true,
+            difficulty = Difficulty.MEDIUM,
+            playerSide = WHITE,
             onSettings = { },
             onNewGame = { },
             onToggleAI = { },

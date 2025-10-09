@@ -54,4 +54,6 @@
     <string name="current_turn">Turno Actual: %1$s</string>
     <string name="yes">Sí</string>
     <string name="cancel">Cancelar</string>
+    <string name="your_turn">Tu turno</string>
+    <string name="opponent_turn">Turno del oponente</string>
 </resources>
