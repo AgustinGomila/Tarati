@@ -1,17 +1,15 @@
 package com.agustin.tarati.ui.screens.main
 
-import androidx.compose.foundation.background
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
@@ -36,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,11 +50,11 @@ import com.agustin.tarati.game.GameState
 import com.agustin.tarati.game.Move
 import com.agustin.tarati.game.TaratiAI
 import com.agustin.tarati.game.applyMoveToBoard
-import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.components.Board
 import com.agustin.tarati.ui.components.Sidebar
 import com.agustin.tarati.ui.components.TurnIndicator
-import com.agustin.tarati.ui.navigation.ScreenDestinations
+import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -68,6 +67,8 @@ fun MainScreen(navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Estados del juego
     fun initialGameState(): GameState {
@@ -91,6 +92,7 @@ fun MainScreen(navController: NavController) {
     var stopAI by remember { mutableStateOf(false) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var boardSize by remember { mutableStateOf(500.dp) }
+
     // Estados para diálogos
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
@@ -201,96 +203,23 @@ fun MainScreen(navController: NavController) {
 
     // Diálogo About
     if (showAboutDialog) {
-        AlertDialog(
-            onDismissRequest = { showAboutDialog = false },
-            title = { LocalizedText(id = (R.string.about_tarati)) },
-            text = {
-                Column {
-                    LocalizedText(
-                        id = R.string.tarati_is_a_strategic_board_game_created_by_george_spencer_brown,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    LocalizedText(
-                        id = (R.string.game_rules),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                    LocalizedText(
-                        id = (R.string.players_2_white_vs_black_objective_control_the_board),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LocalizedText(
-                        id = (R.string.credits),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                    LocalizedText(
-                        id = (R.string.original_concept_george_spencer_brown),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showAboutDialog = false }
-                ) {
-                    LocalizedText(id = (R.string.close))
-                }
-            }
-        )
+        aboutDialog(showAboutDialog = { showAboutDialog = it })
     }
 
     // Diálogo de fin de juego
     if (showGameOverDialog) {
-        AlertDialog(
-            onDismissRequest = { showGameOverDialog = false },
-            title = { LocalizedText(id = (R.string.game_over)) },
-            text = { Text(gameOverMessage) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showGameOverDialog = false
-                        startNewGame()
-                    }
-                ) {
-                    LocalizedText(id = (R.string.new_game))
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showGameOverDialog = false }
-                ) {
-                    LocalizedText(id = (R.string.continue_))
-                }
-            }
+        gameOverDialog(
+            gameOverMessage = gameOverMessage,
+            showGameOverDialog = { showGameOverDialog = it },
+            onConfirmed = ::startNewGame
         )
     }
 
     // Diálogo de confirmación de nueva partida
     if (showNewGameDialog) {
-        AlertDialog(
-            onDismissRequest = { showNewGameDialog = false },
-            title = { LocalizedText(id = (R.string.new_game)) },
-            text = { LocalizedText(id = (R.string.are_you_sure_you_want_to_start_a_new_game)) },
-            confirmButton = {
-                Button(
-                    onClick = { startNewGame() }
-                ) {
-                    LocalizedText(R.string.yes)
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showNewGameDialog = false }
-                ) {
-                    LocalizedText(R.string.cancel)
-                }
-            }
+        newGameDialog(
+            showNewGameDialog = { showNewGameDialog = it },
+            onConfirmed = ::startNewGame
         )
     }
 
@@ -303,13 +232,13 @@ fun MainScreen(navController: NavController) {
                 currentMoveIndex = currentMoveIndex,
                 isAIEnabled = isAIEnabled,
                 difficulty = difficulty,
-                onSettings = { navController.navigate(ScreenDestinations.SettingsScreenDest.route) },
+                onSettings = { navController.navigate(SettingsScreenDest.route) },
                 onNewGame = { showNewGameDialog = true },
                 onToggleAI = { isAIEnabled = !isAIEnabled },
                 onDifficultyChange = { difficulty = it },
-                onUndo = { undoMove() },
-                onRedo = { redoMove() },
-                onMoveToCurrent = { moveToCurrentState() },
+                onUndo = ::undoMove,
+                onRedo = ::redoMove,
+                onMoveToCurrent = ::moveToCurrentState,
                 onAboutClick = {
                     showAboutDialog = true
                     scope.launch { drawerState.close() }
@@ -351,11 +280,14 @@ fun MainScreen(navController: NavController) {
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    LocalizedText(
-                        id = (R.string.a_board_game_by_george_spencer_brown),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                    // Detectar orientación del canvas
+                    if (!isLandscapeScreen) {
+                        LocalizedText(
+                            id = (R.string.a_board_game_by_george_spencer_brown),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
 
                     Box(
                         modifier = Modifier
@@ -388,45 +320,171 @@ fun MainScreen(navController: NavController) {
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable
-fun MainScreenPreview() {
-    TaratiTheme {
-        MainScreen(rememberNavController())
-    }
+fun aboutDialog(showAboutDialog: (Boolean) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { showAboutDialog(false) },
+        title = { LocalizedText(id = (R.string.about_tarati)) },
+        text = {
+            Column {
+                LocalizedText(
+                    id = R.string.tarati_is_a_strategic_board_game_created_by_george_spencer_brown,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                LocalizedText(
+                    id = (R.string.game_rules),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                LocalizedText(
+                    id = (R.string.players_2_white_vs_black_objective_control_the_board),
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LocalizedText(
+                    id = (R.string.credits),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                LocalizedText(
+                    id = (R.string.original_concept_george_spencer_brown),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { showAboutDialog(false) }
+            ) {
+                LocalizedText(id = (R.string.close))
+            }
+        }
+    )
 }
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable
-fun MainScreenPreview_Dark() {
-    TaratiTheme(darkTheme = true) {
-        MainScreen(rememberNavController())
-    }
+fun gameOverDialog(
+    gameOverMessage: String,
+    showGameOverDialog: (Boolean) -> Unit,
+    onConfirmed: () -> Unit,
+    onDismissed: () -> Unit = {},
+) {
+    AlertDialog(
+        onDismissRequest = { showGameOverDialog(false) },
+        title = { LocalizedText(id = (R.string.game_over)) },
+        text = { Text(gameOverMessage) },
+        confirmButton = {
+            Button(
+                onClick = {
+                    showGameOverDialog(false)
+                    onConfirmed()
+                }
+            ) {
+                LocalizedText(id = (R.string.new_game))
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { showGameOverDialog(false) }
+            ) {
+                LocalizedText(id = (R.string.continue_))
+            }
+        }
+    )
 }
 
-// Preview simplificado del drawer abierto
+@Composable
+fun newGameDialog(showNewGameDialog: (Boolean) -> Unit, onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
+    AlertDialog(
+        onDismissRequest = { showNewGameDialog(false) },
+        title = { LocalizedText(id = (R.string.new_game)) },
+        text = { LocalizedText(id = (R.string.are_you_sure_you_want_to_start_a_new_game)) },
+        confirmButton = {
+            Button(
+                onClick = { onConfirmed() }
+            ) {
+                LocalizedText(R.string.yes)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { showNewGameDialog(false) }
+            ) {
+                LocalizedText(R.string.cancel)
+            }
+        }
+    )
+}
+
+// Función base reutilizable para los previews
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, widthDp = 411, heightDp = 891)
 @Composable
-fun MainScreenPreview_WithDrawer() {
-    TaratiTheme {
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
+private fun MainScreenPreviewContent(
+    darkTheme: Boolean = false,
+    drawerStateValue: DrawerValue = DrawerValue.Open,
+    landScape: Boolean,
+) {
+    TaratiTheme(darkTheme = darkTheme) {
+        val drawerState = rememberDrawerState(initialValue = drawerStateValue)
         val scope = rememberCoroutineScope()
+        val navController = rememberNavController()
+
+        // Reutilizamos la misma función de initialGameState del código principal
+        fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
+            val map = mapOf(
+                "C1" to Checker(Color.WHITE, false),
+                "C2" to Checker(Color.WHITE, false),
+                "D1" to Checker(Color.WHITE, false),
+                "D2" to Checker(Color.WHITE, false),
+                "C7" to Checker(Color.BLACK, false),
+                "C8" to Checker(Color.BLACK, false),
+                "D3" to Checker(Color.BLACK, false),
+                "D4" to Checker(Color.BLACK, false)
+            )
+            return GameState(map, currentTurn)
+        }
+
+        val exampleMoveHistory = listOf(
+            Move("C1", "B1"),
+            Move("C7", "B4"),
+            Move("B1", "A1"),
+            Move("B4", "A1")
+        )
+
+        // Estado del juego para el preview
+        var previewGameState by remember { mutableStateOf(initialGameState()) }
+        var boardSize by remember { mutableStateOf(500.dp) }
+
+        // Función auxiliar para calcular vWidth (igual que en MainScreen)
+        fun getBoardWidth(size: Dp): Float {
+            return (((size.value) / 3f).dp).value
+        }
+
+        val vWidth = getBoardWidth(boardSize)
 
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                // TODO: Reutilizar el SidebarPreview aquí
-                Box(
-                    modifier = Modifier
-                        .width(280.dp)
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Menu Lateral Abierto", style = MaterialTheme.typography.headlineSmall)
-                }
+                Sidebar(
+                    gameState = previewGameState,
+                    moveHistory = exampleMoveHistory,
+                    currentMoveIndex = 2, // Índice intermedio para mostrar funcionalidad
+                    isAIEnabled = true,
+                    difficulty = Difficulty.MEDIUM,
+                    onSettings = { },
+                    onNewGame = { },
+                    onToggleAI = { },
+                    onDifficultyChange = { },
+                    onUndo = { previewGameState = initialGameState(Color.BLACK) },
+                    onRedo = { previewGameState = initialGameState(Color.WHITE) },
+                    onMoveToCurrent = ::initialGameState,
+                    onAboutClick = { },
+                    modifier = Modifier.systemBarsPadding()
+                )
             }
         ) {
             Scaffold(
@@ -456,15 +514,51 @@ fun MainScreenPreview_WithDrawer() {
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            "Contenido Principal",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { }) {
-                            Text("Abrir Drawer")
+                        if (!landScape) {
+                            LocalizedText(
+                                R.string.a_board_game_by_george_spencer_brown,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Usamos el Board real en lugar de placeholder
+                            Board(
+                                gameState = previewGameState,
+                                boardSize = boardSize,
+                                vWidth = vWidth,
+                                onMove = { from, to ->
+                                    // Simulación de movimiento para el preview
+                                    previewGameState = initialGameState(
+                                        if (previewGameState.currentTurn == Color.WHITE)
+                                            Color.BLACK
+                                        else
+                                            Color.WHITE
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.95f)
+                                    .padding(8.dp)
+                            )
+
+                            TurnIndicator(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(60.dp)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                currentTurn = previewGameState.currentTurn,
+                                size = 60.dp
+                            )
                         }
                     }
                 }
@@ -473,63 +567,76 @@ fun MainScreenPreview_WithDrawer() {
     }
 }
 
-@Preview(showBackground = true)
+// Previews Portrait
+@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable
-fun AboutDialogPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AlertDialog(
-                onDismissRequest = { },
-                title = { Text("About Tarati") },
-                text = {
-                    Column {
-                        Text(
-                            text = "Tarati is a strategic board game created by George Spencer Brown, " +
-                                    "based on his work 'Laws of Form'. The game combines elements of " +
-                                    "traditional board games with unique movement and capture mechanics.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+fun MainScreenPreview_WithDrawer_Portrait() {
+    MainScreenPreviewContent(
+        darkTheme = false,
+        drawerStateValue = DrawerValue.Open,
+        landScape = false,
+    )
+}
 
-                        Text(
-                            text = "Game Rules:",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                        Text(
-                            text = "• Players: 2 (WHITE vs BLACK)\n" +
-                                    "• Objective: Control the board by converting opponent pieces\n" +
-                                    "• Movement: Pieces move along edges to adjacent vertices\n" +
-                                    "• Upgrades: Pieces become upgraded in opponent's home base\n" +
-                                    "• Capture: Moving adjacent to opponent pieces converts them",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
+@Composable
+fun MainScreenPreview_WithDrawer_Portrait_Dark() {
+    MainScreenPreviewContent(
+        darkTheme = true,
+        drawerStateValue = DrawerValue.Open,
+        landScape = false,
+    )
+}
 
-                        Spacer(modifier = Modifier.height(12.dp))
+// Previews Landscape
+@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
+@Composable
+fun MainScreenPreview_WithDrawer_Landscape() {
+    MainScreenPreviewContent(
+        darkTheme = false,
+        drawerStateValue = DrawerValue.Open,
+        landScape = true,
+    )
+}
 
-                        Text(
-                            text = "Credits:",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                        Text(
-                            text = "• Original concept: George Spencer Brown\n" +
-                                    "• React implementation: Adam Blvck\n" +
-                                    "• Kotlin/Android port: Agustín Gomila",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
+@Composable
+fun MainScreenPreview_WithDrawer_Landscape_Dark() {
+    MainScreenPreviewContent(
+        darkTheme = true,
+        drawerStateValue = DrawerValue.Open,
+        landScape = true,
+    )
+}
 
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { }
-                    ) {
-                        Text("Close")
-                    }
-                }
-            )
-        }
-    }
+// Previews con drawer cerrado (para ver el contenido principal)
+@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
+@Composable
+fun MainScreenPreview_DrawerClosed_Portrait() {
+    MainScreenPreviewContent(
+        darkTheme = false,
+        drawerStateValue = DrawerValue.Closed,
+        landScape = false,
+    )
+}
+
+// Preview adicional: Juego en progreso con más movimientos
+@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
+@Composable
+fun MainScreenPreview_GameInProgress() {
+    MainScreenPreviewContent(
+        darkTheme = false,
+        drawerStateValue = DrawerValue.Open,
+        landScape = false,
+    )
+}
+
+@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
+@Composable
+fun MainScreenPreview_DrawerClosed_Landscape() {
+    MainScreenPreviewContent(
+        darkTheme = false,
+        drawerStateValue = DrawerValue.Closed,
+        landScape = true,
+    )
 }
