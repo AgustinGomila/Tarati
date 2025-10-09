@@ -149,6 +149,7 @@ The Tarati board represents a deep symbolic structure:
 | <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot3.jpeg" alt="Tarati Screenshot" width="300"/> |
 |--------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
 | <img src="/screenshots/screenshot4.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot5.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot6.jpeg" alt="Tarati Screenshot" width="300"/> |
 
 * Intuitive and simple interface designed with Jetpack Compose
 
