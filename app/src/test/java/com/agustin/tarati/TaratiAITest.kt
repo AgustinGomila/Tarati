@@ -4,7 +4,7 @@ import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
-import com.agustin.tarati.game.core.applyMoveToBoard
+import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import org.junit.Assert
 import org.junit.Test
 

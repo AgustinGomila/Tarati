@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -48,9 +47,10 @@ import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
-import com.agustin.tarati.game.core.applyMoveToBoard
+import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.TurnIndicator
+import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
@@ -82,20 +82,12 @@ fun MainScreen(navController: NavController) {
     val vmPlayerSide by viewModel.playerSide.collectAsState(Color.WHITE)
 
     var stopAI by remember { mutableStateOf(false) }
-    var boardSize by remember { mutableStateOf(500.dp) }
 
     // Estados para diálogos
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
     var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
-
-    fun getBoardWidth(size: Dp): Float {
-        return (((size.value) / 3f).dp).value
-    }
-
-    // ancho virtual por vértice
-    val vWidth = getBoardWidth(boardSize)
 
     fun isGameOverLocal(state: GameState): Boolean {
         val possible = TaratiAI.getAllPossibleMoves(state)
@@ -106,20 +98,16 @@ fun MainScreen(navController: NavController) {
 
     fun applyMove(from: String, to: String) {
         stopAI = false
-
-        // No rotar las coordenadas aquí, el Board ya maneja la conversión.
-        // Las coordenadas from/to ya están en el sistema lógico correcto
         val actualFrom = from
-        val actualTo = to
 
-        println("Applying move: $actualFrom -> $actualTo")
+        println("Applying move: $actualFrom -> $to")
 
-        val newBoardState = applyMoveToBoard(vmGameState, actualFrom, actualTo)
+        val newBoardState = applyMoveToBoard(vmGameState, actualFrom, to)
         val nextState = newBoardState.copy(
             currentTurn = if (vmGameState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
         )
 
-        val newEntry = Pair(Move(actualFrom, actualTo), nextState)
+        val newEntry = Pair(Move(actualFrom, to), nextState)
         val truncated =
             if (vmMoveIndex < vmHistory.size - 1) {
                 vmHistory.take(vmMoveIndex + 1)
@@ -174,11 +162,7 @@ fun MainScreen(navController: NavController) {
         viewModel.updateHistory(emptyList())
         viewModel.updateMoveIndex(-1)
 
-        // Siempre empezar con BLANCAS, sin importar el lado del jugador
-        // Esto es importante para la lógica del juego
-        val initialTurn = Color.WHITE
-
-        viewModel.updateGameState(initialGameState(initialTurn))
+        viewModel.updateGameState(initialGameState())
         showNewGameDialog = false
 
         // Reiniciar estado de IA
@@ -188,7 +172,7 @@ fun MainScreen(navController: NavController) {
             drawerState.close()
         }
 
-        println("New game started: playerSide=$playerSide, initialTurn=$initialTurn")
+        println("New game started: playerSide=$playerSide")
     }
 
     fun undoMove() {
@@ -321,12 +305,17 @@ fun MainScreen(navController: NavController) {
                     ) {
                         Board(
                             gameState = vmGameState,
-                            vWidth = vWidth,
-                            onMove = { from, to -> applyMove(from, to) },
-                            playerSide = vmPlayerSide,
-                            modifier = Modifier
-                                .fillMaxWidth(0.95f)
-                                .padding(8.dp)
+                            onMove = { from, to ->
+                                println("Move from $from to $to")
+                                applyMove(from, to)
+                            },
+                            boardOrientation =
+                                when {
+                                    isLandscapeScreen && vmPlayerSide == Color.BLACK -> BoardOrientation.LANDSCAPE_BLACK
+                                    isLandscapeScreen && vmPlayerSide == Color.WHITE -> BoardOrientation.LANDSCAPE_WHITE
+                                    vmPlayerSide == Color.BLACK -> BoardOrientation.PORTRAIT_BLACK
+                                    else -> BoardOrientation.PORTRAIT_WHITE
+                                }
                         )
 
                         TurnIndicator(
@@ -462,15 +451,7 @@ private fun MainScreenPreviewContent(
 
         // Estado del juego para el preview
         var previewGameState by remember { mutableStateOf(initialGameState()) }
-        var boardSize by remember { mutableStateOf(500.dp) }
         var playerSide by remember { mutableStateOf(playerSide) }
-
-        // Función auxiliar para calcular vWidth (igual que en MainScreen)
-        fun getBoardWidth(size: Dp): Float {
-            return (((size.value) / 3f).dp).value
-        }
-
-        val vWidth = getBoardWidth(boardSize)
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -538,23 +519,10 @@ private fun MainScreenPreviewContent(
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            // Usamos el Board real en lugar de placeholder
                             Board(
                                 gameState = previewGameState,
-                                vWidth = vWidth,
-                                onMove = { _, _ ->
-                                    // Simulación de movimiento para el preview
-                                    previewGameState = initialGameState(
-                                        if (previewGameState.currentTurn == Color.WHITE)
-                                            Color.BLACK
-                                        else
-                                            Color.WHITE
-                                    )
-                                },
-                                playerSide = playerSide,
-                                modifier = Modifier
-                                    .fillMaxWidth(0.95f)
-                                    .padding(8.dp)
+                                onMove = { from, to -> println("Move from $from to $to") },
+                                boardOrientation = BoardOrientation.LANDSCAPE_BLACK
                             )
 
                             TurnIndicator(

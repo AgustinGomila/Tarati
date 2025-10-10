@@ -6,17 +6,13 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
-import com.agustin.tarati.game.core.applyMoveToBoard
 import com.agustin.tarati.game.logic.PositionHelper.getPosition
+import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import kotlin.math.max
 import kotlin.math.min
 
-// --- IA: constantes y tabla de trasposición ---
 object TaratiAI {
     private const val WINNING_SCORE = 1_000_000.0
-    private const val UPGRADE_SCORE = 50.0
-    private const val CONTROL_CENTER_SCORE = 30.0
-    private const val MOBILITY_SCORE = 5.0
 
     private data class TranspositionEntry(val depth: Int, val result: Result)
 
