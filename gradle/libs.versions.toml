@@ -15,7 +15,7 @@ minSdk = "26"
 navigation-compose = "2.9.5"
 
 # Compose BOM
-compose-bom = "2025.09.01"
+compose-bom = "2025.10.00"
 
 # Testing
 junit = "4.13.2"

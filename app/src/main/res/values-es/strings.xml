@@ -51,7 +51,6 @@
     <string name="english">Inglés</string>
     <string name="dark_theme">Tema oscuro</string>
     <string name="appearance">Apariencia</string>
-    <string name="current_turn">Turno Actual: %1$s</string>
     <string name="yes">Sí</string>
     <string name="cancel">Cancelar</string>
     <string name="your_turn">Tu turno</string>

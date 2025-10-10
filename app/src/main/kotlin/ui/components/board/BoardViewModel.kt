@@ -19,4 +19,9 @@ class BoardViewModel : ViewModel() {
     fun updateHighlightedMoves(newMoves: List<String>) {
         _highlightedMoves.value = newMoves
     }
+
+    fun resetSelection() {
+        _selectedPiece.value = null
+        _highlightedMoves.value = emptyList()
+    }
 }

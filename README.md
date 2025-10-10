@@ -1,6 +1,6 @@
 # 🎮 Tarati — Un Juego de Tablero por George Spencer Brown
 
-<div align="center">
+<div style="text-align: center;">
 
 [![Logo](screenshots/logo.png)](screenshots/logo.png)
 
@@ -208,7 +208,7 @@ Las contribuciones son bienvenidas. Por favor:
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
 
 ### ⭐ ¿Disfrutas del juego? ¡Dale una estrella al repositorio!
 

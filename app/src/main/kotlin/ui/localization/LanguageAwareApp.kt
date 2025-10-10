@@ -51,17 +51,14 @@ fun LanguageAwareApp(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, currentLocale) {
         val appContext = context.applicationContext
-        val resources = appContext.resources
-        val config = Configuration(deviceConfig).apply { // Usar deviceConfig aquí también
-            setLocale(currentLocale)
-        }
-
-        val contextThemeWrapper = ContextThemeWrapper(appContext, R.style.Theme_Tarati)
-        contextThemeWrapper.applyOverrideConfiguration(config)
-
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_CREATE) {
-                resources.updateConfiguration(config, resources.displayMetrics)
+                val config = Configuration(deviceConfig).apply {
+                    setLocale(currentLocale)
+                }
+
+                val contextThemeWrapper = ContextThemeWrapper(appContext, R.style.Theme_Tarati)
+                contextThemeWrapper.applyOverrideConfiguration(config)
             }
         }
 
