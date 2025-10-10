@@ -368,7 +368,9 @@ fun BoardPreview_Custom() {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
-                boardOrientation = BoardOrientation.PORTRAIT_WHITE
+                boardOrientation = BoardOrientation.PORTRAIT_WHITE,
+                selectedPiece = "B1",
+                highlightedMoves = listOf("B2", "A1", "B6")
             )
         }
     }
@@ -383,7 +385,9 @@ fun BoardPreview_BlackPlayer() {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
-                boardOrientation = BoardOrientation.PORTRAIT_BLACK
+                boardOrientation = BoardOrientation.PORTRAIT_BLACK,
+                selectedPiece = "A1",
+                highlightedMoves = listOf("B1", "B2", "B3", "B4", "B5", "B6")
             )
         }
     }
@@ -398,7 +402,9 @@ fun BoardPreview_Landscape_BlackPlayer() {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
-                boardOrientation = BoardOrientation.LANDSCAPE_BLACK
+                boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
+                selectedPiece = "C2",
+                highlightedMoves = listOf("C9", "B4", "B5")
             )
         }
     }
@@ -413,7 +419,9 @@ fun BoardPreview_Landscape_Debug() {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
-                boardOrientation = BoardOrientation.LANDSCAPE_WHITE
+                boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
+                selectedPiece = "C2",
+                highlightedMoves = listOf("C3", "B2", "B1")
             )
         }
     }
