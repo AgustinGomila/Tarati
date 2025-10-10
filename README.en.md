@@ -1,8 +1,8 @@
 # 🎮 Tarati — A Board Game by George Spencer Brown
 
-<div style="text-align: center;">
+<img src="screenshots/logo.png" alt="Logo" style="display: block; margin: 0 auto;">
 
-[![Logo](screenshots/logo.png)](screenshots/logo.png)
+<div style="text-align: center; margin: 0 auto; max-width: 100%;">
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20-purple.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11.0-blue.svg)](https://developer.android.com/jetpack/compose)
@@ -209,7 +209,7 @@ Contributions are welcome. Please:
 
 ---
 
-<div style="text-align: center;">
+<div style="text-align: center; margin: 0 auto; max-width: 100%;">
 
 ### ⭐ Enjoying the game? Give the repository a star!
 
