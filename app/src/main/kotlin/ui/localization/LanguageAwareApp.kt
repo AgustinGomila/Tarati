@@ -33,7 +33,7 @@ fun LanguageAwareApp(
     // Determinar el locale actual
     val currentLocale = remember(settingsState.language) {
         when (settingsState.language) {
-            AppLanguage.SPANISH -> Locale("es")
+            AppLanguage.SPANISH -> Locale.forLanguageTag("es")
             AppLanguage.ENGLISH -> Locale.ENGLISH
         }
     }

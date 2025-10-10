@@ -14,9 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext.get
 
-class MainViewModel : ViewModel() {
+class MainViewModel() : ViewModel() {
 
-    private val sr: SettingsRepository by lazy { get().get() }
+    val sr: SettingsRepository by lazy { get().get() }
 
     private val _gameState = MutableStateFlow(initialGameState())
     private val _history = MutableStateFlow(listOf<Pair<Move, GameState>>())
@@ -42,7 +42,9 @@ class MainViewModel : ViewModel() {
 
     fun updateDifficulty(newDifficulty: Difficulty) {
         _difficulty.value = newDifficulty
-        viewModelScope.launch { sr.setDifficulty(newDifficulty) }
+        viewModelScope.launch {
+            sr.setDifficulty(newDifficulty)
+        }
     }
 
     fun updateMoveIndex(newMoveIndex: Int) {

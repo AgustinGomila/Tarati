@@ -52,7 +52,13 @@ object TaratiAI {
 
         for (move in possibleMoves) {
             val newGameState = applyMoveAI(currentGameState, move.from, move.to)
-            val childResult = getNextBestMove(newGameState, depth - 1, !isMaximizingPlayer, alpha, beta)
+            val childResult = getNextBestMove(
+                currentGameState = newGameState,
+                depth = depth - 1,
+                isMaximizingPlayer = !isMaximizingPlayer,
+                alphaInit = alpha,
+                betaInit = beta
+            )
             val score = childResult.score
 
             if (isMaximizingPlayer) {
@@ -127,13 +133,13 @@ object TaratiAI {
         val possibleMoves = mutableListOf<Move>()
 
         for ((from, checker) in gameState.checkers) {
-            if (checker.color == gameState.currentTurn) {
-                // Usar el mapa de adyacencia para obtener solo vértices conectados
-                val connectedVertices = GameBoard.adjacencyMap[from] ?: emptyList()
-                for (to in connectedVertices) {
-                    if (isValidMove(gameState, from, to)) {
-                        possibleMoves.add(Move(from, to))
-                    }
+            if (checker.color != gameState.currentTurn) continue
+
+            // Usar el mapa de adyacencia para obtener solo vértices conectados
+            val connectedVertices = GameBoard.adjacencyMap[from] ?: emptyList()
+            for (to in connectedVertices) {
+                if (isValidMove(gameState, from, to)) {
+                    possibleMoves.add(Move(from, to))
                 }
             }
         }

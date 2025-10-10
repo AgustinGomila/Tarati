@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.game.core.Color as SideColor
 
 @Composable
@@ -22,13 +23,13 @@ fun TurnIndicator(
     size: Dp = 60.dp
 ) {
     val indicatorColor = when (currentTurn) {
-        SideColor.WHITE -> MaterialTheme.colorScheme.onPrimary
-        SideColor.BLACK -> MaterialTheme.colorScheme.secondary
+        SideColor.WHITE -> getBoardColors().whitePieceColor
+        SideColor.BLACK -> getBoardColors().blackPieceColor
     }
 
     val borderColor = when (currentTurn) {
-        SideColor.WHITE -> MaterialTheme.colorScheme.secondary
-        SideColor.BLACK -> MaterialTheme.colorScheme.onPrimary
+        SideColor.WHITE -> getBoardColors().whitePieceBorderColor
+        SideColor.BLACK -> getBoardColors().blackPieceBorderColor
     }
 
     Box(

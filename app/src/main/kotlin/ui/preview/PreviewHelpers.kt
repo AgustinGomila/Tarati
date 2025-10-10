@@ -13,7 +13,8 @@ import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameSta
  * Estados de juego predefinidos para previews
  */
 fun initialGameStateWithUpgrades(): GameState {
-    return initialGameState().modifyChecker("C2", WHITE, true)
+    return initialGameState()
+        .modifyChecker("C2", WHITE, true)
         .modifyChecker("C8", BLACK, true)
 }
 

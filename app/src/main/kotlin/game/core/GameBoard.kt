@@ -1,5 +1,14 @@
 package com.agustin.tarati.game.core
 
+import androidx.compose.ui.geometry.Offset
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.logic.PositionHelper
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+
 object GameBoard {
     val vertices: List<String> = listOf(
         "A1",
@@ -32,7 +41,7 @@ object GameBoard {
 
     val homeBases: Map<Color, List<String>> = mapOf(
         Color.WHITE to listOf("C1", "C2", "D1", "D2"),
-        Color.BLACK to listOf("C7", "C8", "D3", "D4")
+        BLACK to listOf("C7", "C8", "D3", "D4")
     )
 
     // Mapa de adyacencia optimizado
@@ -51,5 +60,127 @@ object GameBoard {
         }
 
         map.toMap()
+    }
+
+    // Mapa de rotación 180 grados (para negro en portrait)
+    private val rotationMap = mapOf(
+        "A1" to "A1",
+        "B1" to "B4", "B2" to "B5", "B3" to "B6",
+        "B4" to "B1", "B5" to "B2", "B6" to "B3",
+        "C1" to "C7", "C2" to "C8", "C3" to "C9", "C4" to "C10", "C5" to "C11", "C6" to "C12",
+        "C7" to "C1", "C8" to "C2", "C9" to "C3", "C10" to "C4", "C11" to "C5", "C12" to "C6",
+        "D1" to "D3", "D2" to "D4", "D3" to "D1", "D4" to "D2"
+    )
+
+    private val inverseRotationMap by lazy {
+        rotationMap.entries.associate { (key, value) -> value to key }
+    }
+
+    fun logicalToVisual(logicalCoord: String, playerSide: Color): String {
+        return if (playerSide == BLACK) {
+            rotationMap[logicalCoord] ?: logicalCoord
+        } else {
+            logicalCoord
+        }
+    }
+
+    fun visualToLogical(visualCoord: String, playerSide: Color): String {
+        return if (playerSide == BLACK) {
+            inverseRotationMap[visualCoord] ?: visualCoord
+        } else {
+            visualCoord
+        }
+    }
+
+    fun getVisualCoordinates(playerSide: Color): List<String> {
+        return if (playerSide == BLACK) {
+            vertices.map { rotationMap[it] ?: it }
+        } else {
+            vertices
+        }
+    }
+
+    // Función para obtener posición visual considerando landscape
+    fun getVisualPosition(
+        visualVertexId: String,
+        canvasWidth: Float,
+        canvasHeight: Float,
+        vWidth: Float,
+        isLandscape: Boolean,
+        playerSide: Color
+    ): Offset {
+        val basePos = getAdaptativePosition(visualVertexId, canvasWidth to canvasHeight, vWidth, isLandscape)
+
+        // Aplicar rotación adicional si el jugador es negro
+        return if (playerSide == BLACK && !isLandscape) {
+            rotateAroundCenter(basePos, canvasWidth, canvasHeight)
+        } else {
+            basePos
+        }
+    }
+
+    fun getAdaptativePosition(
+        vertexId: String,
+        canvasSize: Pair<Float, Float>,
+        vWidth: Float,
+        isLandscape: Boolean = false
+    ): Offset {
+        val (width, height) = canvasSize
+
+        // Si está en landscape, tratar el canvas como portrait para el cálculo
+        val effectiveWidth = if (isLandscape) height else width
+        val effectiveHeight = if (isLandscape) width else height
+
+        // Luego usar la PositionHelper original con las dimensiones efectivas
+        val basePos = PositionHelper.getPosition(vertexId, effectiveWidth to effectiveHeight, vWidth)
+        val offset = Offset(basePos.x, basePos.y)
+
+        // Si está en landscape, rotar la posición
+        return if (isLandscape) {
+            Offset(basePos.y, effectiveWidth - basePos.x)
+        } else {
+            offset
+        }
+    }
+
+    // Función para encontrar vértice más cercano considerando playerSide y orientación
+    fun findClosestVertex(
+        tapOffset: Offset,
+        canvasWidth: Float,
+        canvasHeight: Float,
+        vWidth: Float,
+        playerSide: Color,
+        isLandscape: Boolean
+    ): String? {
+        var closestVertex: String? = null
+        var minDistance = Float.MAX_VALUE
+        val maxTapDistance = vWidth / 2
+
+        val visualVertices = getVisualCoordinates(playerSide)
+
+        visualVertices.forEach { visualVertexId ->
+            val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
+            val distance = sqrt((tapOffset.x - pos.x).pow(2) + (tapOffset.y - pos.y).pow(2))
+
+            if (distance < maxTapDistance && distance < minDistance) {
+                minDistance = distance
+                closestVertex = visualVertexId
+            }
+        }
+
+        return closestVertex
+    }
+
+    // Funciones de rotación (mantener las existentes)
+    fun rotateAroundCenter(point: Offset, width: Float, height: Float, angleRad: Double = PI): Offset {
+        val cx = width / 2f
+        val cy = height / 2f
+        val tx = point.x - cx
+        val ty = point.y - cy
+        val cosA = cos(angleRad)
+        val sinA = sin(angleRad)
+        val rx = (tx * cosA - ty * sinA).toFloat()
+        val ry = (tx * sinA + ty * cosA).toFloat()
+        return Offset(rx + cx, ry + cy)
     }
 }

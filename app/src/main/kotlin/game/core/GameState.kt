@@ -41,20 +41,20 @@ fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState 
     // Flip adjacent checkers (for each edge containing 'to', flip the other vertex if opponent)
     for (edge in GameBoard.edges) {
         val (a, b) = edge
-        if (a == to || b == to) {
-            val adjacent = if (a == to) b else a
-            val adjChecker = mutable[adjacent]
-            if (adjChecker != null && adjChecker.color != placedChecker.color) {
-                var newAdj = adjChecker.copy(color = placedChecker.color)
-                // Check for upgrades for flipped piece
-                if (whiteBase.contains(adjacent) && newAdj.color == BLACK) {
-                    newAdj = newAdj.copy(isUpgraded = true)
-                } else if (blackBase.contains(adjacent) && newAdj.color == WHITE) {
-                    newAdj = newAdj.copy(isUpgraded = true)
-                }
-                mutable[adjacent] = newAdj
-            }
+        if (a != to && b != to) continue
+
+        val adjacent = if (a == to) b else a
+        val adjChecker = mutable[adjacent]
+        if (adjChecker == null || adjChecker.color == placedChecker.color) continue
+
+        var newAdj = adjChecker.copy(color = placedChecker.color)
+        // Check for upgrades for flipped piece
+        if (whiteBase.contains(adjacent) && newAdj.color == BLACK) {
+            newAdj = newAdj.copy(isUpgraded = true)
+        } else if (blackBase.contains(adjacent) && newAdj.color == WHITE) {
+            newAdj = newAdj.copy(isUpgraded = true)
         }
+        mutable[adjacent] = newAdj
     }
 
     // IMPORTANT: applyMoveToBoard DOES NOT toggle currentTurn; App does.

@@ -45,6 +45,7 @@ fun SettingsScreen(
     val viewModel: SettingsViewModel = viewModel()
     val settingsState by viewModel.settingsState.collectAsState()
     val currentLanguage = settingsState.language
+    val currentTheme = settingsState.appTheme
 
     Scaffold(
         topBar = {
@@ -120,8 +121,14 @@ fun SettingsScreen(
             )
 
             SettingsItem(
-                title = localizedString(R.string.dark_theme),
-                subtitle = localizedString(R.string.dark_theme),
+                title = localizedString(
+                    if (currentTheme == AppTheme.MODE_NIGHT) R.string.dark_theme
+                    else R.string.light_theme
+                ),
+                subtitle = localizedString(
+                    if (currentTheme == AppTheme.MODE_NIGHT) R.string.dark_theme
+                    else R.string.light_theme
+                ),
                 trailing = {
                     Switch(
                         checked = settingsState.appTheme == AppTheme.MODE_NIGHT,

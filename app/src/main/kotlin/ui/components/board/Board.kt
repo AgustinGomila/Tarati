@@ -25,19 +25,17 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.findClosestVertex
+import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.core.GameBoard.logicalToVisual
+import com.agustin.tarati.game.core.GameBoard.visualToLogical
 import com.agustin.tarati.game.core.GameState
-import com.agustin.tarati.game.logic.AdaptivePositionHelper
 import com.agustin.tarati.game.logic.createGameState
-import com.agustin.tarati.game.utils.CoordinateSystem
 import com.agustin.tarati.ui.preview.endGameState
 import com.agustin.tarati.ui.preview.initialGameStateWithUpgrades
 import com.agustin.tarati.ui.preview.midGameState
+import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 @Composable
 fun Board(
@@ -57,23 +55,19 @@ fun Board(
     val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState(highlightedMoves)
 
     // Colores del tema
-    val backgroundColor = MaterialTheme.colorScheme.surface
-    val boardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
-    val edgeColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-
-    val vertexDefaultColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)
-    val vertexOccupiedColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val vertexSelectedColor = MaterialTheme.colorScheme.primary
-    val vertexHighlightColor = MaterialTheme.colorScheme.tertiary
-
-    val textColor = MaterialTheme.colorScheme.onSurface
-
-    val blackPieceColor = MaterialTheme.colorScheme.primary
-    val whitePieceColor = MaterialTheme.colorScheme.onSecondary
-    val blackPieceBorderColor = MaterialTheme.colorScheme.onPrimary
-    val whitePieceBorderColor = MaterialTheme.colorScheme.secondary
-
-    val selectionIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+    val backgroundColor = getBoardColors().backgroundColor
+    val blackPieceBorderColor = getBoardColors().blackPieceBorderColor
+    val blackPieceColor = getBoardColors().blackPieceColor
+    val boardBackgroundColor = getBoardColors().boardBackgroundColor
+    val edgeColor = getBoardColors().edgeColor
+    val selectionIndicatorColor = getBoardColors().selectionIndicatorColor
+    val textColor = getBoardColors().textColor
+    val vertexDefaultColor = getBoardColors().vertexDefaultColor
+    val vertexHighlightColor = getBoardColors().vertexHighlightColor
+    val vertexOccupiedColor = getBoardColors().vertexOccupiedColor
+    val vertexSelectedColor = getBoardColors().vertexSelectedColor
+    val whitePieceBorderColor = getBoardColors().whitePieceBorderColor
+    val whitePieceColor = getBoardColors().whitePieceColor
 
     Box(
         modifier = modifier
@@ -89,13 +83,19 @@ fun Board(
                     println("Raw offset: $offset")
 
                     // Manejo de landscape
-                    val tappedVisualVertex =
-                        findClosestVertex(offset, canvasWidth, canvasHeight, vWidth, playerSide, isLandscape)
+                    val tappedVisualVertex = findClosestVertex(
+                        tapOffset = offset,
+                        canvasWidth = canvasWidth,
+                        canvasHeight = canvasHeight,
+                        vWidth = vWidth,
+                        playerSide = playerSide,
+                        isLandscape = isLandscape
+                    )
                     println("Tapped visual vertex: $tappedVisualVertex")
 
                     tappedVisualVertex?.let { visualVertexId ->
                         // Convertir coordenada visual a lógica
-                        val logicalVertexId = CoordinateSystem.visualToLogical(visualVertexId, playerSide)
+                        val logicalVertexId = visualToLogical(visualVertexId, playerSide)
 
                         println("Visual: $visualVertexId -> Logical: $logicalVertexId")
                         println("Game state checkers: ${gameState.checkers.keys}")
@@ -109,19 +109,14 @@ fun Board(
                                 viewModel.updateSelectedPiece(logicalVertexId)
 
                                 // Resaltar movimientos válidos
-                                val logicalMoves = GameBoard.adjacencyMap[logicalVertexId]
-                                    ?.filter { to ->
-                                        !gameState.checkers.containsKey(to) &&
-                                                (checker.isUpgraded || TaratiAI.isForwardMove(
-                                                    checker.color,
-                                                    logicalVertexId,
-                                                    to
-                                                ))
-                                    } ?: emptyList()
+                                val logicalMoves = GameBoard.adjacencyMap[logicalVertexId]?.filter { to ->
+                                    !gameState.checkers.containsKey(to) && (checker.isUpgraded || TaratiAI.isForwardMove(
+                                        checker.color, logicalVertexId, to
+                                    ))
+                                } ?: emptyList()
 
-                                viewModel.updateHighlightedMoves(logicalMoves.map {
-                                    CoordinateSystem.logicalToVisual(it, playerSide)
-                                })
+                                viewModel.updateHighlightedMoves(
+                                    logicalMoves.map { logicalToVisual(it, playerSide) })
 
                                 println("Selected piece: $logicalVertexId")
                                 println("Logical moves: $logicalMoves")
@@ -141,8 +136,7 @@ fun Board(
                         }
                     }
                 }
-            }
-    ) {
+            }) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
             val canvasHeight = size.height
@@ -167,49 +161,36 @@ fun Board(
             // Fondo circular del tablero
             val maxRadius = minOf(canvasWidth, canvasHeight) * 0.45f
             drawCircle(
-                color = boardBackgroundColor,
-                center = Offset(canvasWidth / 2, canvasHeight / 2),
-                radius = maxRadius
+                color = boardBackgroundColor, center = Offset(canvasWidth / 2, canvasHeight / 2), radius = maxRadius
             )
 
             // Draw edges
             GameBoard.edges.forEach { edge ->
-                val fromVisual = CoordinateSystem.logicalToVisual(edge.first, playerSide)
-                val toVisual = CoordinateSystem.logicalToVisual(edge.second, playerSide)
+                val fromVisual = logicalToVisual(edge.first, playerSide)
+                val toVisual = logicalToVisual(edge.second, playerSide)
 
                 val fromPos = getVisualPosition(fromVisual, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
                 val toPos = getVisualPosition(toVisual, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
                 drawLine(
-                    color = edgeColor,
-                    start = fromPos,
-                    end = toPos,
-                    strokeWidth = 2f
+                    color = edgeColor, start = fromPos, end = toPos, strokeWidth = 2f
                 )
             }
 
             // Draw vertices
             GameBoard.vertices.forEach { logicalVertexId ->
-                val visualVertexId = CoordinateSystem.logicalToVisual(logicalVertexId, playerSide)
+                val visualVertexId = logicalToVisual(logicalVertexId, playerSide)
                 val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
                 val checker = gameState.checkers[logicalVertexId]
                 val vertexColor = when {
-                    logicalVertexId == vmSelectedPiece -> {
-                        vertexSelectedColor
-                    }
+                    logicalVertexId == vmSelectedPiece -> vertexSelectedColor
 
-                    vmHighlightedMoves.contains(visualVertexId) -> {
-                        vertexHighlightColor
-                    }
+                    vmHighlightedMoves.contains(visualVertexId) -> vertexHighlightColor
 
-                    checker != null -> {
-                        vertexOccupiedColor
-                    }
+                    checker != null -> vertexOccupiedColor
 
-                    else -> {
-                        vertexDefaultColor
-                    }
+                    else -> vertexDefaultColor
                 }
 
                 // Vértice
@@ -217,30 +198,23 @@ fun Board(
 
                 // Borde del vértice
                 drawCircle(
-                    color = textColor.copy(alpha = 0.3f),
-                    center = pos,
-                    radius = vWidth / 10,
-                    style = Stroke(width = 1f)
+                    color = textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
                 )
 
                 // Etiqueta del vértice - mostrar coordenada VISUAL
                 drawContext.canvas.nativeCanvas.apply {
                     drawText(
-                        visualVertexId,
-                        pos.x - vWidth / 6,
-                        pos.y - vWidth / 6,
-                        Paint().apply {
+                        visualVertexId, pos.x - vWidth / 6, pos.y - vWidth / 6, Paint().apply {
                             color = textColor.hashCode()
                             textSize = vWidth / 8
                             isAntiAlias = true
-                        }
-                    )
+                        })
                 }
             }
 
             // Draw checkers
             gameState.checkers.forEach { (logicalVertexId, checker) ->
-                val visualVertexId = CoordinateSystem.logicalToVisual(logicalVertexId, playerSide)
+                val visualVertexId = logicalToVisual(logicalVertexId, playerSide)
                 val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
 
                 val (checkerColor, borderColor) = when (checker.color) {
@@ -250,17 +224,12 @@ fun Board(
 
                 // Borde exterior de la pieza
                 drawCircle(
-                    color = borderColor,
-                    center = pos,
-                    radius = vWidth / 5,
-                    style = Stroke(width = 3f)
+                    color = borderColor, center = pos, radius = vWidth / 5, style = Stroke(width = 3f)
                 )
 
                 // Pieza principal
                 drawCircle(
-                    color = checkerColor,
-                    center = pos,
-                    radius = vWidth / 6
+                    color = checkerColor, center = pos, radius = vWidth / 6
                 )
 
                 // Indicador de pieza mejorada
@@ -271,91 +240,23 @@ fun Board(
                     }
 
                     drawCircle(
-                        color = upgradeColor,
-                        center = pos,
-                        radius = vWidth / 7,
-                        style = Stroke(width = 3f)
+                        color = upgradeColor, center = pos, radius = vWidth / 7, style = Stroke(width = 3f)
                     )
 
                     drawCircle(
-                        color = upgradeColor,
-                        center = pos,
-                        radius = vWidth / 10
+                        color = upgradeColor, center = pos, radius = vWidth / 10
                     )
                 }
 
                 // Resaltado de selección
                 if (logicalVertexId == vmSelectedPiece) {
                     drawCircle(
-                        color = selectionIndicatorColor,
-                        center = pos,
-                        radius = vWidth / 4,
-                        style = Stroke(width = 3f)
+                        color = selectionIndicatorColor, center = pos, radius = vWidth / 4, style = Stroke(width = 3f)
                     )
                 }
             }
         }
     }
-}
-
-// Función para obtener posición visual considerando landscape
-private fun getVisualPosition(
-    visualVertexId: String,
-    canvasWidth: Float,
-    canvasHeight: Float,
-    vWidth: Float,
-    isLandscape: Boolean,
-    playerSide: Color
-): Offset {
-    val basePos = AdaptivePositionHelper.getPosition(visualVertexId, canvasWidth to canvasHeight, vWidth, isLandscape)
-
-    // Aplicar rotación adicional si el jugador es negro
-    return if (playerSide == BLACK && !isLandscape) {
-        rotateAroundCenter(basePos, canvasWidth, canvasHeight)
-    } else {
-        basePos
-    }
-}
-
-// Función para encontrar vértice más cercano considerando playerSide y orientación
-private fun findClosestVertex(
-    tapOffset: Offset,
-    canvasWidth: Float,
-    canvasHeight: Float,
-    vWidth: Float,
-    playerSide: Color,
-    isLandscape: Boolean
-): String? {
-    var closestVertex: String? = null
-    var minDistance = Float.MAX_VALUE
-    val maxTapDistance = vWidth / 2
-
-    val visualVertices = CoordinateSystem.getVisualCoordinates(playerSide)
-
-    visualVertices.forEach { visualVertexId ->
-        val pos = getVisualPosition(visualVertexId, canvasWidth, canvasHeight, vWidth, isLandscape, playerSide)
-        val distance = sqrt((tapOffset.x - pos.x).pow(2) + (tapOffset.y - pos.y).pow(2))
-
-        if (distance < maxTapDistance && distance < minDistance) {
-            minDistance = distance
-            closestVertex = visualVertexId
-        }
-    }
-
-    return closestVertex
-}
-
-// Funciones de rotación (mantener las existentes)
-private fun rotateAroundCenter(point: Offset, width: Float, height: Float, angleRad: Double = PI): Offset {
-    val cx = width / 2f
-    val cy = height / 2f
-    val tx = point.x - cx
-    val ty = point.y - cy
-    val cosA = cos(angleRad)
-    val sinA = sin(angleRad)
-    val rx = (tx * cosA - ty * sinA).toFloat()
-    val ry = (tx * sinA + ty * cosA).toFloat()
-    return Offset(rx + cx, ry + cy)
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)

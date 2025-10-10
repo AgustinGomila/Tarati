@@ -1,6 +1,5 @@
 package com.agustin.tarati.game.logic
 
-import androidx.compose.ui.geometry.Offset
 import com.agustin.tarati.game.core.Position
 import kotlin.math.cos
 import kotlin.math.sin
@@ -48,32 +47,6 @@ object PositionHelper {
             }
 
             else -> Position(centerX, centerY)
-        }
-    }
-}
-
-object AdaptivePositionHelper {
-    fun getPosition(
-        vertexId: String,
-        canvasSize: Pair<Float, Float>,
-        vWidth: Float,
-        isLandscape: Boolean = false
-    ): Offset {
-        val (width, height) = canvasSize
-
-        // Si está en landscape, tratar el canvas como portrait para el cálculo
-        val effectiveWidth = if (isLandscape) height else width
-        val effectiveHeight = if (isLandscape) width else height
-
-        // Luego usar la PositionHelper original con las dimensiones efectivas
-        val basePos = PositionHelper.getPosition(vertexId, effectiveWidth to effectiveHeight, vWidth)
-        val offset = Offset(basePos.x, basePos.y)
-
-        // Si está en landscape, rotar la posición
-        return if (isLandscape) {
-            Offset(basePos.y, effectiveWidth - basePos.x)
-        } else {
-            offset
         }
     }
 }

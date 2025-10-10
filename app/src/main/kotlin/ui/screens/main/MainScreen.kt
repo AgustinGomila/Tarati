@@ -248,6 +248,7 @@ fun MainScreen(navController: NavController) {
         drawerState = drawerState,
         drawerContent = {
             Sidebar(
+                modifier = Modifier.systemBarsPadding(),
                 gameState = vmGameState,
                 moveHistory = vmHistory.map { it.first },
                 currentMoveIndex = vmMoveIndex,
@@ -263,13 +264,11 @@ fun MainScreen(navController: NavController) {
                 onDifficultyChange = { viewModel.updateDifficulty(it) },
                 onUndo = ::undoMove,
                 onRedo = ::redoMove,
-                onMoveToCurrent = ::moveToCurrentState,
-                onAboutClick = {
-                    showAboutDialog = true
-                    scope.launch { drawerState.close() }
-                },
-                modifier = Modifier.systemBarsPadding()
-            )
+                onMoveToCurrent = ::moveToCurrentState
+            ) {
+                showAboutDialog = true
+                scope.launch { drawerState.close() }
+            }
         }
     ) {
         Scaffold(
@@ -477,9 +476,10 @@ private fun MainScreenPreviewContent(
             drawerState = drawerState,
             drawerContent = {
                 Sidebar(
+                    modifier = Modifier.systemBarsPadding(),
                     gameState = previewGameState,
-                    moveHistory = exampleMoveHistory,
-                    currentMoveIndex = 2, // Índice intermedio para mostrar funcionalidad
+                    moveHistory = exampleMoveHistory, // Índice intermedio para mostrar funcionalidad
+                    currentMoveIndex = 2,
                     isAIEnabled = true,
                     difficulty = Difficulty.MEDIUM,
                     playerSide = playerSide,
@@ -489,10 +489,8 @@ private fun MainScreenPreviewContent(
                     onDifficultyChange = { },
                     onUndo = { },
                     onRedo = { },
-                    onMoveToCurrent = ::initialGameState,
-                    onAboutClick = { },
-                    modifier = Modifier.systemBarsPadding()
-                )
+                    onMoveToCurrent = ::initialGameState
+                ) { }
             }
         ) {
             Scaffold(

@@ -59,6 +59,7 @@ import com.agustin.tarati.ui.preview.customGameState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sidebar(
+    modifier: Modifier = Modifier,
     gameState: GameState,
     moveHistory: List<Move>,
     currentMoveIndex: Int,
@@ -72,8 +73,7 @@ fun Sidebar(
     onUndo: () -> Unit,
     onRedo: () -> Unit,
     onMoveToCurrent: () -> Unit,
-    onAboutClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onAboutClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -403,9 +403,8 @@ fun SidebarPreview() {
             onDifficultyChange = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { },
-            onAboutClick = { }
-        )
+            onMoveToCurrent = { }
+        ) { }
     }
 }
 
@@ -434,9 +433,8 @@ fun SidebarPreview_Dark() {
             onDifficultyChange = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { },
-            onAboutClick = { }
-        )
+            onMoveToCurrent = { }
+        ) { }
     }
 }
 
@@ -466,8 +464,7 @@ fun SidebarPreview_CustomState() {
             onDifficultyChange = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { },
-            onAboutClick = { }
-        )
+            onMoveToCurrent = { }
+        ) { }
     }
 }

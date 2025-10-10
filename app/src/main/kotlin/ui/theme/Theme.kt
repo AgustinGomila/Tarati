@@ -18,32 +18,32 @@ enum class AppTheme {
 }
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = DarkLavender900,
-    surface = DarkLavender800,
+    primary = DarkPrimary,
+    secondary = DarkSecondary,
+    tertiary = DarkTertiary,
+    background = DarkBackground,
+    surface = DarkSurface,
     onPrimary = OnPrimaryDark,
     onSecondary = OnSecondaryDark,
     onTertiary = OnTertiaryDark,
     onBackground = OnBackgroundDark,
     onSurface = OnSurfaceDark,
-    error = ErrorLilac,
+    error = ErrorVariant,
     onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = LightLavender50,
-    surface = LightLavender100,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
+    primary = LightPrimary,
+    secondary = LightSecondary,
+    tertiary = LightTertiary,
+    background = LightBackground,
+    surface = LightSurface,
+    onPrimary = OnPrimaryLight,  // Usando la nueva variable
+    onSecondary = OnSecondaryLight,  // Usando la nueva variable
+    onTertiary = OnTertiaryLight,  // Usando la nueva variable
     onBackground = OnBackgroundLight,
     onSurface = OnSurfaceLight,
-    error = ErrorLilac,
+    error = ErrorVariant,
     onError = Color.White
 )
 

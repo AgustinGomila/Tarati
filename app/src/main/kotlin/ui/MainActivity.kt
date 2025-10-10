@@ -13,18 +13,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import com.agustin.tarati.ui.localization.LanguageAwareApp
-import com.agustin.tarati.ui.navigation.TaratiNavGraph
+import com.agustin.tarati.ui.navigation.NavGraph
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
 import com.agustin.tarati.ui.theme.TaratiTheme
-import org.koin.androidx.compose.koinViewModel
+import org.koin.core.context.GlobalContext.get
 import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         val prefs = newBase.getSharedPreferences("settings", MODE_PRIVATE)
         val langCode = prefs.getString("language", "en") ?: "en"
-        val locale = Locale(langCode)
+        val locale = Locale.forLanguageTag(langCode)
 
         super.attachBaseContext(
             newBase.wrapContext(locale)
@@ -37,9 +37,12 @@ class MainActivity : ComponentActivity() {
         // This app draws behind the system bars, so we want to handle fitting system windows
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        // ViewModel que guarda estado, historial y dificultad
+        val viewModel: SettingsViewModel = get().get()
+
         setContent {
             LanguageAwareApp {
-                val viewModel = koinViewModel<SettingsViewModel>()
+
                 val settings = viewModel.settingsState.collectAsState()
                 val useDarkTheme = when (settings.value.appTheme) {
                     AppTheme.MODE_AUTO -> isSystemInDarkTheme()
@@ -52,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        TaratiNavGraph(
+                        NavGraph(
                             onThemeChange = { viewModel.toggleDarkTheme(it == AppTheme.MODE_NIGHT) },
                             onLanguageChange = { viewModel.setLanguage(it) }
                         )

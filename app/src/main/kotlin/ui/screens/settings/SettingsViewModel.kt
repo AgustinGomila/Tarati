@@ -2,7 +2,6 @@ package com.agustin.tarati.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,9 +12,11 @@ import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext.get
 
 class SettingsViewModel() : ViewModel() {
+
+    val sr: SettingsRepository by lazy { get().get() }
+
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
-    val repository: SettingsRepository = get().get()
 
     init {
         loadSettings()
@@ -24,9 +25,9 @@ class SettingsViewModel() : ViewModel() {
     private fun loadSettings() {
         viewModelScope.launch {
             combine(
-                repository.isDarkTheme,
-                repository.difficulty,
-                repository.language
+                sr.isDarkTheme,
+                sr.difficulty,
+                sr.language
             ) { isDark, difficulty, language ->
                 SettingsState(
                     appTheme = if (isDark) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO,
@@ -41,19 +42,13 @@ class SettingsViewModel() : ViewModel() {
 
     fun toggleDarkTheme(enabled: Boolean) {
         viewModelScope.launch {
-            repository.setDarkTheme(enabled)
-        }
-    }
-
-    fun setDifficulty(difficulty: Difficulty) {
-        viewModelScope.launch {
-            repository.setDifficulty(difficulty)
+            sr.setDarkTheme(enabled)
         }
     }
 
     fun setLanguage(language: AppLanguage) {
         viewModelScope.launch {
-            repository.setLanguage(language)
+            sr.setLanguage(language)
         }
     }
 }
