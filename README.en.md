@@ -50,10 +50,10 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 - **Minimax algorithm** with Alpha-Beta pruning
 - **Transposition table** for optimization
 - **4 difficulty levels**:
-    - 🟢 Easy (depth 3)
-    - 🟡 Medium (depth 6)
-    - 🟠 Hard (depth 9)
-    - 🔴 Champion (depth 12)
+    - 🟢 Easy (depth 2)
+    - 🟡 Medium (depth 4)
+    - 🟠 Hard (depth 6)
+    - 🔴 Champion (depth 8)
 
 ## 📥 Download
 

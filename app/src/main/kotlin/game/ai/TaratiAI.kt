@@ -6,6 +6,7 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.hashBoard
 import com.agustin.tarati.game.logic.PositionHelper.getPosition
 import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import kotlin.math.max
@@ -13,26 +14,33 @@ import kotlin.math.min
 
 object TaratiAI {
     private const val WINNING_SCORE = 1_000_000.0
+    private const val MAX_TABLE_SIZE = 10000
 
     private data class TranspositionEntry(val depth: Int, val result: Result)
 
-    private val transpositionTable: MutableMap<String, TranspositionEntry> = mutableMapOf()
+    private val transpositionTable: LinkedHashMap<String, TranspositionEntry> =
+        object : LinkedHashMap<String, TranspositionEntry>(MAX_TABLE_SIZE, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, TranspositionEntry>): Boolean {
+                return size > MAX_TABLE_SIZE
+            }
+        }
 
     fun getNextBestMove(
-        currentGameState: GameState,
+        gameState: GameState,
         depth: Int = 8,
         isMaximizingPlayer: Boolean = true,
         alphaInit: Double = Double.NEGATIVE_INFINITY,
         betaInit: Double = Double.POSITIVE_INFINITY
     ): Result {
-        val boardHash = currentGameState.hashBoard()
+        val boardHash = gameState.hashBoard()
         transpositionTable[boardHash]?.let { entry ->
             if (entry.depth >= depth) return entry.result
         }
 
-        if (depth == 0 || isGameOver(currentGameState)) {
-            val score = evaluateBoard(currentGameState)
-            val finalScore = if (isGameOver(currentGameState)) {
+        val gameOver = isGameOver(gameState)
+        if (depth == 0 || gameOver) {
+            val score = evaluateBoard(gameState)
+            val finalScore = if (gameOver) {
                 if (score < 0) WINNING_SCORE else -WINNING_SCORE
             } else score
             return Result(finalScore, null)
@@ -43,13 +51,13 @@ object TaratiAI {
         var alpha = alphaInit
         var beta = betaInit
 
-        val possibleMoves = getAllPossibleMoves(currentGameState)
-        sortMoves(possibleMoves, currentGameState, isMaximizingPlayer)
+        val possibleMoves = getAllPossibleMoves(gameState)
+        sortMoves(possibleMoves, gameState, isMaximizingPlayer)
 
         for (move in possibleMoves) {
-            val newGameState = applyMoveAI(currentGameState, move.from, move.to)
+            val newGameState = applyMoveAI(gameState, move.from, move.to)
             val childResult = getNextBestMove(
-                currentGameState = newGameState,
+                gameState = newGameState,
                 depth = depth - 1,
                 isMaximizingPlayer = !isMaximizingPlayer,
                 alphaInit = alpha,
@@ -96,10 +104,12 @@ object TaratiAI {
     }
 
     private fun isGameOver(gameState: GameState): Boolean {
-        val possible = getAllPossibleMoves(gameState)
-        if (possible.isEmpty()) return true
-        val colors = gameState.checkers.values.map { it.color }.toSet()
-        return colors.size <= 1
+        val whitePieces = gameState.checkers.values.count { it.color == WHITE }
+        val blackPieces = gameState.checkers.values.count { it.color == BLACK }
+        if (whitePieces == 0 || blackPieces == 0) return true
+
+        val possibleMoves = getAllPossibleMoves(gameState)
+        return possibleMoves.isEmpty()
     }
 
     private fun evaluateBoard(gameState: GameState): Double {

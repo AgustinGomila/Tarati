@@ -50,10 +50,10 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 - **Algoritmo Minimax** con poda Alpha-Beta
 - **Tabla de transposición** para optimización
 - **4 niveles de dificultad**:
-    - 🟢 Fácil (profundidad 3)
-    - 🟡 Medio (profundidad 6)
-    - 🟠 Difícil (profundidad 9)
-    - 🔴 Campeón (profundidad 12)
+    - 🟢 Fácil (profundidad 2)
+    - 🟡 Medio (profundidad 4)
+    - 🟠 Difícil (profundidad 6)
+    - 🔴 Campeón (profundidad 8)
 
 ## 📥 Descargar
 

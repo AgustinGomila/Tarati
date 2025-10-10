@@ -307,10 +307,7 @@ fun MainScreen(navController: NavController) {
                     ) {
                         Board(
                             gameState = vmGameState,
-                            onMove = { from, to ->
-                                println("Move from $from to $to")
-                                applyMove(from, to)
-                            },
+                            onMove = ::applyMove,
                             boardOrientation =
                                 when {
                                     isLandscapeScreen && vmPlayerSide == BLACK -> BoardOrientation.LANDSCAPE_BLACK

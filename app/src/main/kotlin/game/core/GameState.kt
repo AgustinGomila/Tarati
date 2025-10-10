@@ -3,15 +3,17 @@ package com.agustin.tarati.game.core
 data class GameState(
     val checkers: Map<String, Checker>,
     val currentTurn: Color
-) {
-    fun hashBoard(): String {
-        val keys = checkers.keys.sorted()
-        val sb = StringBuilder()
-        for (k in keys) {
-            val c = checkers[k]!!
-            sb.append("$k:${c.color}:${c.isUpgraded};")
+)
+
+fun GameState.hashBoard(): String {
+    return buildString {
+        // Incluir información del turno actual
+        append("turn:${currentTurn},")
+
+        // Ordenar las posiciones para consistencia
+        val sortedEntries = checkers.entries.sortedBy { it.key }
+        sortedEntries.forEach { (pos, checker) ->
+            append("$pos:${checker.color}:${checker.isUpgraded},")
         }
-        sb.append("turn:${currentTurn}")
-        return sb.toString()
     }
 }
