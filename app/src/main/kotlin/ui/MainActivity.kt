@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavGraph(
                             onThemeChange = { viewModel.toggleDarkTheme(it == AppTheme.MODE_NIGHT) },
-                            onLanguageChange = { viewModel.setLanguage(it) }
+                            onLanguageChange = { viewModel.setLanguage(it) },
+                            onLabelsVisibilityChange = { viewModel.setLabelsVisibility(it) }
                         )
                     }
                 }

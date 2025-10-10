@@ -17,6 +17,7 @@ import com.agustin.tarati.ui.theme.AppTheme
 fun NavGraph(
     onThemeChange: (AppTheme) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
+    onLabelsVisibilityChange: (Boolean) -> Unit,
 ) {
     val navController = rememberNavController()
 
@@ -36,6 +37,7 @@ fun NavGraph(
             SettingsScreen(
                 onThemeChange = onThemeChange,
                 onLanguageChange = onLanguageChange,
+                onLabelsVisibilityChange = onLabelsVisibilityChange,
                 navController = navController
             )
         }

@@ -51,4 +51,7 @@
     <string name="your_turn">Your turn</string>
     <string name="opponent_turn">Opponent turn</string>
     <string name="light_theme">Light theme</string>
+    <string name="board_labels">Board labels</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
 </resources>

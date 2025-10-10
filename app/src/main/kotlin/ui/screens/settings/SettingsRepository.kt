@@ -16,10 +16,12 @@ interface SettingsRepository {
     val isDarkTheme: Flow<Boolean>
     val difficulty: Flow<Difficulty>
     val language: Flow<AppLanguage>
+    val labelsVisibility: Flow<Boolean>
 
     suspend fun setDarkTheme(enabled: Boolean)
     suspend fun setDifficulty(difficulty: Difficulty)
     suspend fun setLanguage(language: AppLanguage)
+    suspend fun setLabelsVisibility(visibility: Boolean)
 }
 
 class SettingsRepositoryImpl() : SettingsRepository {
@@ -30,6 +32,7 @@ class SettingsRepositoryImpl() : SettingsRepository {
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme_enabled")
         val DIFFICULTY_KEY = intPreferencesKey("difficulty")
         val LANGUAGE_KEY = stringPreferencesKey("app_language")
+        val LABELS_VISIBILITY_KEY = booleanPreferencesKey("labels_visibles")
     }
 
     override val isDarkTheme: Flow<Boolean> = dataStore.data
@@ -49,6 +52,9 @@ class SettingsRepositoryImpl() : SettingsRepository {
             } ?: AppLanguage.SPANISH
         }
 
+    override val labelsVisibility: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[LABELS_VISIBILITY_KEY] == true }
+
     override suspend fun setDarkTheme(enabled: Boolean) {
         dataStore.edit { settings ->
             settings[DARK_THEME_KEY] = enabled
@@ -64,6 +70,12 @@ class SettingsRepositoryImpl() : SettingsRepository {
     override suspend fun setLanguage(language: AppLanguage) {
         dataStore.edit { settings ->
             settings[LANGUAGE_KEY] = language.name
+        }
+    }
+
+    override suspend fun setLabelsVisibility(visibility: Boolean) {
+        dataStore.edit { settings ->
+            settings[LABELS_VISIBILITY_KEY] = visibility
         }
     }
 }

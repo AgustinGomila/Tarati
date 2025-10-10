@@ -56,4 +56,7 @@
     <string name="your_turn">Tu turno</string>
     <string name="opponent_turn">Turno oponente</string>
     <string name="light_theme">Tema claro</string>
+    <string name="board_labels">Etiquetas visibles</string>
+    <string name="show">Mostrar</string>
+    <string name="hide">Ocultar</string>
 </resources>

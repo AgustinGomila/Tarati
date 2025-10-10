@@ -7,5 +7,6 @@ import com.agustin.tarati.ui.theme.AppTheme
 data class SettingsState(
     val appTheme: AppTheme = AppTheme.MODE_AUTO,
     val difficulty: Difficulty = Difficulty.DEFAULT,
-    val language: AppLanguage = AppLanguage.SPANISH
+    val language: AppLanguage = AppLanguage.SPANISH,
+    val labelsVisibility: Boolean = true,
 )

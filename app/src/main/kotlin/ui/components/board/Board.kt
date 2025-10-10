@@ -22,10 +22,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agustin.tarati.game.ai.TaratiAI
+import com.agustin.tarati.game.ai.TaratiAI.isForwardMove
+import com.agustin.tarati.game.ai.TaratiAI.isValidMove
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -44,19 +46,15 @@ fun Board(
     modifier: Modifier = Modifier,
     gameState: GameState,
     onMove: (from: String, to: String) -> Unit,
-    boardOrientation: BoardOrientation,
-    selectedPiece: String? = null,
-    highlightedMoves: List<String> = listOf()
+    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
+    viewModel: BoardViewModel = viewModel()
 ) {
-    val viewModel: BoardViewModel = viewModel()
-
-    // Resetear la selección cuando el gameState cambia (nuevo turno)
     LaunchedEffect(gameState) {
         viewModel.resetSelection()
     }
 
-    val vmSelectedPiece by viewModel.selectedPiece.collectAsState(selectedPiece)
-    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState(highlightedMoves)
+    val vmSelectedPiece by viewModel.selectedPiece.collectAsState()
+    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState()
 
     // Calcular tamaño visual basado en el contexto
     val density = LocalDensity.current
@@ -78,23 +76,18 @@ fun Board(
 
                     closestVertex?.let { logicalVertexId ->
                         handleTap(
-                            logicalVertexId,
-                            gameState,
-                            vmSelectedPiece,
-                            viewModel,
-                            onMove
+                            logicalVertexId, gameState, vmSelectedPiece, onMove, viewModel
                         )
                     }
                 }
-            }
-    ) {
+            }) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawBoardContent(
                 gameState = gameState,
                 orientation = boardOrientation,
                 vWidth = vWidth,
-                vmSelectedPiece = vmSelectedPiece,
-                vmHighlightedMoves = vmHighlightedMoves,
+                selectedPiece = vmSelectedPiece,
+                highlightedMoves = vmHighlightedMoves,
                 canvasSize = size,
                 colors = boardColors
             )
@@ -105,60 +98,37 @@ fun Board(
 fun handleTap(
     tappedVertex: String,
     gameState: GameState,
-    currentSelectedPiece: String?,
-    viewModel: BoardViewModel,
-    onMove: (String, String) -> Unit
+    selectedPiece: String?,
+    onMove: (String, String) -> Unit,
+    viewModel: BoardViewModel
 ) {
-    println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$currentSelectedPiece")
+    println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$selectedPiece")
 
-    if (currentSelectedPiece == null) {
+    if (selectedPiece == null) {
         // Seleccionar pieza
-        val checker = gameState.checkers[tappedVertex]
-        println("Checking piece: $checker at $tappedVertex, currentTurn: ${gameState.currentTurn}")
-
-        if (checker != null && checker.color == gameState.currentTurn) {
-            viewModel.updateSelectedPiece(tappedVertex)
-            println("Piece selected: $tappedVertex")
-
-            // Calcular movimientos válidos
-            val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
-                val isValid = !gameState.checkers.containsKey(to) &&
-                        (checker.isUpgraded || TaratiAI.isForwardMove(checker.color, tappedVertex, to))
-                println("Move $tappedVertex -> $to: valid=$isValid")
-                isValid
-            } ?: emptyList()
-
-            viewModel.updateHighlightedMoves(validMoves)
-            println("Highlighted moves: $validMoves")
-        } else {
-            println("Cannot select: checker=$checker, currentTurn=${gameState.currentTurn}")
-        }
+        selectPiece(
+            gameState = gameState,
+            tappedVertex = tappedVertex,
+            onSelected = { piece, moves ->
+                viewModel.updateSelectedPiece(piece)
+                viewModel.updateHighlightedMoves(moves)
+            })
     } else {
         // Mover pieza
-        println("Attempting move from $currentSelectedPiece to $tappedVertex")
+        println("Attempting move from $selectedPiece to $tappedVertex")
 
-        if (tappedVertex != currentSelectedPiece) {
-            val isValid = TaratiAI.isValidMove(gameState, currentSelectedPiece, tappedVertex)
-            println("Move validation: $currentSelectedPiece -> $tappedVertex = $isValid")
-
-            if (isValid) {
-                println("Calling onMove with: $currentSelectedPiece, $tappedVertex")
-                onMove(currentSelectedPiece, tappedVertex)
-            } else {
-                println("Move is invalid")
-                // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
-                val checker = gameState.checkers[tappedVertex]
-                if (checker != null && checker.color == gameState.currentTurn) {
-                    viewModel.updateSelectedPiece(tappedVertex)
-                    val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
-                        !gameState.checkers.containsKey(to) &&
-                                (checker.isUpgraded || TaratiAI.isForwardMove(checker.color, tappedVertex, to))
-                    } ?: emptyList()
-                    viewModel.updateHighlightedMoves(validMoves)
-                } else {
-                    viewModel.resetSelection()
-                }
-            }
+        if (tappedVertex != selectedPiece) {
+            movePiece(
+                gameState = gameState,
+                selectedPiece = selectedPiece,
+                tappedVertex = tappedVertex,
+                onMove = onMove,
+                onInvalid = { tapped, moves ->
+                    viewModel.updateSelectedPiece(tapped)
+                    viewModel.updateHighlightedMoves(moves)
+                },
+                onCancel = { viewModel.resetSelection() }
+            )
         } else {
             // Tocar la misma pieza: deseleccionar
             println("Deselecting piece")
@@ -167,12 +137,76 @@ fun handleTap(
     }
 }
 
+private fun movePiece(
+    gameState: GameState,
+    selectedPiece: String,
+    tappedVertex: String,
+    onMove: (String, String) -> Unit,
+    onInvalid: (String, List<String>) -> Unit,
+    onCancel: () -> Unit
+) {
+    if (tappedVertex != selectedPiece) {
+        val isValid = isValidMove(gameState, selectedPiece, tappedVertex)
+        println("Move validation: $selectedPiece -> $tappedVertex = $isValid")
+
+        if (isValid) {
+            println("Calling onMove with: $selectedPiece, $tappedVertex")
+            onMove(selectedPiece, tappedVertex)
+        } else {
+            println("Move is invalid")
+            // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
+            val checker = gameState.checkers[tappedVertex]
+            if (checker != null && checker.color == gameState.currentTurn) {
+                val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
+                    !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
+                        checker.color,
+                        tappedVertex,
+                        to
+                    ))
+                } ?: emptyList()
+                onInvalid(tappedVertex, validMoves)
+            } else {
+                onCancel()
+            }
+        }
+    } else {
+        // Tocar la misma pieza: deseleccionar
+        println("Deselecting piece")
+        onCancel()
+    }
+}
+
+private fun selectPiece(gameState: GameState, tappedVertex: String, onSelected: (String, List<String>) -> Unit) {
+    val checker = gameState.checkers[tappedVertex]
+    println("Checking piece: $checker at $tappedVertex, currentTurn: ${gameState.currentTurn}")
+
+    if (checker != null && checker.color == gameState.currentTurn) {
+
+        println("Piece selected: $tappedVertex")
+
+        // Calcular movimientos válidos
+        val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
+            val isValid = !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
+                checker.color,
+                tappedVertex,
+                to
+            ))
+            println("Move $tappedVertex -> $to: valid=$isValid")
+            isValid
+        } ?: emptyList()
+        onSelected(tappedVertex, validMoves)
+        println("Highlighted moves: $validMoves")
+    } else {
+        println("Cannot select: checker=$checker, currentTurn=${gameState.currentTurn}")
+    }
+}
+
 private fun DrawScope.drawBoardContent(
     gameState: GameState,
     orientation: BoardOrientation,
     vWidth: Float,
-    vmSelectedPiece: String?,
-    vmHighlightedMoves: List<String>,
+    selectedPiece: String?,
+    highlightedMoves: List<String>,
     canvasSize: Size,
     colors: BoardColors
 ) {
@@ -188,26 +222,24 @@ private fun DrawScope.drawBoardContent(
 
     // Círculo del tablero - usar la misma área cuadrada
     drawCircle(
-        color = colors.boardBackgroundColor,
-        center = boardCenter,
-        radius = squareSize / 2
+        color = colors.boardBackgroundColor, center = boardCenter, radius = squareSize / 2
     )
 
     // Aristas
     GameBoard.edges.forEach { (from, to) ->
-        val fromPos = GameBoard.getVisualPosition(from, canvasSize.width, canvasSize.height, orientation)
-        val toPos = GameBoard.getVisualPosition(to, canvasSize.width, canvasSize.height, orientation)
-        drawLine(color = colors.edgeColor, start = fromPos, end = toPos, strokeWidth = 2f)
+        val fromPos = getVisualPosition(from, canvasSize.width, canvasSize.height, orientation)
+        val toPos = getVisualPosition(to, canvasSize.width, canvasSize.height, orientation)
+        drawLine(color = colors.edgeColor, start = fromPos, end = toPos, strokeWidth = 6f)
     }
 
     // Vértices
     vertices.forEach { vertexId ->
-        val pos = GameBoard.getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
+        val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
         val checker = gameState.checkers[vertexId]
 
         val vertexColor = when {
-            vertexId == vmSelectedPiece -> colors.vertexSelectedColor
-            vmHighlightedMoves.contains(vertexId) -> colors.vertexHighlightColor
+            vertexId == selectedPiece -> colors.vertexSelectedColor
+            highlightedMoves.contains(vertexId) -> colors.vertexHighlightColor
             checker != null -> colors.vertexOccupiedColor
             else -> colors.vertexDefaultColor
         }
@@ -216,30 +248,23 @@ private fun DrawScope.drawBoardContent(
 
         // Borde del vértice
         drawCircle(
-            color = colors.textColor.copy(alpha = 0.3f),
-            center = pos,
-            radius = vWidth / 10,
-            style = Stroke(width = 1f)
+            color = colors.textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
         )
 
-        // Etiqueta del vértice (para debugging)
+        // Etiqueta del vértice
         drawContext.canvas.nativeCanvas.apply {
             drawText(
-                vertexId,
-                pos.x - vWidth / 6,
-                pos.y - vWidth / 6,
-                Paint().apply {
+                vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
                     color = colors.textColor.hashCode()
-                    textSize = vWidth / 8
+                    textSize = vWidth / 6
                     isAntiAlias = true
-                }
-            )
+                })
         }
     }
 
     // Piezas
     gameState.checkers.forEach { (vertexId, checker) ->
-        val pos = GameBoard.getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
+        val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
         val baseRadius = vWidth / 5
 
         val (pieceColor, borderColor) = when (checker.color) {
@@ -253,13 +278,25 @@ private fun DrawScope.drawBoardContent(
 
         // Indicador de mejora
         if (checker.isUpgraded) {
-            val upgradeColor = if (checker.color == WHITE) colors.blackPieceColor else colors.whitePieceColor
-            drawCircle(color = upgradeColor, center = pos, radius = baseRadius * 0.6f, style = Stroke(width = 2f))
-            drawCircle(color = upgradeColor, center = pos, radius = baseRadius * 0.3f)
+            val upgradeColor =
+                if (checker.color == WHITE) colors.blackPieceColor
+                else colors.whitePieceColor
+
+            drawCircle(
+                color = upgradeColor,
+                center = pos,
+                radius = baseRadius * 0.6f,
+                style = Stroke(width = 2f)
+            )
+            drawCircle(
+                color = upgradeColor,
+                center = pos,
+                radius = baseRadius * 0.2f
+            )
         }
 
         // Resaltado de selección
-        if (vertexId == vmSelectedPiece) {
+        if (vertexId == selectedPiece) {
             drawCircle(
                 color = colors.selectionIndicatorColor,
                 center = pos,
@@ -332,7 +369,7 @@ fun BoardPreview_PortraitWhite() {
         Board(
             gameState = initialGameStateWithUpgrades(),
             onMove = { from, to -> println("Move from $from to $to") },
-            boardOrientation = BoardOrientation.PORTRAIT_WHITE
+            boardOrientation = BoardOrientation.PORTRAIT_WHITE,
         )
     }
 }
@@ -344,7 +381,7 @@ fun BoardPreview_LandscapeBlack() {
         Board(
             gameState = midGameState(),
             onMove = { from, to -> println("Move from $from to $to") },
-            boardOrientation = BoardOrientation.LANDSCAPE_BLACK
+            boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
         )
     }
 }
@@ -359,9 +396,15 @@ fun BoardPreview_Custom() {
             setChecker("C8", BLACK, true)
             setChecker("B1", WHITE, false)
             setChecker("B4", BLACK, false)
+
             // Agregar piezas extra para testing
             setChecker("C5", WHITE, true)
             setChecker("C11", BLACK, true)
+        }
+
+        val vm = viewModel<BoardViewModel>().apply {
+            updateSelectedPiece("B1")
+            updateHighlightedMoves(listOf("B2", "A1", "B6"))
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -369,8 +412,7 @@ fun BoardPreview_Custom() {
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.PORTRAIT_WHITE,
-                selectedPiece = "B1",
-                highlightedMoves = listOf("B2", "A1", "B6")
+                viewModel = vm,
             )
         }
     }
@@ -381,13 +423,17 @@ fun BoardPreview_Custom() {
 fun BoardPreview_BlackPlayer() {
     TaratiTheme(true) {
         val exampleGameState = endGameState(BLACK)
+        val vm = viewModel<BoardViewModel>().apply {
+            updateSelectedPiece("A1")
+            updateHighlightedMoves(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.PORTRAIT_BLACK,
-                selectedPiece = "A1",
-                highlightedMoves = listOf("B1", "B2", "B3", "B4", "B5", "B6")
+                viewModel = vm,
             )
         }
     }
@@ -398,13 +444,17 @@ fun BoardPreview_BlackPlayer() {
 fun BoardPreview_Landscape_BlackPlayer() {
     TaratiTheme {
         val exampleGameState = createGameState { setTurn(BLACK) }
+        val vm = viewModel<BoardViewModel>().apply {
+            updateSelectedPiece("C2")
+            updateHighlightedMoves(listOf("C9", "B4", "B5"))
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
-                selectedPiece = "C2",
-                highlightedMoves = listOf("C9", "B4", "B5")
+                viewModel = vm,
             )
         }
     }
@@ -415,13 +465,17 @@ fun BoardPreview_Landscape_BlackPlayer() {
 fun BoardPreview_Landscape_Debug() {
     TaratiTheme(true) {
         val exampleGameState = createGameState {}
+        val vm = viewModel<BoardViewModel>().apply {
+            updateSelectedPiece("C2")
+            updateHighlightedMoves(listOf("C3", "B2", "B1"))
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
-                selectedPiece = "C2",
-                highlightedMoves = listOf("C3", "B2", "B1")
+                viewModel = vm,
             )
         }
     }

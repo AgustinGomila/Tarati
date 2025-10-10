@@ -3,20 +3,28 @@ package com.agustin.tarati.game.ai
 import androidx.annotation.StringRes
 import com.agustin.tarati.R
 
-data class Difficulty(
+enum class Difficulty(
     @param:StringRes val displayNameRes: Int,
     val depth: Int
 ) {
-    companion object {
-        val EASY = Difficulty(R.string.difficulty_easy, 3)
-        val MEDIUM = Difficulty(R.string.difficulty_medium, 6)
-        val HARD = Difficulty(R.string.difficulty_hard, 9)
-        val CHAMPION = Difficulty(R.string.difficulty_champion, 12)
+    EASY(R.string.difficulty_easy, 3),
+    MEDIUM(R.string.difficulty_medium, 6),
+    HARD(R.string.difficulty_hard, 9),
+    CHAMPION(R.string.difficulty_champion, 12);
 
-        val ALL = listOf(EASY, MEDIUM, HARD, CHAMPION)
+    val aiDepth: Int
+        get() = when (this) {
+            EASY -> 2
+            MEDIUM -> 4
+            HARD -> 6
+            CHAMPION -> 8
+        }
+
+    companion object {
+        val ALL = entries
         val DEFAULT = MEDIUM
 
         fun getByDepth(depth: Int): Difficulty =
-            ALL.firstOrNull { it.depth == depth } ?: MEDIUM
+            ALL.firstOrNull { it.depth == depth } ?: DEFAULT
     }
 }

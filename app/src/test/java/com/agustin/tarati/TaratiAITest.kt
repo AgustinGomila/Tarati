@@ -1,30 +1,16 @@
 package com.agustin.tarati
 
+import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.ui.components.board.applyMoveToBoard
+import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 import org.junit.Assert
 import org.junit.Test
 
 class TaratiAITest {
-
-    private fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
-        // Equivalente a initializeGameState()
-        val map = mapOf(
-            "C1" to Checker(Color.WHITE, false),
-            "C2" to Checker(Color.WHITE, false),
-            "D1" to Checker(Color.WHITE, false),
-            "D2" to Checker(Color.WHITE, false),
-            "C7" to Checker(Color.BLACK, false),
-            "C8" to Checker(Color.BLACK, false),
-            "D3" to Checker(Color.BLACK, false),
-            "D4" to Checker(Color.BLACK, false)
-        )
-        return GameState(map, currentTurn)
-    }
-
     @Test
     fun applyMoveToBoard_movesPiece_and_doesNotChangeTurn() {
         val gs = initialGameState(currentTurn = Color.WHITE)
@@ -96,7 +82,7 @@ class TaratiAITest {
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
-        val result = TaratiAI.getNextBestMove(gs, depth = 1, isMaximizingPlayer = true)
+        val result = TaratiAI.getNextBestMove(gs, Difficulty.MEDIUM.aiDepth)
         Assert.assertNotNull("Result should not be null", result)
 
         // Si no hay movimientos posibles, el resultado puede ser null (juego terminado)

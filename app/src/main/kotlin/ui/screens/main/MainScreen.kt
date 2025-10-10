@@ -44,7 +44,10 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI
+import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -79,7 +82,7 @@ fun MainScreen(navController: NavController) {
     val vmDifficulty by viewModel.difficulty.collectAsState(Difficulty.DEFAULT)
     val vmMoveIndex by viewModel.moveIndex.collectAsState(-1)
     val vmAIEnabled by viewModel.aIEnabled.collectAsState(true)
-    val vmPlayerSide by viewModel.playerSide.collectAsState(Color.WHITE)
+    val vmPlayerSide by viewModel.playerSide.collectAsState(WHITE)
 
     var stopAI by remember { mutableStateOf(false) }
 
@@ -98,16 +101,15 @@ fun MainScreen(navController: NavController) {
 
     fun applyMove(from: String, to: String) {
         stopAI = false
-        val actualFrom = from
 
-        println("Applying move: $actualFrom -> $to")
+        println("Applying move: $from -> $to")
 
-        val newBoardState = applyMoveToBoard(vmGameState, actualFrom, to)
+        val newBoardState = applyMoveToBoard(vmGameState, from, to)
         val nextState = newBoardState.copy(
-            currentTurn = if (vmGameState.currentTurn == Color.WHITE) Color.BLACK else Color.WHITE
+            currentTurn = if (vmGameState.currentTurn == WHITE) BLACK else WHITE
         )
 
-        val newEntry = Pair(Move(actualFrom, to), nextState)
+        val newEntry = Pair(Move(from, to), nextState)
         val truncated =
             if (vmMoveIndex < vmHistory.size - 1) {
                 vmHistory.take(vmMoveIndex + 1)
@@ -122,7 +124,7 @@ fun MainScreen(navController: NavController) {
         if (isGameOverLocal(nextState)) {
             gameOverMessage = context.getString(
                 R.string.game_over_wins,
-                if (nextState.currentTurn == Color.WHITE) context.getString(R.string.black) else context.getString(R.string.white)
+                if (nextState.currentTurn == WHITE) context.getString(R.string.black) else context.getString(R.string.white)
             )
             showGameOverDialog = true
         }
@@ -142,7 +144,7 @@ fun MainScreen(navController: NavController) {
             delay(500)
             val result = try {
                 withContext(Dispatchers.Default) {
-                    TaratiAI.getNextBestMove(vmGameState, depth = vmDifficulty.depth, isMaximizingPlayer = true)
+                    getNextBestMove(vmGameState, depth = vmDifficulty.aiDepth)
                 }
             } catch (t: Throwable) {
                 t.printStackTrace()
@@ -311,11 +313,11 @@ fun MainScreen(navController: NavController) {
                             },
                             boardOrientation =
                                 when {
-                                    isLandscapeScreen && vmPlayerSide == Color.BLACK -> BoardOrientation.LANDSCAPE_BLACK
-                                    isLandscapeScreen && vmPlayerSide == Color.WHITE -> BoardOrientation.LANDSCAPE_WHITE
-                                    vmPlayerSide == Color.BLACK -> BoardOrientation.PORTRAIT_BLACK
+                                    isLandscapeScreen && vmPlayerSide == BLACK -> BoardOrientation.LANDSCAPE_BLACK
+                                    isLandscapeScreen && vmPlayerSide == WHITE -> BoardOrientation.LANDSCAPE_WHITE
+                                    vmPlayerSide == BLACK -> BoardOrientation.PORTRAIT_BLACK
                                     else -> BoardOrientation.PORTRAIT_WHITE
-                                }
+                                },
                         )
 
                         TurnIndicator(
@@ -435,7 +437,7 @@ fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
 private fun MainScreenPreviewContent(
     darkTheme: Boolean = false,
     drawerStateValue: DrawerValue = DrawerValue.Open,
-    playerSide: Color = Color.WHITE,
+    playerSide: Color = WHITE,
     landScape: Boolean,
 ) {
     TaratiTheme(darkTheme = darkTheme) {
@@ -522,7 +524,7 @@ private fun MainScreenPreviewContent(
                             Board(
                                 gameState = previewGameState,
                                 onMove = { from, to -> println("Move from $from to $to") },
-                                boardOrientation = BoardOrientation.LANDSCAPE_BLACK
+                                boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
                             )
 
                             TurnIndicator(

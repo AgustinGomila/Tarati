@@ -40,12 +40,15 @@ import com.agustin.tarati.ui.theme.AppTheme
 fun SettingsScreen(
     onThemeChange: (AppTheme) -> Unit = {},
     onLanguageChange: (AppLanguage) -> Unit = {},
+    onLabelsVisibilityChange: (Boolean) -> Unit = {},
     navController: NavController
 ) {
     val viewModel: SettingsViewModel = viewModel()
     val settingsState by viewModel.settingsState.collectAsState()
-    val currentLanguage = settingsState.language
-    val currentTheme = settingsState.appTheme
+
+    val currLanguage = settingsState.language
+    val currTheme = settingsState.appTheme
+    val currLabelsVisibility = settingsState.labelsVisibility
 
     Scaffold(
         topBar = {
@@ -70,78 +73,125 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Sección de Idioma
-            LocalizedText(
-                id = R.string.language,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // Alternar entre los dos idiomas
-                        val newLanguage = if (currentLanguage == AppLanguage.SPANISH)
-                            AppLanguage.ENGLISH else
-                            AppLanguage.SPANISH
-                        onLanguageChange(newLanguage)
-                    }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    LocalizedText(
-                        id = when (currentLanguage) {
-                            AppLanguage.SPANISH -> R.string.spanish
-                            AppLanguage.ENGLISH -> R.string.english
-                        },
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    LocalizedText(
-                        id = R.string.language,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-                Icon(
-                    imageVector = Icons.Default.Language,
-                    contentDescription = localizedString(R.string.language)
-                )
-            }
-
+            LanguageOption(currLanguage, onLanguageChange)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Sección de Apariencia
-            LocalizedText(
-                id = R.string.appearance,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
-            )
+            ThemeOption(currTheme, onThemeChange)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            SettingsItem(
-                title = localizedString(
-                    if (currentTheme == AppTheme.MODE_NIGHT) R.string.dark_theme
-                    else R.string.light_theme
-                ),
-                subtitle = localizedString(
-                    if (currentTheme == AppTheme.MODE_NIGHT) R.string.dark_theme
-                    else R.string.light_theme
-                ),
-                trailing = {
-                    Switch(
-                        checked = settingsState.appTheme == AppTheme.MODE_NIGHT,
-                        onCheckedChange = {
-                            viewModel.toggleDarkTheme(it)
-                            val appTheme = if (it) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO
-                            onThemeChange.invoke(appTheme)
-                        }
-                    )
+            // LabelsVisibilityOption(currLabelsVisibility, onLabelsVisibilityChange)
+            // HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
+    }
+}
+
+@Composable
+fun LanguageOption(
+    language: AppLanguage,
+    onChange: (AppLanguage) -> Unit = {}
+) {
+    LocalizedText(
+        id = R.string.language,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                // Alternar entre los dos idiomas
+                val newLanguage = if (language == AppLanguage.SPANISH)
+                    AppLanguage.ENGLISH else
+                    AppLanguage.SPANISH
+                onChange(newLanguage)
+            }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            LocalizedText(
+                id = when (language) {
+                    AppLanguage.SPANISH -> R.string.spanish
+                    AppLanguage.ENGLISH -> R.string.english
+                },
+                style = MaterialTheme.typography.bodyLarge
+            )
+            LocalizedText(
+                id = R.string.language,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.Language,
+            contentDescription = localizedString(R.string.language)
+        )
+    }
+}
+
+@Composable
+fun ThemeOption(
+    theme: AppTheme,
+    onChange: (AppTheme) -> Unit = {},
+) {
+    LocalizedText(
+        id = R.string.appearance,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+
+    SettingsItem(
+        title = localizedString(
+            if (theme == AppTheme.MODE_NIGHT) R.string.dark_theme
+            else R.string.light_theme
+        ),
+        subtitle = localizedString(
+            if (theme == AppTheme.MODE_NIGHT) R.string.dark_theme
+            else R.string.light_theme
+        ),
+        trailing = {
+            Switch(
+                checked = theme == AppTheme.MODE_NIGHT,
+                onCheckedChange = {
+                    val appTheme = if (it) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO
+                    onChange.invoke(appTheme)
                 }
             )
         }
-    }
+    )
+}
+
+@Composable
+fun LabelsVisibilityOption(
+    visibility: Boolean,
+    onChange: (Boolean) -> Unit = {},
+) {
+    LocalizedText(
+        id = R.string.board_labels,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+
+    SettingsItem(
+        title = localizedString(
+            if (visibility) R.string.show
+            else R.string.hide
+        ),
+        subtitle = localizedString(
+            if (visibility) R.string.show
+            else R.string.hide
+        ),
+        trailing = {
+            Switch(
+                checked = visibility,
+                onCheckedChange = {
+                    onChange.invoke(it)
+                }
+            )
+        }
+    )
 }
 
 // Componente reutilizable

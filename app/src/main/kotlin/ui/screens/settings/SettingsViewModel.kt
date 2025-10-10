@@ -27,12 +27,14 @@ class SettingsViewModel() : ViewModel() {
             combine(
                 sr.isDarkTheme,
                 sr.difficulty,
-                sr.language
-            ) { isDark, difficulty, language ->
+                sr.language,
+                sr.labelsVisibility
+            ) { isDark, difficulty, language, labelsVisible ->
                 SettingsState(
                     appTheme = if (isDark) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO,
                     difficulty = difficulty,
-                    language = language
+                    language = language,
+                    labelsVisibility = labelsVisible
                 )
             }.collect { newState ->
                 _settingsState.value = newState
@@ -49,6 +51,12 @@ class SettingsViewModel() : ViewModel() {
     fun setLanguage(language: AppLanguage) {
         viewModelScope.launch {
             sr.setLanguage(language)
+        }
+    }
+
+    fun setLabelsVisibility(visible: Boolean) {
+        viewModelScope.launch {
+            sr.setLabelsVisibility(visible)
         }
     }
 }
