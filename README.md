@@ -74,25 +74,58 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 3. Ejecuta el archivo APK y sigue las instrucciones
 4. ¡Disfruta del juego!
 
+---
+
 ## 🎮 Cómo Jugar
 
-### Objetivo del Juego
+**Tarati** es un juego abstracto de estrategia para dos jugadores.
+Cada jugador controla un conjunto de fichas que compiten por dominar el tablero mediante movimiento, mejora y volteo de
+piezas enemigas.
 
-Controlar el tablero convirtiendo las piezas del oponente mediante movimientos estratégicos.
+### 🎯 Objetivo
 
-### Movimientos Básicos
+Ganar al oponente controlando más piezas propias en el tablero cuando ya no haya movimientos posibles, o logrando una
+ventaja decisiva en número o posición.
 
-1. **Selecciona** una pieza de tu color tocándola
-2. **Los vértices verdes** muestran movimientos válidos
-3. **Toca un vértice vacío** para mover tu pieza
-4. **Las piezas convertidas** cambian a tu color
+### ⚙️ Componentes
 
-### Reglas Especiales
+* Un **tablero de vértices y conexiones** (no cuadrado): cada punto representa una posición posible para una ficha.
+* Cada jugador tiene un color de fichas (por ejemplo, **blancas** y **negras**).
+* Algunos vértices forman la **base** de cada jugador (su zona inicial).
 
-- **Movimiento forward**: Las piezas no mejoradas solo avanzan
-- **Mejoras**: Al entrar en la base del oponente, las piezas se actualizan
-- **Capturas**: Mover adyacente a piezas enemigas las convierte
-- **Fin del juego**: Cuando un jugador no puede mover o pierde todas sus piezas
+### 🚶‍♂️ Movimientos
+
+* En su turno, el jugador elige **una ficha propia** y la mueve a un **vértice adyacente libre** (según las conexiones
+  del tablero).
+* Una ficha **normal** solo puede avanzar “hacia adelante” (según la orientación de su jugador).
+* Una ficha **mejorada** (o *upgrade*) puede moverse en **cualquier dirección**.
+
+### ⚡ Volteo de fichas
+
+* Al llegar al nuevo vértice, **todas las fichas enemigas conectadas** directamente a esa posición se **voltean**,
+  pasando a pertenecer al jugador que movió.
+* Si una ficha volteada cae dentro de la **base del oponente**, también se convierte automáticamente en **mejorada**.
+
+### ⬆️ Mejoras (Upgrades)
+
+* Si una ficha entra en la **base enemiga**, se **mejora** (gana más movilidad).
+* Una ficha mejorada conserva su estado incluso si vuelve a su base original.
+
+### 🔄 Turnos
+
+* Los jugadores se alternan los turnos, moviendo una sola ficha por vez.
+* Después de cada movimiento, el turno pasa al oponente.
+
+### 🏁 Fin de la partida
+
+El juego termina cuando:
+
+* Ningún jugador puede mover (bloqueo total), o
+* Se alcanza una condición acordada (por ejemplo, número de turnos o diferencia de fichas).
+
+Gana quien **controle más piezas en el tablero** o cumpla el objetivo acordado.
+
+---
 
 ### Controles
 

@@ -1,8 +1,11 @@
 package com.agustin.tarati.ui.screens.main
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,12 +13,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.RotateRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,10 +63,12 @@ import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.TurnIndicator
 import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
 import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
@@ -72,8 +86,12 @@ fun MainScreen(navController: NavController) {
     val configuration = LocalConfiguration.current
     val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // ViewModel que guarda estado, historial y dificultad
     val viewModel: MainViewModel = viewModel()
+
+    val vmIsEditing by viewModel.isEditing.collectAsState()
+    val vmEditColor by viewModel.editColor.collectAsState()
+    val vmEditTurn by viewModel.editTurn.collectAsState()
+    val vmEditBoardOrientation by viewModel.editBoardOrientation.collectAsState()
 
     val vmGameState by viewModel.gameState.collectAsState(initialGameState())
     val vmHistory by viewModel.history.collectAsState(emptyList())
@@ -85,7 +103,6 @@ fun MainScreen(navController: NavController) {
     var stopAI by remember { mutableStateOf(false) }
     var resetBoard by remember { mutableStateOf(false) }
 
-    // Estados para diálogos
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
     var gameOverMessage by remember { mutableStateOf("") }
@@ -236,6 +253,154 @@ fun MainScreen(navController: NavController) {
         println("Board reset completed")
     }
 
+    // Función para manejar edición de piezas
+    fun handleEditPiece(vertexId: String) {
+        if (vmIsEditing) {
+            viewModel.editPiece(vertexId)
+        }
+    }
+
+    // Calcular conteo de piezas
+    val pieceCounts = remember(vmGameState) {
+        val white = vmGameState.checkers.values.count { it.color == WHITE }
+        val black = vmGameState.checkers.values.count { it.color == BLACK }
+        PieceCounts(white, black)
+    }
+
+    // Validar distribución
+    val isValidDistribution = remember(pieceCounts) {
+        pieceCounts.white + pieceCounts.black <= 8 && when {
+            pieceCounts.white == 7 && pieceCounts.black == 1 -> true
+            pieceCounts.white == 6 && pieceCounts.black == 2 -> true
+            pieceCounts.white == 5 && pieceCounts.black == 3 -> true
+            pieceCounts.white == 4 && pieceCounts.black == 4 -> true
+            pieceCounts.white == 3 && pieceCounts.black == 5 -> true
+            pieceCounts.white == 2 && pieceCounts.black == 6 -> true
+            pieceCounts.white == 1 && pieceCounts.black == 7 -> true
+            pieceCounts.white + pieceCounts.black < 8 -> true
+            else -> false
+        }
+    }
+
+    val isCompletedDistribution = remember(pieceCounts) {
+        pieceCounts.white + pieceCounts.black == 8 &&
+                (pieceCounts.white == 7 && pieceCounts.black == 1 ||
+                        pieceCounts.white == 6 && pieceCounts.black == 2 ||
+                        pieceCounts.white == 5 && pieceCounts.black == 3 ||
+                        pieceCounts.white == 4 && pieceCounts.black == 4 ||
+                        pieceCounts.white == 3 && pieceCounts.black == 5 ||
+                        pieceCounts.white == 2 && pieceCounts.black == 6 ||
+                        pieceCounts.white == 1 && pieceCounts.black == 7)
+    }
+
+    // Controles de edición mejorados
+    @Composable
+    fun EditControls() {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Selector de color (esquina superior izquierda)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+            ) {
+                ColorToggleButton(
+                    currentColor = vmEditColor,
+                    onColorToggle = { viewModel.toggleEditColor() }
+                )
+            }
+
+            // Selector de color para el jugador (centro)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            ) {
+                PlayerSideToggleButton(
+                    playerSide = vmPlayerSide,
+                    onPlayerSideToggle = { viewModel.togglePlayerSide() }
+                )
+            }
+
+            // Selector de turno (esquina superior derecha)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            ) {
+                TurnToggleButton(
+                    currentTurn = vmEditTurn,
+                    onTurnToggle = { viewModel.toggleEditTurn() }
+                )
+            }
+
+            // Botón rotar (esquina inferior izquierda)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
+                FloatingActionButton(
+                    onClick = { viewModel.rotateEditBoard() },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.RotateRight, contentDescription =
+                            localizedString(R.string.rotate_board)
+                    )
+                }
+            }
+
+            // Botón limpiar (esquina inferior derecha)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                FloatingActionButton(
+                    onClick = { viewModel.clearBoard() },
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = localizedString(R.string.clear_board))
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+            ) {
+                // Contador de piezas (centro superior) - muestra distribución actual
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp)
+                ) {
+                    PieceCounter(
+                        whiteCount = pieceCounts.white,
+                        blackCount = pieceCounts.black,
+                        isValid = isValidDistribution
+                    )
+                }
+                // Botón terminar edición (centro inferior) - solo habilitado si distribución es válida
+                Button(
+                    onClick = {
+                        viewModel.startGameFromEditedState()
+                        resetBoard = true
+                    },
+                    enabled = isCompletedDistribution,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isCompletedDistribution) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    )
+                ) {
+                    LocalizedText(R.string.start_game)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.PlayArrow, contentDescription = localizedString(R.string.start))
+                }
+            }
+        }
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -257,15 +422,28 @@ fun MainScreen(navController: NavController) {
                 onUndo = ::undoMove,
                 onRedo = ::redoMove,
                 onMoveToCurrent = ::moveToCurrentState,
-                onAboutClick = { showAboutDialog = true }
-            )
+                onEditBoard = {
+                    scope.launch { drawerState.close() }
+                    viewModel.toggleEditing()
+                }
+            ) { showAboutDialog = true }
         }
     ) {
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
-                        LocalizedText(id = (R.string.tarati))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            LocalizedText(id = (R.string.tarati))
+                            if (vmIsEditing) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                LocalizedText(
+                                    id = (R.string.editing),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     },
                     navigationIcon = {
                         IconButton(
@@ -276,7 +454,7 @@ fun MainScreen(navController: NavController) {
                                 }
                             }
                         ) {
-                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
+                            Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
                         }
                     }
                 )
@@ -294,10 +472,9 @@ fun MainScreen(navController: NavController) {
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    // Detectar orientación del canvas
-                    if (!isLandscapeScreen) {
+                    if (!isLandscapeScreen && !vmIsEditing) {
                         LocalizedText(
-                            id = (R.string.a_board_game_by_george_spencer_brown),
+                            id = R.string.a_board_game_by_george_spencer_brown,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -310,30 +487,200 @@ fun MainScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Board(
-                            newGame = resetBoard,
-                            onResetCompleted = onResetBoardCompleted,
                             gameState = vmGameState,
-                            onMove = ::applyMove,
-                            boardOrientation =
+                            boardOrientation = if (vmIsEditing) {
+                                vmEditBoardOrientation
+                            } else {
                                 when {
                                     isLandscapeScreen && vmPlayerSide == BLACK -> BoardOrientation.LANDSCAPE_BLACK
                                     isLandscapeScreen && vmPlayerSide == WHITE -> BoardOrientation.LANDSCAPE_WHITE
                                     vmPlayerSide == BLACK -> BoardOrientation.PORTRAIT_BLACK
                                     else -> BoardOrientation.PORTRAIT_WHITE
-                                },
+                                }
+                            },
+                            newGame = resetBoard,
+                            onResetCompleted = onResetBoardCompleted,
+                            onMove = { from, to ->
+                                if (!vmIsEditing) {
+                                    applyMove(from, to)
+                                }
+                            },
+                            isEditing = vmIsEditing,
+                            onEditPiece = ::handleEditPiece
                         )
 
-                        TurnIndicator(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(60.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            currentTurn = vmGameState.currentTurn,
-                            size = 60.dp
-                        )
+                        if (vmIsEditing) {
+                            EditControls()
+                        } else {
+                            TurnIndicator(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(60.dp)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                currentTurn = vmGameState.currentTurn,
+                                size = 60.dp
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun TurnToggleButton(currentTurn: Color, onTurnToggle: () -> Unit) {
+    val backgroundColor = when (currentTurn) {
+        WHITE -> MaterialTheme.colorScheme.surface
+        BLACK -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val contentColor = when (currentTurn) {
+        WHITE -> MaterialTheme.colorScheme.onSurface
+        BLACK -> MaterialTheme.colorScheme.surface
+    }
+
+    FloatingActionButton(
+        onClick = onTurnToggle,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(backgroundColor, CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                if (currentTurn == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor
+            )
+        }
+    }
+}
+
+
+@Composable
+fun PlayerSideToggleButton(playerSide: Color, onPlayerSideToggle: () -> Unit) {
+    val backgroundColor = when (playerSide) {
+        WHITE -> MaterialTheme.colorScheme.surface
+        BLACK -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val contentColor = when (playerSide) {
+        WHITE -> MaterialTheme.colorScheme.onSurface
+        BLACK -> MaterialTheme.colorScheme.surface
+    }
+
+    FloatingActionButton(
+        onClick = onPlayerSideToggle,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(backgroundColor, CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                if (playerSide == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor
+            )
+        }
+    }
+}
+
+// Componentes para los controles de Edición
+@Composable
+fun PieceCounter(whiteCount: Int, blackCount: Int, isValid: Boolean) {
+    Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isValid) MaterialTheme.colorScheme.surface
+            else MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Contador blanco
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    whiteCount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Text(" - ", modifier = Modifier.padding(horizontal = 8.dp))
+
+            // Contador negro
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(MaterialTheme.colorScheme.onSurface, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    blackCount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.surface
+                )
+            }
+
+            // Indicador de validez
+            if (!isValid) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.Warning,
+                    localizedString(R.string.invalid_schema),
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ColorToggleButton(currentColor: Color, onColorToggle: () -> Unit) {
+    val backgroundColor = when (currentColor) {
+        WHITE -> MaterialTheme.colorScheme.surface
+        BLACK -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val contentColor = when (currentColor) {
+        WHITE -> MaterialTheme.colorScheme.onSurface
+        BLACK -> MaterialTheme.colorScheme.surface
+    }
+
+    FloatingActionButton(
+        onClick = onColorToggle,
+        containerColor = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(backgroundColor, CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                if (currentColor == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor
+            )
         }
     }
 }
@@ -439,9 +786,10 @@ fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
 @Composable
 private fun MainScreenPreviewContent(
     darkTheme: Boolean = false,
-    drawerStateValue: DrawerValue = DrawerValue.Open,
+    drawerStateValue: DrawerValue = DrawerValue.Closed,
     playerSide: Color = WHITE,
-    landScape: Boolean,
+    landScape: Boolean = false,
+    isEditing: Boolean = false,
 ) {
     TaratiTheme(darkTheme = darkTheme) {
         val drawerState = rememberDrawerState(initialValue = drawerStateValue)
@@ -457,6 +805,7 @@ private fun MainScreenPreviewContent(
         // Estado del juego para el preview
         var previewGameState by remember { mutableStateOf(initialGameState()) }
         var playerSide by remember { mutableStateOf(playerSide) }
+        var isEditing by remember { mutableStateOf(isEditing) }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -464,7 +813,7 @@ private fun MainScreenPreviewContent(
                 Sidebar(
                     modifier = Modifier.systemBarsPadding(),
                     gameState = previewGameState,
-                    moveHistory = exampleMoveHistory, // Índice intermedio para mostrar funcionalidad
+                    moveHistory = exampleMoveHistory,
                     currentMoveIndex = 2,
                     isAIEnabled = true,
                     difficulty = Difficulty.MEDIUM,
@@ -475,7 +824,8 @@ private fun MainScreenPreviewContent(
                     onDifficultyChange = { },
                     onUndo = { },
                     onRedo = { },
-                    onMoveToCurrent = ::initialGameState
+                    onMoveToCurrent = ::initialGameState,
+                    onEditBoard = { }
                 ) { }
             }
         ) {
@@ -492,7 +842,7 @@ private fun MainScreenPreviewContent(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                                Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
                             }
                         }
                     )
@@ -512,7 +862,7 @@ private fun MainScreenPreviewContent(
                     ) {
                         if (!landScape) {
                             LocalizedText(
-                                R.string.a_board_game_by_george_spencer_brown,
+                                id = R.string.a_board_game_by_george_spencer_brown,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -526,8 +876,9 @@ private fun MainScreenPreviewContent(
                         ) {
                             Board(
                                 gameState = previewGameState,
+                                boardOrientation = toBoardOrientation(landScape, playerSide),
                                 onMove = { from, to -> println("Move from $from to $to") },
-                                boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
+                                isEditing = isEditing,
                             )
 
                             TurnIndicator(
@@ -551,9 +902,7 @@ private fun MainScreenPreviewContent(
 @Composable
 fun MainScreenPreview_WithDrawer_Portrait() {
     MainScreenPreviewContent(
-        darkTheme = false,
         drawerStateValue = DrawerValue.Open,
-        landScape = false,
     )
 }
 
@@ -563,7 +912,6 @@ fun MainScreenPreview_WithDrawer_Portrait_Dark() {
     MainScreenPreviewContent(
         darkTheme = true,
         drawerStateValue = DrawerValue.Open,
-        landScape = false,
     )
 }
 
@@ -572,7 +920,6 @@ fun MainScreenPreview_WithDrawer_Portrait_Dark() {
 @Composable
 fun MainScreenPreview_WithDrawer_Landscape() {
     MainScreenPreviewContent(
-        darkTheme = false,
         drawerStateValue = DrawerValue.Open,
         landScape = true,
     )
@@ -593,9 +940,7 @@ fun MainScreenPreview_WithDrawer_Landscape_Dark() {
 @Composable
 fun MainScreenPreview_DrawerClosed_Portrait() {
     MainScreenPreviewContent(
-        darkTheme = false,
-        drawerStateValue = DrawerValue.Closed,
-        landScape = false,
+        isEditing = true,
     )
 }
 
@@ -604,9 +949,7 @@ fun MainScreenPreview_DrawerClosed_Portrait() {
 @Composable
 fun MainScreenPreview_GameInProgress() {
     MainScreenPreviewContent(
-        darkTheme = false,
         drawerStateValue = DrawerValue.Open,
-        landScape = false,
     )
 }
 
@@ -614,8 +957,7 @@ fun MainScreenPreview_GameInProgress() {
 @Composable
 fun MainScreenPreview_DrawerClosed_Landscape() {
     MainScreenPreviewContent(
-        darkTheme = false,
-        drawerStateValue = DrawerValue.Closed,
         landScape = true,
+        isEditing = true,
     )
 }

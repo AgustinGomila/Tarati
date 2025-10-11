@@ -74,25 +74,58 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 3. Run the APK file and follow the instructions
 4. Enjoy the game!
 
+---
+
 ## 🎮 How to Play
 
-### Game Objective
+**Tarati** is an abstract strategy game for two players.  
+Each player controls a set of pieces that compete to dominate the board through movement, upgrading, and flipping enemy
+pieces.
 
-Control the board by converting your opponent's pieces through strategic moves.
+### 🎯 Objective
 
-### Basic Moves
+Defeat the opponent by controlling more of your own pieces on the board when no moves are possible, or by achieving a
+decisive advantage in number or position.
 
-1. **Select** a piece of your color by tapping it
-2. **Green vertices** show valid moves
-3. **Tap an empty vertex** to move your piece
-4. **Converted pieces** change to your color
+### ⚙️ Components
 
-### Special Rules
+* A **vertex and connection board** (non-square): each point represents a possible position for a piece.
+* Each player has a set of colored pieces (e.g., **white** and **black**).
+* Some vertices form each player's **base** (their starting zone).
 
-- **Forward movement**: Non-upgraded pieces only move forward
-- **Upgrades**: When entering the opponent's base, pieces are upgraded
-- **Captures**: Moving adjacent to enemy pieces converts them
-- **Game end**: When a player cannot move or loses all their pieces
+### 🚶‍♂️ Moves
+
+* On their turn, the player selects **one of their own pieces** and moves it to an adjacent **free vertex** (according
+  to the board's connections).
+* A **normal** piece can only move "forward" (according to the player's orientation).
+* An **upgraded** piece (or *upgrade*) can move in **any direction**.
+
+### ⚡ Flipping Pieces
+
+* Upon reaching the new vertex, **all enemy pieces directly connected** to that position are **flipped**, becoming the
+  property of the moving player.
+* If a flipped piece lands within the **opponent's base**, it automatically becomes **upgraded**.
+
+### ⬆️ Upgrades
+
+* If a piece enters the **enemy base**, it is **upgraded** (gaining increased mobility).
+* An upgraded piece retains its status even if it returns to its original base.
+
+### 🔄 Turns
+
+* Players alternate turns, moving one piece at a time.
+* After each move, the turn passes to the opponent.
+
+### 🏁 End of the Game
+
+The game ends when:
+
+* No player can move (total blockage), or
+* An agreed condition is met (e.g., number of turns or piece difference).
+
+The player who **controls more pieces on the board** or meets the agreed objective wins.
+
+---
 
 ### Controls
 

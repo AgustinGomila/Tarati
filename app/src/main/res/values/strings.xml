@@ -54,4 +54,15 @@
     <string name="board_labels">Board labels</string>
     <string name="show">Show</string>
     <string name="hide">Hide</string>
+    <string name="edit">Edit</string>
+    <string name="editing">Editing</string>
+    <string name="start_game">Start game</string>
+    <string name="invalid_schema">Invalid schema</string>
+    <string name="w">W</string>
+    <string name="b">B</string>
+    <string name="clear_board">Clear board</string>
+    <string name="rotate_board">Rotate board</string>
+    <string name="start">Start</string>
+    <string name="turn">Turn</string>
+    <string name="player_side">Side</string>
 </resources>
