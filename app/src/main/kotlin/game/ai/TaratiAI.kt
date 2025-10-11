@@ -4,11 +4,12 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.hashBoard
+import com.agustin.tarati.game.logic.NormalizedBoard
 import com.agustin.tarati.game.logic.PositionHelper.getPosition
-import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import kotlin.math.max
 import kotlin.math.min
 
@@ -114,7 +115,7 @@ object TaratiAI {
         return possibleMoves.isEmpty()
     }
 
-    private fun evaluateBoard(gameState: GameState): Double {
+    fun evaluateBoard(gameState: GameState): Double {
         var score = 0.0
         var whitePieces = 0.0
         var blackPieces = 0.0
@@ -160,6 +161,61 @@ object TaratiAI {
         // toggle turn (Does this outside applyMoveToBoard; AI.ApplyMoveAI must toggle)
         val nextTurn = if (boardState.currentTurn == WHITE) BLACK else WHITE
         return newState.copy(currentTurn = nextTurn)
+    }
+
+    fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState {
+        val mutable = prevState.checkers.toMutableMap()
+        val movedChecker = mutable[from] ?: return prevState
+        // remove from
+        mutable.remove(from)
+        // place moved checker (copy to allow mutability of isUpgraded)
+        var placedChecker = movedChecker
+
+        // Check for upgrades when moved into opponent home base
+        val whiteBase = GameBoard.homeBases[WHITE] ?: emptyList()
+        val blackBase = GameBoard.homeBases[BLACK] ?: emptyList()
+        if (whiteBase.contains(to) && movedChecker.color == BLACK) {
+            placedChecker = movedChecker.copy(isUpgraded = true)
+        } else if (blackBase.contains(to) && movedChecker.color == WHITE) {
+            placedChecker = movedChecker.copy(isUpgraded = true)
+        }
+        mutable[to] = placedChecker
+
+        // Flip adjacent checkers (for each edge containing 'to', flip the other vertex if opponent)
+        for (edge in GameBoard.edges) {
+            val (a, b) = edge
+            if (a != to && b != to) continue
+
+            val adjacent = if (a == to) b else a
+            val adjChecker = mutable[adjacent]
+            if (adjChecker == null || adjChecker.color == placedChecker.color) continue
+
+            var newAdj = adjChecker.copy(color = placedChecker.color)
+            // Check for upgrades for flipped piece
+            if (whiteBase.contains(adjacent) && newAdj.color == BLACK) {
+                newAdj = newAdj.copy(isUpgraded = true)
+            } else if (blackBase.contains(adjacent) && newAdj.color == WHITE) {
+                newAdj = newAdj.copy(isUpgraded = true)
+            }
+            mutable[adjacent] = newAdj
+        }
+
+        return GameState(mutable.toMap(), prevState.currentTurn)
+    }
+
+    val normalizedPositions: Map<String, NormalizedBoard> by lazy {
+        val tempMap = mutableMapOf<String, NormalizedBoard>()
+        val referenceSize = 1100f to 1100f // Tamaño de referencia para normalizar
+
+        vertices.forEach { vertexId ->
+            val position = getPosition(vertexId, referenceSize, 250f)
+            // Normalizar las coordenadas (0-1)
+            val normalizedX = position.x / referenceSize.first
+            val normalizedY = position.y / referenceSize.second
+            tempMap[vertexId] = NormalizedBoard(normalizedX, normalizedY)
+        }
+
+        tempMap.toMap()
     }
 
     fun isForwardMove(color: Color, from: String, to: String): Boolean {

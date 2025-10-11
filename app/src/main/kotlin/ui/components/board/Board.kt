@@ -31,8 +31,6 @@ import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.NormalizedBoard
-import com.agustin.tarati.game.logic.PositionHelper
 import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.ui.preview.endGameState
 import com.agustin.tarati.ui.preview.initialGameStateWithUpgrades
@@ -45,16 +43,21 @@ import com.agustin.tarati.ui.theme.TaratiTheme
 fun Board(
     modifier: Modifier = Modifier,
     gameState: GameState,
+    newGame: Boolean = false,
+    onResetCompleted: () -> Unit = {},
     onMove: (from: String, to: String) -> Unit,
     boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     viewModel: BoardViewModel = viewModel()
 ) {
-    LaunchedEffect(gameState) {
-        viewModel.resetSelection()
+    LaunchedEffect(newGame) {
+        if (newGame) {
+            viewModel.resetSelection()
+            onResetCompleted()
+        }
     }
 
     val vmSelectedPiece by viewModel.selectedPiece.collectAsState()
-    val vmHighlightedMoves by viewModel.highlightedMoves.collectAsState()
+    val vmValidMoves by viewModel.validMoves.collectAsState()
 
     // Calcular tamaño visual basado en el contexto
     val density = LocalDensity.current
@@ -87,7 +90,7 @@ fun Board(
                 orientation = boardOrientation,
                 vWidth = vWidth,
                 selectedPiece = vmSelectedPiece,
-                highlightedMoves = vmHighlightedMoves,
+                highlightedMoves = vmValidMoves,
                 canvasSize = size,
                 colors = boardColors
             )
@@ -111,7 +114,7 @@ fun handleTap(
             tappedVertex = tappedVertex,
             onSelected = { piece, moves ->
                 viewModel.updateSelectedPiece(piece)
-                viewModel.updateHighlightedMoves(moves)
+                viewModel.updateValidMoves(moves)
             })
     } else {
         // Mover pieza
@@ -122,10 +125,13 @@ fun handleTap(
                 gameState = gameState,
                 selectedPiece = selectedPiece,
                 tappedVertex = tappedVertex,
-                onMove = onMove,
-                onInvalid = { tapped, moves ->
-                    viewModel.updateSelectedPiece(tapped)
-                    viewModel.updateHighlightedMoves(moves)
+                onMove = { from, to ->
+                    onMove(from, to)
+                    viewModel.resetSelection()
+                },
+                onInvalid = { from, valid ->
+                    viewModel.updateSelectedPiece(from)
+                    viewModel.updateValidMoves(valid)
                 },
                 onCancel = { viewModel.resetSelection() }
             )
@@ -141,8 +147,8 @@ private fun movePiece(
     gameState: GameState,
     selectedPiece: String,
     tappedVertex: String,
-    onMove: (String, String) -> Unit,
-    onInvalid: (String, List<String>) -> Unit,
+    onMove: (from: String, to: String) -> Unit,
+    onInvalid: (from: String, valid: List<String>) -> Unit,
     onCancel: () -> Unit
 ) {
     if (tappedVertex != selectedPiece) {
@@ -307,61 +313,6 @@ private fun DrawScope.drawBoardContent(
     }
 }
 
-fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState {
-    val mutable = prevState.checkers.toMutableMap()
-    val movedChecker = mutable[from] ?: return prevState
-    // remove from
-    mutable.remove(from)
-    // place moved checker (copy to allow mutability of isUpgraded)
-    var placedChecker = movedChecker
-
-    // Check for upgrades when moved into opponent home base
-    val whiteBase = GameBoard.homeBases[WHITE] ?: emptyList()
-    val blackBase = GameBoard.homeBases[BLACK] ?: emptyList()
-    if (whiteBase.contains(to) && movedChecker.color == BLACK) {
-        placedChecker = movedChecker.copy(isUpgraded = true)
-    } else if (blackBase.contains(to) && movedChecker.color == WHITE) {
-        placedChecker = movedChecker.copy(isUpgraded = true)
-    }
-    mutable[to] = placedChecker
-
-    // Flip adjacent checkers (for each edge containing 'to', flip the other vertex if opponent)
-    for (edge in GameBoard.edges) {
-        val (a, b) = edge
-        if (a != to && b != to) continue
-
-        val adjacent = if (a == to) b else a
-        val adjChecker = mutable[adjacent]
-        if (adjChecker == null || adjChecker.color == placedChecker.color) continue
-
-        var newAdj = adjChecker.copy(color = placedChecker.color)
-        // Check for upgrades for flipped piece
-        if (whiteBase.contains(adjacent) && newAdj.color == BLACK) {
-            newAdj = newAdj.copy(isUpgraded = true)
-        } else if (blackBase.contains(adjacent) && newAdj.color == WHITE) {
-            newAdj = newAdj.copy(isUpgraded = true)
-        }
-        mutable[adjacent] = newAdj
-    }
-
-    return GameState(mutable.toMap(), prevState.currentTurn)
-}
-
-val normalizedPositions: Map<String, NormalizedBoard> by lazy {
-    val tempMap = mutableMapOf<String, NormalizedBoard>()
-    val referenceSize = 1100f to 1100f // Tamaño de referencia para normalizar
-
-    vertices.forEach { vertexId ->
-        val position = PositionHelper.getPosition(vertexId, referenceSize, 250f)
-        // Normalizar las coordenadas (0-1)
-        val normalizedX = position.x / referenceSize.first
-        val normalizedY = position.y / referenceSize.second
-        tempMap[vertexId] = NormalizedBoard(normalizedX, normalizedY)
-    }
-
-    tempMap.toMap()
-}
-
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitWhite() {
@@ -404,7 +355,7 @@ fun BoardPreview_Custom() {
 
         val vm = viewModel<BoardViewModel>().apply {
             updateSelectedPiece("B1")
-            updateHighlightedMoves(listOf("B2", "A1", "B6"))
+            updateValidMoves(listOf("B2", "A1", "B6"))
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -425,7 +376,7 @@ fun BoardPreview_BlackPlayer() {
         val exampleGameState = endGameState(BLACK)
         val vm = viewModel<BoardViewModel>().apply {
             updateSelectedPiece("A1")
-            updateHighlightedMoves(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
+            updateValidMoves(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -446,7 +397,7 @@ fun BoardPreview_Landscape_BlackPlayer() {
         val exampleGameState = createGameState { setTurn(BLACK) }
         val vm = viewModel<BoardViewModel>().apply {
             updateSelectedPiece("C2")
-            updateHighlightedMoves(listOf("C9", "B4", "B5"))
+            updateValidMoves(listOf("C9", "B4", "B5"))
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -467,7 +418,7 @@ fun BoardPreview_Landscape_Debug() {
         val exampleGameState = createGameState {}
         val vm = viewModel<BoardViewModel>().apply {
             updateSelectedPiece("C2")
-            updateHighlightedMoves(listOf("C3", "B2", "B1"))
+            updateValidMoves(listOf("C3", "B2", "B1"))
         }
 
         Box(modifier = Modifier.fillMaxSize()) {

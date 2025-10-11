@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // ViewModel que guarda estado, historial y dificultad
-        val viewModel: SettingsViewModel = get().get()
+        val viewModel: SettingsViewModel by lazy { get().get() }
 
         setContent {
             LanguageAwareApp {

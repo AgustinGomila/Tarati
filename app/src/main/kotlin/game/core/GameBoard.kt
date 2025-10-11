@@ -1,9 +1,9 @@
 package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset
+import com.agustin.tarati.game.ai.TaratiAI.normalizedPositions
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.ui.components.board.normalizedPositions
 import kotlin.math.pow
 import kotlin.math.sqrt
 

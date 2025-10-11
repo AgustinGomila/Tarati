@@ -20,6 +20,8 @@ compose-bom = "2025.10.00"
 
 # Testing
 junit = "4.13.2"
+kotlinxCoroutines = "1.7.3"
+mockk = "1.14.6"
 
 [libraries]
 # Core Android
@@ -47,6 +49,8 @@ koin-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = 
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 # Debug
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }

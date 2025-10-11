@@ -104,6 +104,8 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)

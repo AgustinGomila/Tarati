@@ -13,7 +13,7 @@ import org.koin.core.context.GlobalContext.get
 
 class SettingsViewModel() : ViewModel() {
 
-    val sr: SettingsRepository by lazy { get().get() }
+    var sr: SettingsRepository = get().get()
 
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()

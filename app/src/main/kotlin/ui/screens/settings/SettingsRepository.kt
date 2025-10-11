@@ -10,7 +10,6 @@ import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.koin.core.context.GlobalContext.get
 
 interface SettingsRepository {
     val isDarkTheme: Flow<Boolean>
@@ -24,9 +23,7 @@ interface SettingsRepository {
     suspend fun setLabelsVisibility(visibility: Boolean)
 }
 
-class SettingsRepositoryImpl() : SettingsRepository {
-
-    private var dataStore: DataStore<Preferences> = get().get()
+class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRepository {
 
     companion object {
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme_enabled")

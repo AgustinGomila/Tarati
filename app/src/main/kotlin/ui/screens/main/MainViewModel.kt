@@ -16,7 +16,7 @@ import org.koin.core.context.GlobalContext.get
 
 class MainViewModel() : ViewModel() {
 
-    val sr: SettingsRepository by lazy { get().get() }
+    var sr: SettingsRepository = get().get()
 
     private val _gameState = MutableStateFlow(initialGameState())
     private val _history = MutableStateFlow(listOf<Pair<Move, GameState>>())
@@ -80,6 +80,10 @@ class MainViewModel() : ViewModel() {
                 "D4" to Checker(Color.BLACK, false)
             )
             return GameState(checkers = map, currentTurn = currentTurn)
+        }
+
+        fun cleanGameState(currentTurn: Color = Color.WHITE): GameState {
+            return GameState(checkers = mapOf(), currentTurn = currentTurn)
         }
     }
 }

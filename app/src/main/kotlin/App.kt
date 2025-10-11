@@ -42,7 +42,7 @@ class App : Application() {
 
     // Módulo de repositorios
     private val repositoryModule = module {
-        single<SettingsRepository> { SettingsRepositoryImpl() }
+        single<SettingsRepository> { SettingsRepositoryImpl(get()) }
     }
 
     // Módulo de ViewModels

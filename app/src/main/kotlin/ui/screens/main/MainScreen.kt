@@ -43,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Color
@@ -52,7 +53,6 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.TurnIndicator
-import com.agustin.tarati.ui.components.board.applyMoveToBoard
 import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
@@ -83,6 +83,7 @@ fun MainScreen(navController: NavController) {
     val vmPlayerSide by viewModel.playerSide.collectAsState(WHITE)
 
     var stopAI by remember { mutableStateOf(false) }
+    var resetBoard by remember { mutableStateOf(false) }
 
     // Estados para diálogos
     var showGameOverDialog by remember { mutableStateOf(false) }
@@ -163,7 +164,6 @@ fun MainScreen(navController: NavController) {
         viewModel.updatePlayerSide(playerSide)
         viewModel.updateHistory(emptyList())
         viewModel.updateMoveIndex(-1)
-
         viewModel.updateGameState(initialGameState())
 
         showNewGameDialog = false
@@ -178,6 +178,7 @@ fun MainScreen(navController: NavController) {
         }
 
         println("New game started: playerSide=$playerSide")
+        resetBoard = true
     }
 
     fun undoMove() {
@@ -228,6 +229,11 @@ fun MainScreen(navController: NavController) {
             onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = { showNewGameDialog = false },
         )
+    }
+
+    val onResetBoardCompleted = {
+        resetBoard = false
+        println("Board reset completed")
     }
 
     ModalNavigationDrawer(
@@ -304,6 +310,8 @@ fun MainScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Board(
+                            newGame = resetBoard,
+                            onResetCompleted = onResetBoardCompleted,
                             gameState = vmGameState,
                             onMove = ::applyMove,
                             boardOrientation =
