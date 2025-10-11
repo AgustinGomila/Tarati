@@ -21,6 +21,7 @@ val versionProps = getVersionProperties()
 android {
     namespace = "com.agustin.tarati"
     compileSdk = libs.versions.compileSdk.get().toInt()
+    ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
         applicationId = "com.agustin.tarati"
@@ -30,6 +31,22 @@ android {
         versionName = versionProps.getProperty("versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        @Suppress("UnstableApiUsage")
+        externalNativeBuild {
+            cmake {
+                cppFlags += ""
+            }
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 
     buildTypes {
@@ -41,7 +58,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            ndk.debugSymbolLevel = NdkOptions.DebugSymbolLevel.FULL.toString()
+            ndk.debugSymbolLevel = NdkOptions.DebugSymbolLevel.SYMBOL_TABLE.toString()
         }
     }
     compileOptions {

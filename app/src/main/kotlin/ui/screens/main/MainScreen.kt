@@ -165,8 +165,10 @@ fun MainScreen(navController: NavController) {
         viewModel.updateMoveIndex(-1)
 
         viewModel.updateGameState(initialGameState())
+
         showNewGameDialog = false
         showGameOverDialog = false
+        showAboutDialog = false
 
         // Reiniciar estado de IA
         stopAI = false
@@ -208,7 +210,7 @@ fun MainScreen(navController: NavController) {
 
     // Diálogo About
     if (showAboutDialog) {
-        AboutDialog(showAboutDialog = { showAboutDialog = it })
+        AboutDialog(onDismiss = { showAboutDialog = false })
     }
 
     // Diálogo de fin de juego
@@ -224,7 +226,7 @@ fun MainScreen(navController: NavController) {
     if (showNewGameDialog) {
         NewGameDialog(
             onConfirmed = { startNewGame(vmPlayerSide) },
-            onDismissed = { showNewGameDialog = false }
+            onDismissed = { showNewGameDialog = false },
         )
     }
 
@@ -248,11 +250,9 @@ fun MainScreen(navController: NavController) {
                 onDifficultyChange = { viewModel.updateDifficulty(it) },
                 onUndo = ::undoMove,
                 onRedo = ::redoMove,
-                onMoveToCurrent = ::moveToCurrentState
-            ) {
-                showAboutDialog = true
-                scope.launch { drawerState.close() }
-            }
+                onMoveToCurrent = ::moveToCurrentState,
+                onAboutClick = { showAboutDialog = true }
+            )
         }
     ) {
         Scaffold(
@@ -331,9 +331,9 @@ fun MainScreen(navController: NavController) {
 }
 
 @Composable
-fun AboutDialog(showAboutDialog: (Boolean) -> Unit) {
+fun AboutDialog(onDismiss: () -> Unit = { }) {
     AlertDialog(
-        onDismissRequest = { showAboutDialog(false) },
+        onDismissRequest = onDismiss,
         title = { LocalizedText(id = (R.string.about_tarati)) },
         text = {
             Column {
@@ -368,7 +368,7 @@ fun AboutDialog(showAboutDialog: (Boolean) -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { showAboutDialog(false) }
+                onClick = onDismiss
             ) {
                 LocalizedText(id = (R.string.close))
             }
