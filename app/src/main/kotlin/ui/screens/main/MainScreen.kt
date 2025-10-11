@@ -43,12 +43,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
-import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
+import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.components.board.Board
@@ -76,7 +75,6 @@ fun MainScreen(navController: NavController) {
     // ViewModel que guarda estado, historial y dificultad
     val viewModel: MainViewModel = viewModel()
 
-    // Observamos el gameState del ViewModel. Si es null, creamos un estado inicial
     val vmGameState by viewModel.gameState.collectAsState(initialGameState())
     val vmHistory by viewModel.history.collectAsState(emptyList())
     val vmDifficulty by viewModel.difficulty.collectAsState(Difficulty.DEFAULT)
@@ -92,22 +90,15 @@ fun MainScreen(navController: NavController) {
     var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
 
-    fun isGameOverLocal(state: GameState): Boolean {
-        val possible = TaratiAI.getAllPossibleMoves(state)
-        if (possible.isEmpty()) return true
-        val colors = state.checkers.values.map { it.color }.toSet()
-        return colors.size <= 1
-    }
-
     fun applyMove(from: String, to: String) {
         stopAI = false
 
         println("Applying move: $from -> $to")
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
-        val nextState = newBoardState.copy(
-            currentTurn = if (vmGameState.currentTurn == WHITE) BLACK else WHITE
-        )
+
+        val nextTurn = if (vmGameState.currentTurn == WHITE) BLACK else WHITE
+        val nextState = newBoardState.copy(currentTurn = nextTurn)
 
         val newEntry = Pair(Move(from, to), nextState)
         val truncated =
@@ -121,22 +112,31 @@ fun MainScreen(navController: NavController) {
         viewModel.updateHistory(newMoveHistory)
         viewModel.updateGameState(nextState)
 
-        if (isGameOverLocal(nextState)) {
+        if (isGameOver(nextState)) {
+            val winner = if (nextState.currentTurn == WHITE) BLACK else WHITE
+            val winnerName = if (winner == WHITE)
+                context.getString(R.string.white)
+            else
+                context.getString(R.string.black)
+
             gameOverMessage = context.getString(
                 R.string.game_over_wins,
-                if (nextState.currentTurn == WHITE) context.getString(R.string.black) else context.getString(R.string.white)
+                winnerName
             )
             showGameOverDialog = true
+            stopAI = true
         }
     }
 
-    // IA Logic
-    // En MainScreen.kt, corregir el LaunchedEffect de la IA:
     LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty, vmPlayerSide) {
         if (!vmAIEnabled || stopAI) return@LaunchedEffect
 
-        // La IA juega cuando no es el turno del humano
-        val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide
+        // La IA juega cuando:
+        // 1. Está habilitada
+        // 2. No es el turno del jugador humano
+        // 3. El juego no está terminado
+        val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide &&
+                !isGameOver(vmGameState)
 
         println("AI Check: enabled=${true}, playerSide=$vmPlayerSide, currentTurn=${vmGameState.currentTurn}, shouldPlay=$shouldAIPlay")
 
@@ -166,6 +166,7 @@ fun MainScreen(navController: NavController) {
 
         viewModel.updateGameState(initialGameState())
         showNewGameDialog = false
+        showGameOverDialog = false
 
         // Reiniciar estado de IA
         stopAI = false
@@ -214,10 +215,7 @@ fun MainScreen(navController: NavController) {
     if (showGameOverDialog) {
         GameOverDialog(
             gameOverMessage = gameOverMessage,
-            onConfirmed = {
-                showGameOverDialog = false
-                startNewGame(vmPlayerSide)
-            },
+            onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = { showGameOverDialog = false }
         )
     }

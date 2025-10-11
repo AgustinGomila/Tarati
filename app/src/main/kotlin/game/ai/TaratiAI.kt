@@ -82,6 +82,8 @@ object TaratiAI {
             if (beta <= alpha) break
         }
 
+        println("AI best score: $bestScore, best move: $bestMove, alpha: $alpha, beta: $beta")
+
         transpositionTable[boardHash] = TranspositionEntry(depth, Result(bestScore, bestMove))
         return Result(bestScore, bestMove)
     }
@@ -103,7 +105,7 @@ object TaratiAI {
         return score
     }
 
-    private fun isGameOver(gameState: GameState): Boolean {
+    fun isGameOver(gameState: GameState): Boolean {
         val whitePieces = gameState.checkers.values.count { it.color == WHITE }
         val blackPieces = gameState.checkers.values.count { it.color == BLACK }
         if (whitePieces == 0 || blackPieces == 0) return true
