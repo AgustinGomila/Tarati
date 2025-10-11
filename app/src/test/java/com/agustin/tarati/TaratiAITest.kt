@@ -36,7 +36,7 @@ class TaratiAITest {
     fun applyMoveToBoard_upgradesWhenEnteringOpponentHomeBase() {
         // Prepare a minimal state: black piece at B1 (empty normally)
         val state = GameState(mapOf("B1" to Checker(Color.BLACK, false)), currentTurn = Color.BLACK)
-        val result = applyMoveToBoard(state, "B1", "C1") // C1 is white homebase
+        val result = applyMoveToBoard(state, "B1", "C1") // C1 is white home-base
         val placed = result.checkers["C1"]
         Assert.assertNotNull("Piece must be placed at destination", placed)
         Assert.assertEquals("Color preserved", Color.BLACK, placed!!.color)

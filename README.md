@@ -18,8 +18,8 @@
 
 ## 📖 Sobre el Juego
 
-Tarati es un juego de mesa estratégico creado por **George Spencer Brown**, el brillante autor de "Leyes de la Forma" (
-*Laws of Form*). Este juego combina elementos de ajedrez y damas con mecánicas únicas de movimiento y captura, basadas
+Tarati es un juego de mesa estratégico creado por **George Spencer Brown**, el brillante autor de "Leyes de la Forma"
+(*Laws of Form*). Este juego combina elementos de ajedrez y damas con mecánicas únicas de movimiento y captura, basadas
 en el cálculo de distinciones de Spencer Brown.
 
 > *"Un juego de distinciones y decisiones" - George Spencer Brown*
@@ -31,7 +31,7 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 
 ### 🎯 Jugabilidad
 
-- **Dos jugadores**: Blanco vs Negro con 4 piezas cada uno
+- **Dos jugadores**: Blanco vs. Negro con 4 piezas cada uno
 - **IA inteligente**: 4 niveles de dificultad configurable
 - **Movimiento táctil**: Interfaz intuitiva de tocar y mover
 - **Historial completo**: Sistema de deshacer/rehacer movimientos

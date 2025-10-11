@@ -31,7 +31,7 @@ import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.NormalizedCoord
+import com.agustin.tarati.game.logic.NormalizedBoard
 import com.agustin.tarati.game.logic.PositionHelper
 import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.ui.preview.endGameState
@@ -347,8 +347,8 @@ fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState 
     return GameState(mutable.toMap(), prevState.currentTurn)
 }
 
-val normalizedPositions: Map<String, NormalizedCoord> by lazy {
-    val tempMap = mutableMapOf<String, NormalizedCoord>()
+val normalizedPositions: Map<String, NormalizedBoard> by lazy {
+    val tempMap = mutableMapOf<String, NormalizedBoard>()
     val referenceSize = 1100f to 1100f // Tamaño de referencia para normalizar
 
     vertices.forEach { vertexId ->
@@ -356,7 +356,7 @@ val normalizedPositions: Map<String, NormalizedCoord> by lazy {
         // Normalizar las coordenadas (0-1)
         val normalizedX = position.x / referenceSize.first
         val normalizedY = position.y / referenceSize.second
-        tempMap[vertexId] = NormalizedCoord(normalizedX, normalizedY)
+        tempMap[vertexId] = NormalizedBoard(normalizedX, normalizedY)
     }
 
     tempMap.toMap()
