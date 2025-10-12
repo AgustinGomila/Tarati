@@ -67,4 +67,6 @@
     <string name="player_side">Side</string>
     <string name="piece">Piece</string>
     <string name="side">Side</string>
+    <string name="clear">Clear</string>
+    <string name="rotate">Rotate</string>
 </resources>
