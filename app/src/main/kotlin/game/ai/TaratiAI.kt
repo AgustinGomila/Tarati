@@ -8,6 +8,7 @@ import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.hashBoard
+import com.agustin.tarati.game.core.switchColor
 import com.agustin.tarati.game.logic.NormalizedBoard
 import com.agustin.tarati.game.logic.PositionHelper.getPosition
 import kotlin.math.max
@@ -165,7 +166,7 @@ object TaratiAI {
         // Apply move using the board mutator (does NOT toggle turn)
         val newState = applyMoveToBoard(boardState, from, to)
         // toggle turn (Does this outside applyMoveToBoard; AI.ApplyMoveAI must toggle)
-        val nextTurn = if (boardState.currentTurn == WHITE) BLACK else WHITE
+        val nextTurn = boardState.currentTurn.switchColor()
         return newState.copy(currentTurn = nextTurn)
     }
 
@@ -240,14 +241,11 @@ object TaratiAI {
     fun isValidMove(gs: GameState, from: String, to: String): Boolean {
         // Verificar que from y to sean adyacentes
         val isAdjacent = GameBoard.adjacencyMap[from]?.contains(to) ?: false
-        if (!isAdjacent) {
-            return false
-        }
+        if (!isAdjacent) return false
 
         if (from == to) return false
 
         val checker = gs.checkers[from] ?: return false
-
         if (gs.checkers.containsKey(to)) return false
 
         if (checker.color != gs.currentTurn) return false

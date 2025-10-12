@@ -368,7 +368,7 @@ fun GameStateIndicator(gameState: GameState, playerSide: Any) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AIDifficultyControls(
-    playerSide: Any,
+    playerSide: Color,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     difficulty: Difficulty,
@@ -390,72 +390,88 @@ fun AIDifficultyControls(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = onExpandedChange
-            ) {
-                TextField(
-                    value = stringResource(difficulty.displayNameRes),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { onExpandedChange(false) }
-                ) {
-                    Difficulty.ALL.forEach { difficultyOption ->
-                        DropdownMenuItem(
-                            text = {
-                                LocalizedText(
-                                    difficultyOption.displayNameRes,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            },
-                            onClick = {
-                                onDifficultyChange(difficultyOption)
-                                onExpandedChange(false)
-                            }
-                        )
-                    }
-                }
-            }
+            DifficultySelector(expanded, onExpandedChange, difficulty, onDifficultyChange)
         }
 
         // Botón de toggle AI (icono solamente)
         Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(
-                    color = if (playerSide == BLACK)
-                        MaterialTheme.colorScheme.secondary
-                    else
-                        MaterialTheme.colorScheme.primary,
-                ),
-            contentAlignment = Alignment.Center
+        AIEnabledButton(playerSide, isAIEnabled, onToggleAI)
+    }
+}
+
+@Composable
+fun AIEnabledButton(playerSide: Color, isAIEnabled: Boolean, onToggleAI: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                color = if (playerSide == BLACK)
+                    MaterialTheme.colorScheme.secondary
+                else
+                    MaterialTheme.colorScheme.primary,
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        IconButton(
+            onClick = onToggleAI,
+            modifier = Modifier.size(48.dp)
         ) {
-            IconButton(
-                onClick = onToggleAI,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector =
-                        if (isAIEnabled) Icons.Filled.SmartToy
-                        else Icons.Outlined.SmartToy,
-                    contentDescription = stringResource(
-                        if (isAIEnabled) R.string.disable_ai
-                        else R.string.enable_ai
-                    ),
-                    tint =
-                        if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.outline
+            Icon(
+                imageVector =
+                    if (isAIEnabled) Icons.Filled.SmartToy
+                    else Icons.Outlined.SmartToy,
+                contentDescription = stringResource(
+                    if (isAIEnabled) R.string.disable_ai
+                    else R.string.enable_ai
+                ),
+                tint =
+                    if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.outline
+            )
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+fun DifficultySelector(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    difficulty: Difficulty,
+    onDifficultyChange: (Difficulty) -> Unit
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange
+    ) {
+        TextField(
+            value = stringResource(difficulty.displayNameRes),
+            onValueChange = {},
+            readOnly = true,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            Difficulty.ALL.forEach { difficultyOption ->
+                DropdownMenuItem(
+                    text = {
+                        LocalizedText(
+                            difficultyOption.displayNameRes,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    onClick = {
+                        onDifficultyChange(difficultyOption)
+                        onExpandedChange(false)
+                    }
                 )
             }
         }

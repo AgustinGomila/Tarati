@@ -131,7 +131,7 @@ fun MainScreen(navController: NavController) {
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
 
-        val nextTurn = if (vmGameState.currentTurn == WHITE) BLACK else WHITE
+        val nextTurn = vmGameState.currentTurn.switchColor()
         val nextState = newBoardState.copy(currentTurn = nextTurn)
 
         val newEntry = Pair(Move(from, to), nextState)
@@ -147,7 +147,7 @@ fun MainScreen(navController: NavController) {
         viewModel.updateGameState(nextState)
 
         if (isGameOver(nextState)) {
-            val winner = if (nextState.currentTurn == WHITE) BLACK else WHITE
+            val winner = nextState.currentTurn.switchColor()
             val winnerName = if (winner == WHITE)
                 context.getString(R.string.white)
             else
@@ -321,9 +321,9 @@ fun MainScreen(navController: NavController) {
                     modifier = Modifier.align(CenterStart),
                     vmPlayerSide = vmPlayerSide,
                     onPlayerSideToggle = { viewModel.togglePlayerSide() },
-                    vmEditColor = vmEditColor,
+                    editColor = vmEditColor,
                     onColorToggle = { viewModel.toggleEditColor() },
-                    vmEditTurn = vmEditTurn
+                    editTurn = vmEditTurn
                 ) { viewModel.toggleEditTurn() }
 
                 // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
@@ -345,11 +345,11 @@ fun MainScreen(navController: NavController) {
                 // Controles superiores: Color, Lado, Turno
                 TopControls(
                     modifier = Modifier.align(TopCenter),
-                    vmPlayerSide = vmPlayerSide,
+                    playerSide = vmPlayerSide,
                     onPlayerSideToggle = { viewModel.togglePlayerSide() },
-                    vmEditColor = vmEditColor,
+                    editColor = vmEditColor,
                     onColorToggle = { viewModel.toggleEditColor() },
-                    vmEditTurn = vmEditTurn
+                    editTurn = vmEditTurn
                 ) { viewModel.toggleEditTurn() }
 
                 // Controles inferiores: Rotar, Limpiar, Contador y Comenzar
@@ -423,12 +423,12 @@ fun MainScreen(navController: NavController) {
 
                     CreateBoard(
                         modifier = Modifier.weight(1f),
-                        vmGameState = vmGameState,
-                        vmPlayerSide = vmPlayerSide,
+                        gameState = vmGameState,
+                        playerSide = vmPlayerSide,
                         isLandscapeScreen = isLandscapeScreen,
-                        vmIsEditing = vmIsEditing,
+                        isEditing = vmIsEditing,
                         isAIThinking = isAIThinking(),
-                        vmEditBoardOrientation = vmEditBoardOrientation,
+                        editBoardOrientation = vmEditBoardOrientation,
                         onResetBoardCompleted = onResetBoardCompleted,
                         onApplyMove = { from, to -> applyMove(from, to) },
                         handleEditPiece = { d -> handleEditPiece(d) },
@@ -443,12 +443,12 @@ fun MainScreen(navController: NavController) {
 
 @ExperimentalMaterial3Api
 @Composable
-fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, vmIsEditing: Boolean) {
+fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, isEditing: Boolean) {
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 LocalizedText(id = (R.string.tarati))
-                if (vmIsEditing) {
+                if (isEditing) {
                     Spacer(modifier = Modifier.width(8.dp))
                     LocalizedText(
                         id = (R.string.editing),
@@ -476,12 +476,12 @@ fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, vmIsEditing: B
 @Composable
 fun CreateBoard(
     modifier: Modifier = Modifier,
-    vmGameState: GameState,
-    vmPlayerSide: Color,
+    gameState: GameState,
+    playerSide: Color,
     isLandscapeScreen: Boolean,
-    vmIsEditing: Boolean,
+    isEditing: Boolean,
     isAIThinking: Boolean,
-    vmEditBoardOrientation: BoardOrientation,
+    editBoardOrientation: BoardOrientation,
     onResetBoardCompleted: () -> Unit,
     onApplyMove: (String, String) -> Unit,
     handleEditPiece: (String) -> Unit,
@@ -494,29 +494,29 @@ fun CreateBoard(
         contentAlignment = Alignment.Center
     ) {
         Board(
-            gameState = vmGameState,
-            boardOrientation = if (vmIsEditing) {
-                vmEditBoardOrientation
+            gameState = gameState,
+            boardOrientation = if (isEditing) {
+                editBoardOrientation
             } else {
-                toBoardOrientation(isLandscapeScreen, vmPlayerSide)
+                toBoardOrientation(isLandscapeScreen, playerSide)
             },
             newGame = resetBoard,
             onResetCompleted = onResetBoardCompleted,
             onMove = { from, to ->
-                if (!vmIsEditing) {
+                if (!isEditing) {
                     onApplyMove(from, to)
                 }
             },
-            isEditing = vmIsEditing,
+            isEditing = isEditing,
             onEditPiece = handleEditPiece
         )
 
-        if (vmIsEditing) {
+        if (isEditing) {
             content()
         } else {
             TurnIndicator(
                 modifier = Modifier.align(Alignment.TopEnd),
-                currentTurn = vmGameState.currentTurn,
+                currentTurn = gameState.currentTurn,
                 isAIThinking = isAIThinking
             )
         }
@@ -582,9 +582,9 @@ fun RightControls(
 fun LeftControls(
     modifier: Modifier, vmPlayerSide: Color,
     onPlayerSideToggle: () -> Unit,
-    vmEditColor: Color,
+    editColor: Color,
     onColorToggle: () -> Unit,
-    vmEditTurn: Color,
+    editTurn: Color,
     onTurnToggle: () -> Unit
 ) {
     Column(
@@ -593,25 +593,25 @@ fun LeftControls(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        ColorToggleButton(currentColor = vmEditColor, onColorToggle = onColorToggle)
+        ColorToggleButton(currentColor = editColor, onColorToggle = onColorToggle)
         Spacer(modifier = Modifier.height(16.dp))
         PlayerSideToggleButton(
             playerSide = vmPlayerSide,
             onPlayerSideToggle = onPlayerSideToggle
         )
         Spacer(modifier = Modifier.height(16.dp))
-        TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = onTurnToggle)
+        TurnToggleButton(currentTurn = editTurn, onTurnToggle = onTurnToggle)
     }
 }
 
 @Composable
 fun TopControls(
     modifier: Modifier = Modifier,
-    vmPlayerSide: Color,
+    playerSide: Color,
     onPlayerSideToggle: () -> Unit,
-    vmEditColor: Color,
+    editColor: Color,
     onColorToggle: () -> Unit,
-    vmEditTurn: Color,
+    editTurn: Color,
     onTurnToggle: () -> Unit
 ) {
     Row(
@@ -620,12 +620,12 @@ fun TopControls(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        ColorToggleButton(currentColor = vmEditColor, onColorToggle = onColorToggle)
+        ColorToggleButton(currentColor = editColor, onColorToggle = onColorToggle)
         PlayerSideToggleButton(
-            playerSide = vmPlayerSide,
+            playerSide = playerSide,
             onPlayerSideToggle = onPlayerSideToggle
         )
-        TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = onTurnToggle)
+        TurnToggleButton(currentTurn = editTurn, onTurnToggle = onTurnToggle)
     }
 }
 

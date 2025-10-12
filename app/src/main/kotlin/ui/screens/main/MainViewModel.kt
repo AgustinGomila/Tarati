@@ -7,6 +7,7 @@ import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.switchColor
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,11 +95,11 @@ class MainViewModel() : ViewModel() {
     }
 
     fun toggleEditColor() {
-        _editColor.value = if (_editColor.value == Color.WHITE) Color.BLACK else Color.WHITE
+        _editColor.value = _editColor.value.switchColor()
     }
 
     fun toggleEditTurn() {
-        _editTurn.value = if (_editTurn.value == Color.WHITE) Color.BLACK else Color.WHITE
+        _editTurn.value = _editTurn.value.switchColor()
     }
 
     fun rotateEditBoard() {
@@ -111,7 +112,7 @@ class MainViewModel() : ViewModel() {
     }
 
     fun togglePlayerSide() {
-        _playerSide.value = if (_playerSide.value == Color.WHITE) Color.BLACK else Color.WHITE
+        _playerSide.value = _playerSide.value.switchColor()
     }
 
     fun clearBoard() {
