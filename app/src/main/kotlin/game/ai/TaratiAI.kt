@@ -89,7 +89,21 @@ object TaratiAI {
         return Result(bestScore, bestMove)
     }
 
-    private fun sortMoves(moves: MutableList<Move>, gameState: GameState, isMaximizingPlayer: Boolean) {
+    fun sortMoves(moves: MutableList<Move>, gameState: GameState, isMaximizingPlayer: Boolean) {
+        moves.sortWith { a, b ->
+            val newStateA = applyMoveAI(gameState, a.from, a.to)
+            val newStateB = applyMoveAI(gameState, b.from, b.to)
+            val scoreA = if (isGameOver(newStateA)) {
+                if (isMaximizingPlayer) WINNING_SCORE else -WINNING_SCORE
+            } else quickEvaluate(newStateA)
+            val scoreB = if (isGameOver(newStateB)) {
+                if (isMaximizingPlayer) WINNING_SCORE else -WINNING_SCORE
+            } else quickEvaluate(newStateB)
+            if (isMaximizingPlayer) scoreB.compareTo(scoreA) else scoreA.compareTo(scoreB)
+        }
+    }
+
+    fun sortMovesAlt(moves: MutableList<Move>, gameState: GameState, isMaximizingPlayer: Boolean) {
         moves.sortWith { a, b ->
             val scoreA = quickEvaluate(applyMoveAI(gameState, a.from, a.to))
             val scoreB = quickEvaluate(applyMoveAI(gameState, b.from, b.to))
@@ -97,7 +111,7 @@ object TaratiAI {
         }
     }
 
-    private fun quickEvaluate(gameState: GameState): Double {
+    fun quickEvaluate(gameState: GameState): Double {
         var score = 0.0
         for ((_, checker) in gameState.checkers) {
             score += if (checker.color == BLACK) 1.0 else -1.0
