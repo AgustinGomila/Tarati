@@ -110,6 +110,13 @@ fun MainScreen(navController: NavController) {
     var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
 
+    fun isAIThinking(): Boolean {
+        return vmAIEnabled &&
+                vmGameState.currentTurn != vmPlayerSide &&
+                !isGameOver(vmGameState) &&
+                !vmIsEditing
+    }
+
     fun applyMove(from: String, to: String) {
         stopAI = false
 
@@ -302,7 +309,7 @@ fun MainScreen(navController: NavController) {
         if (isLandscapeScreen) {
             // Landscape: controles a izquierda y derecha
             Box(modifier = Modifier.fillMaxSize()) {
-                // Controles izquierda: Color, Lado, Turno
+                // Controles a la izquierda: Color, Lado, Turno
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -319,7 +326,7 @@ fun MainScreen(navController: NavController) {
                     TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = { viewModel.toggleEditTurn() })
                 }
 
-                // Controles derecha: Rotar, Limpiar, Contador y Comenzar
+                // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
@@ -516,12 +523,9 @@ fun MainScreen(navController: NavController) {
                             EditControls(isLandscapeScreen = isLandscapeScreen)
                         } else {
                             TurnIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .size(60.dp)
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.align(Alignment.TopEnd),
                                 currentTurn = vmGameState.currentTurn,
-                                size = 60.dp
+                                isAIThinking = isAIThinking()
                             )
                         }
                     }
@@ -973,12 +977,8 @@ private fun MainScreenPreviewContent(
                             )
 
                             TurnIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .size(60.dp)
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.align(Alignment.TopEnd),
                                 currentTurn = previewGameState.currentTurn,
-                                size = 60.dp
                             )
                         }
                     }
@@ -1166,7 +1166,7 @@ fun EditControlsPreview(
     if (isLandscapeScreen) {
         // Landscape: controles a izquierda y derecha
         Box(modifier = Modifier.fillMaxSize()) {
-            // Controles izquierda: Color, Lado, Turno
+            // Controles a la izquierda: Color, Lado, Turno
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -1181,7 +1181,7 @@ fun EditControlsPreview(
                 TurnToggleButton(currentTurn = editTurn, onTurnToggle = onEditTurnToggle)
             }
 
-            // Controles derecha: Rotar, Limpiar, Contador y Comenzar
+            // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)

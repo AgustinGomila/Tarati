@@ -74,4 +74,6 @@
     <string name="side">Lado</string>
     <string name="clear">Limpiar</string>
     <string name="rotate">Rotar</string>
+    <string name="ai_thinking">IA pensando...</string>
+    <string name="human_turn">Turno humano</string>
 </resources>
