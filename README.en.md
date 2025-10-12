@@ -184,10 +184,12 @@ The Tarati board represents a deep symbolic structure:
 
 ## 🖼️ Screenshots
 
-| <img src="/screenshots/screenshot1.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot3.jpeg" alt="Tarati Screenshot" width="300"/> |
-|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| <img src="/screenshots/screenshot4.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.jpeg" alt="Tarati Screenshot" width="300"/> |
-| <img src="/screenshots/screenshot5.jpeg" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot6.jpeg" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot1.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.png" alt="Tarati Screenshot" width="300"/>  |
+|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| <img src="/screenshots/screenshot3.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot4.png" alt="Tarati Screenshot" width="300"/>  |
+| <img src="/screenshots/screenshot5.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot6.png" alt="Tarati Screenshot" width="300"/>  |
+| <img src="/screenshots/screenshot7.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot8.png" alt="Tarati Screenshot" width="300"/>  |
+| <img src="/screenshots/screenshot9.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot10.png" alt="Tarati Screenshot" width="300"/> |
 
 * Intuitive and simple interface designed with Jetpack Compose
 
