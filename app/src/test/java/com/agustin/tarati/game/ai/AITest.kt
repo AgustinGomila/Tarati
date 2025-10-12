@@ -2,6 +2,8 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
+import com.agustin.tarati.game.ai.TaratiAI.getAllPossibleMoves
+import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -52,7 +54,7 @@ class AITest {
     fun getAllPossibleMoves_excludesBackwardMove_forNonUpgradedWhite() {
         // Single white checker at C1, turn WHITE
         val state = GameState(mapOf("C1" to Checker(WHITE, false)), currentTurn = WHITE)
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
         // Expect C1 -> C2 NOT to be present (this is 'backward' for WHITE)
         assertFalse(
             "Expected backward move C1 -> C2 to be disallowed for WHITE non-upgraded",
@@ -64,7 +66,7 @@ class AITest {
     fun getAllPossibleMoves_includesForwardMove_forNonUpgradedWhite() {
         // Single white checker at C2, turn WHITE
         val state = GameState(mapOf("C2" to Checker(WHITE, false)), currentTurn = WHITE)
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
 
         // Debug: imprimir todos los movimientos posibles
         println("Movimientos posibles para C2:")
@@ -83,11 +85,37 @@ class AITest {
         val gs = initialGameState(currentTurn = BLACK)
 
         // Debug: verificar movimientos posibles
-        val possibleMoves = TaratiAI.getAllPossibleMoves(gs)
+        val possibleMoves = getAllPossibleMoves(gs)
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
-        val result = TaratiAI.getNextBestMove(gs, Difficulty.MEDIUM.aiDepth)
+        val result = getNextBestMove(gs, Difficulty.MEDIUM.aiDepth)
+        assertNotNull("Result should not be null", result)
+
+        // Si no hay movimientos posibles, el resultado puede ser null (juego terminado)
+        if (possibleMoves.isNotEmpty()) {
+            assertNotNull("Should return a move when there are legal moves", result.move)
+        }
+    }
+
+    @Test
+    fun getNextBestMove_returnsMate_forBlackAtDepth1() {
+        // Usar el estado inicial completo, no uno minimal
+        val gs = GameState(
+            mapOf(
+                "C1" to Checker(BLACK, true),
+                "B1" to Checker(BLACK, true),
+                "D2" to Checker(WHITE, true)
+            ),
+            currentTurn = BLACK
+        )
+
+        // Debug: verificar movimientos posibles
+        val possibleMoves = getAllPossibleMoves(gs)
+        println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
+        possibleMoves.forEach { println("${it.from} -> ${it.to}") }
+
+        val result = getNextBestMove(gs, Difficulty.MEDIUM.aiDepth)
         assertNotNull("Result should not be null", result)
 
         // Si no hay movimientos posibles, el resultado puede ser null (juego terminado)
@@ -167,7 +195,7 @@ class AITest {
             mapOf("C1" to Checker(WHITE, true)),
             currentTurn = WHITE
         )
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
         // Upgraded pieces can move backward
         val hasBackwardMove = moves.any { it.from == "C1" && it.to == "C2" }
         assertTrue("Upgraded white should be able to move backward", hasBackwardMove)
@@ -182,7 +210,7 @@ class AITest {
             ),
             currentTurn = WHITE
         )
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
         // Should not include C1 -> B1 because B1 is occupied
         val moveToOccupied = moves.any { it.from == "C1" && it.to == "B1" }
         assertFalse("Should not move to occupied vertex", moveToOccupied)
@@ -197,7 +225,7 @@ class AITest {
             ),
             currentTurn = WHITE
         )
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
         // Should only include moves for white pieces
         val allMovesAreWhite = moves.all { move ->
             state.checkers[move.from]?.color == WHITE
@@ -264,7 +292,7 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val possibleMoves = TaratiAI.getAllPossibleMoves(stateNoMoves)
+        val possibleMoves = getAllPossibleMoves(stateNoMoves)
 
         // Verificar que no hay movimientos disponibles
         assertTrue("Should have no valid moves", possibleMoves.isEmpty())
@@ -407,7 +435,7 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val result = TaratiAI.getNextBestMove(state, depth = 4, isMaximizingPlayer = true)
+        val result = getNextBestMove(state, depth = 4, isMaximizingPlayer = true)
 
         assertNotNull("AI should find a move", result.move)
         // AI debería preferir moverse a posición ventajosa
@@ -427,7 +455,7 @@ class AITest {
         )
 
         // Con profundidad adaptativa (14 en endgame), debería ver el mate
-        val result = TaratiAI.getNextBestMove(state, isMaximizingPlayer = true)
+        val result = getNextBestMove(state, isMaximizingPlayer = true)
 
         assertNotNull("AI should find winning move", result.move)
         assertTrue("Should have high winning score", result.score > 100000.0)
@@ -484,11 +512,11 @@ class AITest {
         )
 
         val startTime = System.currentTimeMillis()
-        TaratiAI.getNextBestMove(state, depth = 8) // Profundidad fija para comparar
+        getNextBestMove(state, depth = 8) // Profundidad fija para comparar
         val firstRunTime = System.currentTimeMillis() - startTime
 
         val startTime2 = System.currentTimeMillis()
-        TaratiAI.getNextBestMove(state, depth = 8) // Misma profundidad
+        getNextBestMove(state, depth = 8) // Misma profundidad
         val secondRunTime = System.currentTimeMillis() - startTime2
 
         println("First run: ${firstRunTime}ms, Second run: ${secondRunTime}ms")
@@ -511,7 +539,7 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val moves = TaratiAI.getAllPossibleMoves(state)
+        val moves = getAllPossibleMoves(state)
 
         assertTrue("Should have multiple moves", moves.size > 1)
 

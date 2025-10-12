@@ -43,10 +43,12 @@ import com.agustin.tarati.ui.theme.TaratiTheme
 fun Board(
     modifier: Modifier = Modifier,
     gameState: GameState,
+    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     newGame: Boolean = false,
     onResetCompleted: () -> Unit = {},
     onMove: (from: String, to: String) -> Unit,
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
+    isEditing: Boolean = false,
+    onEditPiece: (String) -> Unit = { },
     viewModel: BoardViewModel = viewModel()
 ) {
     LaunchedEffect(newGame) {
@@ -67,7 +69,7 @@ fun Board(
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
-            .pointerInput(gameState, vmSelectedPiece, boardOrientation) {
+            .pointerInput(gameState, vmSelectedPiece, boardOrientation, isEditing) {
                 detectTapGestures { offset ->
                     val closestVertex = GameBoard.findClosestVertex(
                         tapOffset = offset,
@@ -78,9 +80,15 @@ fun Board(
                     )
 
                     closestVertex?.let { logicalVertexId ->
-                        handleTap(
-                            logicalVertexId, gameState, vmSelectedPiece, onMove, viewModel
-                        )
+                        if (isEditing) {
+                            // Modo edición: manejar colocación/mejora/eliminación de piezas
+                            onEditPiece(logicalVertexId)
+                        } else {
+                            // Modo juego normal
+                            handleTap(
+                                logicalVertexId, gameState, vmSelectedPiece, onMove, viewModel
+                            )
+                        }
                     }
                 }
             }) {
@@ -320,7 +328,6 @@ fun BoardPreview_PortraitWhite() {
         Board(
             gameState = initialGameStateWithUpgrades(),
             onMove = { from, to -> println("Move from $from to $to") },
-            boardOrientation = BoardOrientation.PORTRAIT_WHITE,
         )
     }
 }
@@ -331,8 +338,8 @@ fun BoardPreview_LandscapeBlack() {
     TaratiTheme {
         Board(
             gameState = midGameState(),
-            onMove = { from, to -> println("Move from $from to $to") },
             boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
+            onMove = { from, to -> println("Move from $from to $to") },
         )
     }
 }
@@ -362,7 +369,6 @@ fun BoardPreview_Custom() {
             Board(
                 gameState = exampleGameState,
                 onMove = { from, to -> println("Move from $from to $to") },
-                boardOrientation = BoardOrientation.PORTRAIT_WHITE,
                 viewModel = vm,
             )
         }
@@ -382,8 +388,8 @@ fun BoardPreview_BlackPlayer() {
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
-                onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.PORTRAIT_BLACK,
+                onMove = { from, to -> println("Move from $from to $to") },
                 viewModel = vm,
             )
         }
@@ -403,8 +409,8 @@ fun BoardPreview_Landscape_BlackPlayer() {
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
-                onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
+                onMove = { from, to -> println("Move from $from to $to") },
                 viewModel = vm,
             )
         }
@@ -413,7 +419,7 @@ fun BoardPreview_Landscape_BlackPlayer() {
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
-fun BoardPreview_Landscape_Debug() {
+fun BoardPreview_Landscape() {
     TaratiTheme(true) {
         val exampleGameState = createGameState {}
         val vm = viewModel<BoardViewModel>().apply {
@@ -424,8 +430,30 @@ fun BoardPreview_Landscape_Debug() {
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 gameState = exampleGameState,
-                onMove = { from, to -> println("Move from $from to $to") },
                 boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
+                onMove = { from, to -> println("Move from $from to $to") },
+                viewModel = vm,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, heightDp = 400)
+@Composable
+fun BoardPreview_Landscape_Editing() {
+    TaratiTheme(true) {
+        val exampleGameState = createGameState {}
+        val vm = viewModel<BoardViewModel>().apply {
+            updateSelectedPiece("C2")
+            updateValidMoves(listOf("C3", "B2", "B1"))
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                gameState = exampleGameState,
+                boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
+                onMove = { from, to -> println("Move from $from to $to") },
+                isEditing = true,
                 viewModel = vm,
             )
         }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.outlined.SmartToy
@@ -61,19 +62,20 @@ import com.agustin.tarati.ui.preview.customGameState
 fun Sidebar(
     modifier: Modifier = Modifier,
     gameState: GameState,
-    moveHistory: List<Move>,
-    currentMoveIndex: Int,
-    isAIEnabled: Boolean,
-    difficulty: Difficulty,
     playerSide: Color,
-    onSettings: () -> Unit,
-    onNewGame: (Color) -> Unit,
-    onToggleAI: () -> Unit,
-    onDifficultyChange: (Difficulty) -> Unit,
+    currentMoveIndex: Int,
+    moveHistory: List<Move>,
+    onMoveToCurrent: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
-    onMoveToCurrent: () -> Unit,
-    onAboutClick: () -> Unit
+    difficulty: Difficulty,
+    onDifficultyChange: (Difficulty) -> Unit,
+    isAIEnabled: Boolean,
+    onToggleAI: () -> Unit,
+    onSettings: () -> Unit,
+    onNewGame: (Color) -> Unit,
+    onEditBoard: () -> Unit,
+    onAboutClick: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -128,7 +130,7 @@ fun Sidebar(
                         MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                LocalizedText(R.string.white)
+                LocalizedText(R.string.w)
             }
 
             Button(
@@ -145,7 +147,19 @@ fun Sidebar(
                         MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                LocalizedText(R.string.black)
+                LocalizedText(R.string.b)
+            }
+
+            // Botón de Edición
+            IconButton(
+                onClick = onEditBoard,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = stringResource(R.string.edit),
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
             }
         }
 
@@ -204,22 +218,34 @@ fun Sidebar(
 
             // Botón de toggle AI (icono solamente)
             Spacer(modifier = Modifier.width(8.dp))
-            IconButton(
-                onClick = onToggleAI,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector =
-                        if (isAIEnabled) Icons.Filled.SmartToy
-                        else Icons.Outlined.SmartToy,
-                    contentDescription = stringResource(
-                        if (isAIEnabled) R.string.disable_ai
-                        else R.string.enable_ai
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        color = if (playerSide == BLACK)
+                            MaterialTheme.colorScheme.secondary
+                        else
+                            MaterialTheme.colorScheme.primary,
                     ),
-                    tint =
-                        if (isAIEnabled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline
-                )
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = onToggleAI,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector =
+                            if (isAIEnabled) Icons.Filled.SmartToy
+                            else Icons.Outlined.SmartToy,
+                        contentDescription = stringResource(
+                            if (isAIEnabled) R.string.disable_ai
+                            else R.string.enable_ai
+                        ),
+                        tint =
+                            if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.outline
+                    )
+                }
             }
         }
 
@@ -233,8 +259,7 @@ fun Sidebar(
                         MaterialTheme.colorScheme.secondary
                     else
                         MaterialTheme.colorScheme.primary
-                )
-                .padding(16.dp),
+                ),
             contentAlignment = Alignment.Center
         ) {
             val currentPlayerText = when {
@@ -392,18 +417,19 @@ fun SidebarPreview() {
 
         Sidebar(
             gameState = exampleGameState,
-            moveHistory = exampleMoveHistory,
-            currentMoveIndex = 2,
-            isAIEnabled = true,
-            difficulty = Difficulty.DEFAULT,
             playerSide = WHITE,
-            onSettings = { },
-            onNewGame = { },
-            onToggleAI = { },
-            onDifficultyChange = { },
+            currentMoveIndex = 2,
+            moveHistory = exampleMoveHistory,
+            onMoveToCurrent = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { }
+            difficulty = Difficulty.DEFAULT,
+            onDifficultyChange = { },
+            isAIEnabled = true,
+            onToggleAI = { },
+            onSettings = { },
+            onNewGame = { },
+            onEditBoard = { },
         ) { }
     }
 }
@@ -422,18 +448,19 @@ fun SidebarPreview_Dark() {
 
         Sidebar(
             gameState = exampleGameState,
-            moveHistory = exampleMoveHistory,
-            currentMoveIndex = 1,
-            isAIEnabled = false,
-            difficulty = Difficulty.HARD,
             playerSide = BLACK,
-            onSettings = { },
-            onNewGame = { },
-            onToggleAI = { },
-            onDifficultyChange = { },
+            currentMoveIndex = 1,
+            moveHistory = exampleMoveHistory,
+            onMoveToCurrent = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { }
+            difficulty = Difficulty.HARD,
+            onDifficultyChange = { },
+            isAIEnabled = false,
+            onToggleAI = { },
+            onSettings = { },
+            onNewGame = { },
+            onEditBoard = { },
         ) { }
     }
 }
@@ -453,18 +480,19 @@ fun SidebarPreview_CustomState() {
 
         Sidebar(
             gameState = exampleGameState,
-            moveHistory = exampleMoveHistory,
-            currentMoveIndex = 2,
-            isAIEnabled = true,
-            difficulty = Difficulty.MEDIUM,
             playerSide = WHITE,
-            onSettings = { },
-            onNewGame = { },
-            onToggleAI = { },
-            onDifficultyChange = { },
+            currentMoveIndex = 2,
+            moveHistory = exampleMoveHistory,
+            onMoveToCurrent = { },
             onUndo = { },
             onRedo = { },
-            onMoveToCurrent = { }
+            difficulty = Difficulty.MEDIUM,
+            onDifficultyChange = { },
+            isAIEnabled = true,
+            onToggleAI = { },
+            onSettings = { },
+            onNewGame = { },
+            onEditBoard = { },
         ) { }
     }
 }
