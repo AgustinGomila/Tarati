@@ -1,6 +1,6 @@
 package com.agustin.tarati.game.ai
 
-import com.agustin.tarati.game.ai.TaratiAI.sortMovesAlt
+import com.agustin.tarati.game.ai.TaratiAI.sortMoves
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -27,7 +27,7 @@ class AIForceTest {
             Move("B1", "C2")   // Movimiento de mate
         )
 
-        sortMovesAlt(moves, gameState, isMaximizingPlayer = true)
+        sortMoves(moves, gameState, isMaximizingPlayer = true)
 
         // El movimiento de mate debe ser primero
         assertEquals("C2", moves[0].to)
@@ -51,7 +51,7 @@ class AIForceTest {
             Move("C3", "C2")   // Movimiento que mantiene movilidad
         )
 
-        sortMovesAlt(moves, gameState, isMaximizingPlayer = false)
+        sortMoves(moves, gameState, isMaximizingPlayer = false)
 
         // Los movimientos que mantienen movilidad deben ser prioritarios
         assertTrue(moves[0].to == "C4" || moves[0].to == "C2")
@@ -90,7 +90,7 @@ class AIForceTest {
 
     @Test
     fun testSortMoves_ComparisonWithOriginal() {
-        // Test comparativo entre sortMoves original y sortMovesAlt
+        // Test comparativo entre sortMoves original y sortMoves
         val checkers = mutableMapOf(
             "B1" to Checker(BLACK, isUpgraded = true),
             "C1" to Checker(BLACK, isUpgraded = true),
@@ -107,7 +107,7 @@ class AIForceTest {
 
         // Aplicar ambos algoritmos
         TaratiAI.sortMoves(movesOriginal, gameState, isMaximizingPlayer = true)
-        sortMovesAlt(movesNew, gameState, isMaximizingPlayer = true)
+        sortMoves(movesNew, gameState, isMaximizingPlayer = true)
 
         // Ambos deberían priorizar el movimiento de mate en este caso simple
         assertEquals("C2", movesOriginal[0].to)
@@ -116,7 +116,7 @@ class AIForceTest {
 
     @Test
     fun testGameOverDetectionInSorting() {
-        // Test específico para verificar que sortMovesAlt detecta estados de game over
+        // Test específico para verificar que sortMoves detecta estados de game over
         val checkers = mutableMapOf(
             "C2" to Checker(BLACK, isUpgraded = true),
             "D2" to Checker(WHITE, isUpgraded = false) // Última pieza blanca
@@ -129,8 +129,8 @@ class AIForceTest {
             Move("C2", "C3")
         )
 
-        // En sortMovesAlt, si algún movimiento lleva a game over, debe ser priorizado
-        sortMovesAlt(moves, gameState, isMaximizingPlayer = true)
+        // En sortMoves, si algún movimiento lleva a game over, debe ser priorizado
+        sortMoves(moves, gameState, isMaximizingPlayer = true)
 
         // Verificar que no hay movimientos que lleven a game over en esta posición
         // (ninguno debería capturar D2 directamente)
@@ -151,7 +151,7 @@ class AIForceTest {
             Move("A1", "B2")
         )
 
-        sortMovesAlt(moves, gameState, isMaximizingPlayer = false)
+        sortMoves(moves, gameState, isMaximizingPlayer = false)
 
         // Ambos movimientos deberían ser válidos, ninguno gana inmediatamente
         assertEquals(2, moves.size)

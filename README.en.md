@@ -66,7 +66,7 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 **System Requirements:**
 
 - Android 8.0 (API 26) or higher
-- 15-20 MB free space
+- 5-10 MB free space
 - Touch screen
 
 **Installation:**

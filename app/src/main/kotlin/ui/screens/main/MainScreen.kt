@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -47,6 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
+import androidx.compose.ui.Alignment.Companion.CenterEnd
+import androidx.compose.ui.Alignment.Companion.CenterStart
+import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -62,6 +67,7 @@ import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.switchColor
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -74,6 +80,7 @@ import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
 import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -310,106 +317,53 @@ fun MainScreen(navController: NavController) {
             // Landscape: controles a izquierda y derecha
             Box(modifier = Modifier.fillMaxSize()) {
                 // Controles a la izquierda: Color, Lado, Turno
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    ColorToggleButton(currentColor = vmEditColor, onColorToggle = { viewModel.toggleEditColor() })
-                    Spacer(modifier = Modifier.height(16.dp))
-                    PlayerSideToggleButton(
-                        playerSide = vmPlayerSide,
-                        onPlayerSideToggle = { viewModel.togglePlayerSide() })
-                    Spacer(modifier = Modifier.height(16.dp))
-                    TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = { viewModel.toggleEditTurn() })
-                }
+                LeftControls(
+                    modifier = Modifier.align(CenterStart),
+                    vmPlayerSide = vmPlayerSide,
+                    onPlayerSideToggle = { viewModel.togglePlayerSide() },
+                    vmEditColor = vmEditColor,
+                    onColorToggle = { viewModel.toggleEditColor() },
+                    vmEditTurn = vmEditTurn
+                ) { viewModel.toggleEditTurn() }
 
                 // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    FloatingActionButton(
-                        onClick = { viewModel.rotateEditBoard() },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.RotateRight,
-                            contentDescription = localizedString(R.string.rotate_board)
-                        )
+                RightControls(
+                    modifier = Modifier.align(CenterEnd),
+                    pieceCounts = pieceCounts,
+                    isValidDistribution = isValidDistribution,
+                    isCompletedDistribution = isCompletedDistribution,
+                    onRotate = { viewModel.rotateEditBoard() },
+                    onStartGame = {
+                        viewModel.startGameFromEditedState()
+                        resetBoard = true
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    FloatingActionButton(
-                        onClick = { viewModel.clearBoard() },
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = localizedString(R.string.clear_board))
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    PieceCounter(
-                        whiteCount = pieceCounts.white,
-                        blackCount = pieceCounts.black,
-                        isValid = isValidDistribution
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            viewModel.startGameFromEditedState()
-                            resetBoard = true
-                        },
-                        enabled = isCompletedDistribution,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isCompletedDistribution) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                        )
-                    ) {
-                        LocalizedText(R.string.start_game)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Default.PlayArrow, contentDescription = localizedString(R.string.start))
-                    }
-                }
+                ) { viewModel.clearBoard() }
             }
         } else {
             // Portrait: controles en superior e inferior
             Box(modifier = Modifier.fillMaxSize()) {
                 // Controles superiores: Color, Lado, Turno
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    ColorToggleButton(currentColor = vmEditColor, onColorToggle = { viewModel.toggleEditColor() })
-                    PlayerSideToggleButton(
-                        playerSide = vmPlayerSide,
-                        onPlayerSideToggle = { viewModel.togglePlayerSide() })
-                    TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = { viewModel.toggleEditTurn() })
-                }
+                TopControls(
+                    modifier = Modifier.align(TopCenter),
+                    vmPlayerSide = vmPlayerSide,
+                    onPlayerSideToggle = { viewModel.togglePlayerSide() },
+                    vmEditColor = vmEditColor,
+                    onColorToggle = { viewModel.toggleEditColor() },
+                    vmEditTurn = vmEditTurn
+                ) { viewModel.toggleEditTurn() }
 
                 // Controles inferiores: Rotar, Limpiar, Contador y Comenzar
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RotateButton { viewModel.rotateEditBoard() }
-                    StartButtonAndPieceCounter(pieceCounts, isValidDistribution, isCompletedDistribution, onClick = {
+                BottomControls(
+                    modifier = Modifier.align(BottomCenter),
+                    pieceCounts = pieceCounts,
+                    isValidDistribution = isValidDistribution,
+                    isCompletedDistribution = isCompletedDistribution,
+                    onRotate = { viewModel.rotateEditBoard() },
+                    onStartGame = {
                         viewModel.startGameFromEditedState()
                         resetBoard = true
-                    })
-                    ClearBoardButton { viewModel.clearBoard() }
-                }
+                    }
+                ) { viewModel.clearBoard() }
             }
         }
     }
@@ -445,35 +399,7 @@ fun MainScreen(navController: NavController) {
         }
     ) {
         Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            LocalizedText(id = (R.string.tarati))
-                            if (vmIsEditing) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                LocalizedText(
-                                    id = (R.string.editing),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    if (drawerState.isClosed) drawerState.open()
-                                    else drawerState.close()
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
-                        }
-                    }
-                )
-            }
+            topBar = { TaratiTopBar(scope, drawerState, vmIsEditing) }
         ) { innerPadding ->
             Box(
                 modifier = Modifier
@@ -495,43 +421,225 @@ fun MainScreen(navController: NavController) {
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Board(
-                            gameState = vmGameState,
-                            boardOrientation = if (vmIsEditing) {
-                                vmEditBoardOrientation
-                            } else {
-                                toBoardOrientation(isLandscapeScreen, vmPlayerSide)
-                            },
-                            newGame = resetBoard,
-                            onResetCompleted = onResetBoardCompleted,
-                            onMove = { from, to ->
-                                if (!vmIsEditing) {
-                                    applyMove(from, to)
-                                }
-                            },
-                            isEditing = vmIsEditing,
-                            onEditPiece = ::handleEditPiece
-                        )
-
-                        if (vmIsEditing) {
-                            EditControls(isLandscapeScreen = isLandscapeScreen)
-                        } else {
-                            TurnIndicator(
-                                modifier = Modifier.align(Alignment.TopEnd),
-                                currentTurn = vmGameState.currentTurn,
-                                isAIThinking = isAIThinking()
-                            )
-                        }
-                    }
+                    CreateBoard(
+                        modifier = Modifier.weight(1f),
+                        vmGameState = vmGameState,
+                        vmPlayerSide = vmPlayerSide,
+                        isLandscapeScreen = isLandscapeScreen,
+                        vmIsEditing = vmIsEditing,
+                        isAIThinking = isAIThinking(),
+                        vmEditBoardOrientation = vmEditBoardOrientation,
+                        onResetBoardCompleted = onResetBoardCompleted,
+                        onApplyMove = { from, to -> applyMove(from, to) },
+                        handleEditPiece = { d -> handleEditPiece(d) },
+                        resetBoard = resetBoard,
+                        content = { EditControls(isLandscapeScreen) }
+                    )
                 }
             }
         }
+    }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, vmIsEditing: Boolean) {
+    TopAppBar(
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LocalizedText(id = (R.string.tarati))
+                if (vmIsEditing) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    LocalizedText(
+                        id = (R.string.editing),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        if (drawerState.isClosed) drawerState.open()
+                        else drawerState.close()
+                    }
+                }
+            ) {
+                Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
+            }
+        }
+    )
+}
+
+@Composable
+fun CreateBoard(
+    modifier: Modifier = Modifier,
+    vmGameState: GameState,
+    vmPlayerSide: Color,
+    isLandscapeScreen: Boolean,
+    vmIsEditing: Boolean,
+    isAIThinking: Boolean,
+    vmEditBoardOrientation: BoardOrientation,
+    onResetBoardCompleted: () -> Unit,
+    onApplyMove: (String, String) -> Unit,
+    handleEditPiece: (String) -> Unit,
+    resetBoard: Boolean,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Board(
+            gameState = vmGameState,
+            boardOrientation = if (vmIsEditing) {
+                vmEditBoardOrientation
+            } else {
+                toBoardOrientation(isLandscapeScreen, vmPlayerSide)
+            },
+            newGame = resetBoard,
+            onResetCompleted = onResetBoardCompleted,
+            onMove = { from, to ->
+                if (!vmIsEditing) {
+                    onApplyMove(from, to)
+                }
+            },
+            isEditing = vmIsEditing,
+            onEditPiece = handleEditPiece
+        )
+
+        if (vmIsEditing) {
+            content()
+        } else {
+            TurnIndicator(
+                modifier = Modifier.align(Alignment.TopEnd),
+                currentTurn = vmGameState.currentTurn,
+                isAIThinking = isAIThinking
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomControls(
+    modifier: Modifier = Modifier,
+    pieceCounts: PieceCounts,
+    isValidDistribution: Boolean,
+    isCompletedDistribution: Boolean,
+    onRotate: () -> Unit,
+    onStartGame: () -> Unit,
+    onClearBoard: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RotateButton(onRotate)
+        StartButtonAndPieceCounter(pieceCounts, isValidDistribution, isCompletedDistribution, onStartGame)
+        ClearBoardButton(onClearBoard)
+    }
+}
+
+@Composable
+fun RightControls(
+    modifier: Modifier, pieceCounts: PieceCounts,
+    isValidDistribution:
+    Boolean,
+    isCompletedDistribution: Boolean,
+    onRotate: () -> Unit,
+    onStartGame: () -> Unit,
+    onClearBoard: () -> Unit,
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        RotateBoardButton(onClick = onRotate)
+        Spacer(modifier = Modifier.height(16.dp))
+        ClearBoardButton(onClick = onClearBoard)
+        Spacer(modifier = Modifier.height(16.dp))
+        PieceCounter(
+            whiteCount = pieceCounts.white,
+            blackCount = pieceCounts.black,
+            isValid = isValidDistribution
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        StartGameButton(
+            isCompletedDistribution = isCompletedDistribution,
+            onClick = onStartGame,
+        )
+    }
+}
+
+@Composable
+fun LeftControls(
+    modifier: Modifier, vmPlayerSide: Color,
+    onPlayerSideToggle: () -> Unit,
+    vmEditColor: Color,
+    onColorToggle: () -> Unit,
+    vmEditTurn: Color,
+    onTurnToggle: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        ColorToggleButton(currentColor = vmEditColor, onColorToggle = onColorToggle)
+        Spacer(modifier = Modifier.height(16.dp))
+        PlayerSideToggleButton(
+            playerSide = vmPlayerSide,
+            onPlayerSideToggle = onPlayerSideToggle
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = onTurnToggle)
+    }
+}
+
+@Composable
+fun TopControls(
+    modifier: Modifier = Modifier,
+    vmPlayerSide: Color,
+    onPlayerSideToggle: () -> Unit,
+    vmEditColor: Color,
+    onColorToggle: () -> Unit,
+    vmEditTurn: Color,
+    onTurnToggle: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        ColorToggleButton(currentColor = vmEditColor, onColorToggle = onColorToggle)
+        PlayerSideToggleButton(
+            playerSide = vmPlayerSide,
+            onPlayerSideToggle = onPlayerSideToggle
+        )
+        TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = onTurnToggle)
+    }
+}
+
+@Composable
+fun RotateBoardButton(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.RotateRight,
+            contentDescription = localizedString(R.string.rotate_board)
+        )
     }
 }
 
@@ -626,6 +734,22 @@ fun PlayerSideToggleButton(playerSide: Color, onPlayerSideToggle: () -> Unit) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+fun StartGameButton(isCompletedDistribution: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        enabled = isCompletedDistribution,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isCompletedDistribution) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        )
+    ) {
+        LocalizedText(R.string.start_game)
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(Icons.Default.PlayArrow, contentDescription = localizedString(R.string.start))
     }
 }
 
@@ -925,23 +1049,7 @@ private fun MainScreenPreviewContent(
             }
         ) {
             Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = { LocalizedText(R.string.tarati) },
-                        navigationIcon = {
-                            IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        if (drawerState.isClosed) drawerState.open()
-                                        else drawerState.close()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
-                            }
-                        }
-                    )
-                }
+                topBar = { TaratiTopBar(scope, drawerState, isEditing) }
             ) { innerPadding ->
                 Box(
                     modifier = Modifier
@@ -1110,7 +1218,7 @@ fun MainScreenPreview_Editing_Landscape() {
         var editColor by remember { mutableStateOf(WHITE) }
         var editTurn by remember { mutableStateOf(WHITE) }
         var playerSide by remember { mutableStateOf(WHITE) }
-        var boardOrientation by remember { mutableStateOf(BoardOrientation.LANDSCAPE_WHITE) }
+        var boardOrientation by remember { mutableStateOf(BoardOrientation.LANDSCAPE_BLACK) }
 
         val pieceCounts = PieceCounts(4, 4)
         val isValidDistribution = true
@@ -1167,74 +1275,51 @@ fun EditControlsPreview(
         // Landscape: controles a izquierda y derecha
         Box(modifier = Modifier.fillMaxSize()) {
             // Controles a la izquierda: Color, Lado, Turno
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                ColorToggleButton(currentColor = editColor, onColorToggle = onEditColorToggle)
-                Spacer(modifier = Modifier.height(16.dp))
-                PlayerSideToggleButton(playerSide = playerSide, onPlayerSideToggle = onPlayerSideToggle)
-                Spacer(modifier = Modifier.height(16.dp))
-                TurnToggleButton(currentTurn = editTurn, onTurnToggle = onEditTurnToggle)
-            }
+            LeftControls(
+                Modifier.align(CenterStart),
+                playerSide,
+                onPlayerSideToggle,
+                editColor,
+                onEditColorToggle,
+                editTurn,
+                onEditTurnToggle,
+            )
 
             // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                RotateButton { onRotateBoard() }
-                Spacer(modifier = Modifier.height(16.dp))
-                ClearBoardButton { onClearBoard() }
-                Spacer(modifier = Modifier.height(16.dp))
-                StartButtonAndPieceCounter(
-                    pieceCounts = pieceCounts,
-                    isValidDistribution = isValidDistribution,
-                    isCompletedDistribution = isCompletedDistribution,
-                    onClick = onStartGame
-                )
-            }
+            RightControls(
+                Modifier.align(CenterEnd),
+                pieceCounts,
+                isValidDistribution,
+                isCompletedDistribution,
+                onRotateBoard,
+                onStartGame,
+                onClearBoard
+            )
         }
     } else {
         // Portrait: controles en superior e inferior
         Box(modifier = Modifier.fillMaxSize()) {
             // Controles superiores: Color, Lado, Turno
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                ColorToggleButton(currentColor = editColor, onColorToggle = onEditColorToggle)
-                PlayerSideToggleButton(playerSide = playerSide, onPlayerSideToggle = onPlayerSideToggle)
-                TurnToggleButton(currentTurn = editTurn, onTurnToggle = onEditTurnToggle)
-            }
+            TopControls(
+                Modifier.align(TopCenter),
+                playerSide,
+                onPlayerSideToggle,
+                editColor,
+                onEditColorToggle,
+                editTurn,
+                onEditTurnToggle,
+            )
 
             // Controles inferiores: Rotar, Limpiar, Contador y Comenzar
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RotateButton { onRotateBoard() }
-                StartButtonAndPieceCounter(
-                    pieceCounts = pieceCounts,
-                    isValidDistribution = isValidDistribution,
-                    isCompletedDistribution = isCompletedDistribution,
-                    onClick = onStartGame
-                )
-                ClearBoardButton { onClearBoard() }
-            }
+            BottomControls(
+                Modifier.align(BottomCenter),
+                pieceCounts,
+                isValidDistribution,
+                isCompletedDistribution,
+                onRotateBoard,
+                onStartGame,
+                onClearBoard
+            )
         }
     }
 }
@@ -1297,7 +1382,7 @@ fun EditControlsPreview_InvalidDistribution() {
             playerSide = WHITE,
             onPlayerSideToggle = { },
             editTurn = WHITE,
-            onEditTurnToggle = { }, // Distribución inválida
+            onEditTurnToggle = { },
             onRotateBoard = { },
             onClearBoard = { }
         ) { }

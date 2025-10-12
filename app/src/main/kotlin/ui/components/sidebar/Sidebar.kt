@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -78,7 +77,6 @@ fun Sidebar(
     onAboutClick: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -89,316 +87,377 @@ fun Sidebar(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Título de la Aplicación
         LocalizedText(
             id = R.string.tarati,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
 
+        SettingsButton(onSettings)
+
+        // Controles para iniciar una nueva partida
+        GameSettingsControls(
+            playerSide = playerSide,
+            onNewGame = { onNewGame(it) },
+            onEditBoard = onEditBoard
+        )
+
+        // Sección de IA y Dificultad en una fila
+        AIDifficultyControls(
+            playerSide = playerSide,
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            difficulty = difficulty,
+            onDifficultyChange = onDifficultyChange,
+            isAIEnabled = isAIEnabled,
+            onToggleAI = onToggleAI,
+        )
+
+        // Indicador de turno con información del jugador
+        GameStateIndicator(gameState, playerSide)
+
+        // Controles del historial de la partida
+        HistorialControls(currentMoveIndex, moveHistory, onUndo, onRedo, onMoveToCurrent)
+
+        // Espacio flexible para empujar el About hacia abajo
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Botón About en la parte inferior
+        AboutButton(onAboutClick)
+    }
+}
+
+@Composable
+fun SettingsButton(onSettings: () -> Unit) {
+    Button(
+        onClick = onSettings,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary
+        )
+    ) {
+        LocalizedText(R.string.settings)
+    }
+}
+
+@Composable
+fun GameSettingsControls(playerSide: Color, onNewGame: (Color) -> Unit, onEditBoard: () -> Unit) {
+    LocalizedText(
+        id = R.string.new_game,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Button(
-            onClick = onSettings,
+            onClick = { onNewGame(WHITE) },
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (playerSide == WHITE)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (playerSide == WHITE)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            LocalizedText(R.string.w)
+        }
+
+        Button(
+            onClick = { onNewGame(BLACK) },
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (playerSide == BLACK)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (playerSide == BLACK)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            LocalizedText(R.string.b)
+        }
+
+        // Botón de Edición
+        IconButton(
+            onClick = onEditBoard,
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = stringResource(R.string.edit),
+                tint = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+    }
+}
+
+@Composable
+fun AboutButton(onAboutClick: () -> Unit) {
+    TextButton(
+        onClick = onAboutClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = localizedString(R.string.about),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        LocalizedText(R.string.about_tarati)
+    }
+}
+
+@Composable
+fun HistorialControls(
+    currentMoveIndex: Int,
+    moveHistory: List<Move>,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
+    onMoveToCurrent: () -> Unit
+) {
+    LocalizedText(
+        id = R.string.move_history,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Button(
+            onClick = onUndo,
+            enabled = currentMoveIndex > 0,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            LocalizedText(R.string.back)
+        }
+
+        Button(
+            onClick = onRedo,
+            enabled = currentMoveIndex < moveHistory.size - 1,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            LocalizedText(R.string.forward)
+        }
+    }
+
+    if (currentMoveIndex != moveHistory.size - 1) {
+        Button(
+            onClick = onMoveToCurrent,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onTertiary
             )
         ) {
-            LocalizedText(R.string.settings)
+            LocalizedText(R.string.move_to_current)
+        }
+    }
+
+    // Historial de movimientos
+    Box(
+        modifier = Modifier
+            .height(200.dp) // Altura fija para el historial
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        val scrollState = rememberScrollState()
+
+        Column(
+            modifier = Modifier
+                .verticalScroll(scrollState)
+                .padding(12.dp)
+        ) {
+            moveHistory.reversed().forEachIndexed { index, move ->
+                val actualIndex = moveHistory.size - 1 - index
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                if (actualIndex == currentMoveIndex)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${actualIndex + 1} · ${move.from} → ${move.to}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GameStateIndicator(gameState: GameState, playerSide: Any) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                if (gameState.currentTurn == BLACK)
+                    MaterialTheme.colorScheme.secondary
+                else
+                    MaterialTheme.colorScheme.primary
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        val currentPlayerText = when {
+            gameState.currentTurn == playerSide -> stringResource(R.string.your_turn)
+            else -> stringResource(R.string.opponent_turn)
         }
 
-        LocalizedText(
-            id = R.string.new_game,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        val turnText = localizedString(
+            when (gameState.currentTurn) {
+                BLACK -> R.string.black
+                else -> R.string.white
+            }
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Text(
+            "$currentPlayerText: $turnText",
+            color = if (gameState.currentTurn == BLACK)
+                MaterialTheme.colorScheme.onSecondary
+            else
+                MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AIDifficultyControls(
+    playerSide: Any,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    difficulty: Difficulty,
+    onDifficultyChange: (Difficulty) -> Unit,
+    isAIEnabled: Boolean,
+    onToggleAI: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Selector de dificultad
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
-            Button(
-                onClick = { onNewGame(WHITE) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (playerSide == WHITE)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (playerSide == WHITE)
-                        MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            LocalizedText(
+                id = R.string.ai_difficulty,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = onExpandedChange
             ) {
-                LocalizedText(R.string.w)
-            }
+                TextField(
+                    value = stringResource(difficulty.displayNameRes),
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
+                )
 
-            Button(
-                onClick = { onNewGame(BLACK) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (playerSide == BLACK)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (playerSide == BLACK)
-                        MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                LocalizedText(R.string.b)
-            }
-
-            // Botón de Edición
-            IconButton(
-                onClick = onEditBoard,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = stringResource(R.string.edit),
-                    tint = MaterialTheme.colorScheme.tertiary,
-                )
-            }
-        }
-
-        // Sección de IA y Dificultad en una fila
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Selector de dificultad
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                LocalizedText(
-                    id = R.string.ai_difficulty,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                ExposedDropdownMenuBox(
+                ExposedDropdownMenu(
                     expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
+                    onDismissRequest = { onExpandedChange(false) }
                 ) {
-                    TextField(
-                        value = stringResource(difficulty.displayNameRes),
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        Difficulty.ALL.forEach { difficultyOption ->
-                            DropdownMenuItem(
-                                text = {
-                                    LocalizedText(
-                                        difficultyOption.displayNameRes,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                },
-                                onClick = {
-                                    onDifficultyChange(difficultyOption)
-                                    expanded = false
-                                }
-                            )
-                        }
+                    Difficulty.ALL.forEach { difficultyOption ->
+                        DropdownMenuItem(
+                            text = {
+                                LocalizedText(
+                                    difficultyOption.displayNameRes,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
+                            onClick = {
+                                onDifficultyChange(difficultyOption)
+                                onExpandedChange(false)
+                            }
+                        )
                     }
                 }
             }
-
-            // Botón de toggle AI (icono solamente)
-            Spacer(modifier = Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        color = if (playerSide == BLACK)
-                            MaterialTheme.colorScheme.secondary
-                        else
-                            MaterialTheme.colorScheme.primary,
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = onToggleAI,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector =
-                            if (isAIEnabled) Icons.Filled.SmartToy
-                            else Icons.Outlined.SmartToy,
-                        contentDescription = stringResource(
-                            if (isAIEnabled) R.string.disable_ai
-                            else R.string.enable_ai
-                        ),
-                        tint =
-                            if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
         }
 
-        // Indicador de turno con información del jugador
+        // Botón de toggle AI (icono solamente)
+        Spacer(modifier = Modifier.width(8.dp))
         Box(
             modifier = Modifier
-                .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    if (gameState.currentTurn == BLACK)
+                    color = if (playerSide == BLACK)
                         MaterialTheme.colorScheme.secondary
                     else
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.primary,
                 ),
             contentAlignment = Alignment.Center
         ) {
-            val currentPlayerText = when {
-                gameState.currentTurn == playerSide -> stringResource(R.string.your_turn)
-                else -> stringResource(R.string.opponent_turn)
-            }
-
-            val turnText = localizedString(
-                when (gameState.currentTurn) {
-                    BLACK -> R.string.black
-                    else -> R.string.white
-                }
-            )
-
-            Text(
-                "$currentPlayerText: $turnText",
-                color = if (gameState.currentTurn == BLACK)
-                    MaterialTheme.colorScheme.onSecondary
-                else
-                    MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        LocalizedText(
-            id = R.string.move_history,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = onUndo,
-                enabled = currentMoveIndex > 0,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            IconButton(
+                onClick = onToggleAI,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector =
+                        if (isAIEnabled) Icons.Filled.SmartToy
+                        else Icons.Outlined.SmartToy,
+                    contentDescription = stringResource(
+                        if (isAIEnabled) R.string.disable_ai
+                        else R.string.enable_ai
+                    ),
+                    tint =
+                        if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.outline
                 )
-            ) {
-                LocalizedText(R.string.back)
             }
-
-            Button(
-                onClick = onRedo,
-                enabled = currentMoveIndex < moveHistory.size - 1,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                LocalizedText(R.string.forward)
-            }
-        }
-
-        if (currentMoveIndex != moveHistory.size - 1) {
-            Button(
-                onClick = onMoveToCurrent,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                )
-            ) {
-                LocalizedText(R.string.move_to_current)
-            }
-        }
-
-        // Historial de movimientos
-        Box(
-            modifier = Modifier
-                .height(200.dp) // Altura fija para el historial
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            val scrollState = rememberScrollState()
-
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-                    .padding(12.dp)
-            ) {
-                moveHistory.reversed().forEachIndexed { index, move ->
-                    val actualIndex = moveHistory.size - 1 - index
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(
-                                    if (actualIndex == currentMoveIndex)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${actualIndex + 1} · ${move.from} → ${move.to}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-
-        // Espacio flexible para empujar el About hacia abajo
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Botón About en la parte inferior
-        TextButton(
-            onClick = onAboutClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = context.getString(R.string.about),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            LocalizedText(R.string.about_tarati)
         }
     }
 }

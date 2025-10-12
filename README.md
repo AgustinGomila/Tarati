@@ -66,7 +66,7 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 **Requisitos del sistema:**
 
 - Android 8.0 (API 26) o superior
-- 15-20 MB de espacio libre
+- 5-10 MB de espacio libre
 - Pantalla táctil
 
 **Instalación:**

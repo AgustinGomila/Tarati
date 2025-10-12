@@ -9,10 +9,10 @@ import kotlin.math.sqrt
 
 object GameBoard {
     val vertices: List<String> = listOf(
-        "A1",
-        "B1", "B2", "B3", "B4", "B5", "B6",
-        "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12",
-        "D1", "D2", "D3", "D4"
+        "A1", // Absolute Middle
+        "B1", "B2", "B3", "B4", "B5", "B6", // Boundary
+        "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", // Circumference
+        "D1", "D2", "D3", "D4" // Domestic
     )
 
     val edges: List<Pair<String, String>> = listOf(
@@ -21,11 +21,13 @@ object GameBoard {
         // Home base Black
         "D3" to "D4", "D3" to "C7", "D4" to "C8",
         // C circumference
-        "C1" to "C2", "C2" to "C3", "C3" to "C4", "C4" to "C5", "C5" to "C6",
-        "C6" to "C7", "C7" to "C8", "C8" to "C9", "C9" to "C10", "C10" to "C11",
-        "C11" to "C12", "C12" to "C1",
+        "C1" to "C2", "C2" to "C3", "C3" to "C4",
+        "C4" to "C5", "C5" to "C6", "C6" to "C7",
+        "C7" to "C8", "C8" to "C9", "C9" to "C10",
+        "C10" to "C11", "C11" to "C12", "C12" to "C1",
         // B boundary
-        "B1" to "B2", "B2" to "B3", "B3" to "B4", "B4" to "B5", "B5" to "B6", "B6" to "B1",
+        "B1" to "B2", "B2" to "B3", "B3" to "B4",
+        "B4" to "B5", "B5" to "B6", "B6" to "B1",
         // C to B
         "C1" to "B1", "C2" to "B1",
         "C3" to "B2", "C4" to "B2",
@@ -33,8 +35,9 @@ object GameBoard {
         "C7" to "B4", "C8" to "B4",
         "C9" to "B5", "C10" to "B5",
         "C11" to "B6", "C12" to "B6",
-        // B to A
-        "B1" to "A1", "B2" to "A1", "B3" to "A1", "B4" to "A1", "B5" to "A1", "B6" to "A1"
+        // B to A (absolute Middle)
+        "B1" to "A1", "B2" to "A1", "B3" to "A1",
+        "B4" to "A1", "B5" to "A1", "B6" to "A1"
     )
 
     val homeBases: Map<Color, List<String>> = mapOf(
@@ -96,9 +99,7 @@ object GameBoard {
         var closestVertex: String? = null
         var minDistance = Float.MAX_VALUE
 
-        val visualVertices = vertices
-
-        visualVertices.forEach { logicalVertexId ->
+        vertices.forEach { logicalVertexId ->
             val pos = getVisualPosition(logicalVertexId, canvasWidth, canvasHeight, orientation)
             val distance = sqrt((tapOffset.x - pos.x).pow(2) + (tapOffset.y - pos.y).pow(2))
 

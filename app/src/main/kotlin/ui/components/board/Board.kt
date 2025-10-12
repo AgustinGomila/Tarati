@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
@@ -24,9 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agustin.tarati.game.ai.TaratiAI.isForwardMove
 import com.agustin.tarati.game.ai.TaratiAI.isValidMove
+import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.edges
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
@@ -98,7 +101,7 @@ fun Board(
                 orientation = boardOrientation,
                 vWidth = vWidth,
                 selectedPiece = vmSelectedPiece,
-                highlightedMoves = vmValidMoves,
+                validMoves = vmValidMoves,
                 canvasSize = size,
                 colors = boardColors
             )
@@ -190,7 +193,11 @@ private fun movePiece(
     }
 }
 
-private fun selectPiece(gameState: GameState, tappedVertex: String, onSelected: (String, List<String>) -> Unit) {
+private fun selectPiece(
+    gameState: GameState,
+    tappedVertex: String,
+    onSelected: (String, List<String>) -> Unit
+) {
     val checker = gameState.checkers[tappedVertex]
     println("Checking piece: $checker at $tappedVertex, currentTurn: ${gameState.currentTurn}")
 
@@ -220,7 +227,7 @@ private fun DrawScope.drawBoardContent(
     orientation: BoardOrientation,
     vWidth: Float,
     selectedPiece: String?,
-    highlightedMoves: List<String>,
+    validMoves: List<String>,
     canvasSize: Size,
     colors: BoardColors
 ) {
@@ -240,41 +247,10 @@ private fun DrawScope.drawBoardContent(
     )
 
     // Aristas
-    GameBoard.edges.forEach { (from, to) ->
-        val fromPos = getVisualPosition(from, canvasSize.width, canvasSize.height, orientation)
-        val toPos = getVisualPosition(to, canvasSize.width, canvasSize.height, orientation)
-        drawLine(color = colors.edgeColor, start = fromPos, end = toPos, strokeWidth = 6f)
-    }
+    drawEdges(this, canvasSize, orientation, colors)
 
     // Vértices
-    vertices.forEach { vertexId ->
-        val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
-        val checker = gameState.checkers[vertexId]
-
-        val vertexColor = when {
-            vertexId == selectedPiece -> colors.vertexSelectedColor
-            highlightedMoves.contains(vertexId) -> colors.vertexHighlightColor
-            checker != null -> colors.vertexOccupiedColor
-            else -> colors.vertexDefaultColor
-        }
-
-        drawCircle(color = vertexColor, center = pos, radius = vWidth / 10)
-
-        // Borde del vértice
-        drawCircle(
-            color = colors.textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
-        )
-
-        // Etiqueta del vértice
-        drawContext.canvas.nativeCanvas.apply {
-            drawText(
-                vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
-                    color = colors.textColor.hashCode()
-                    textSize = vWidth / 6
-                    isAntiAlias = true
-                })
-        }
-    }
+    drawVertices(this, canvasSize, vWidth, gameState, orientation, selectedPiece, validMoves, colors)
 
     // Piezas
     gameState.checkers.forEach { (vertexId, checker) ->
@@ -287,37 +263,99 @@ private fun DrawScope.drawBoardContent(
         }
 
         // Dibujar pieza base
-        drawCircle(color = borderColor, center = pos, radius = baseRadius, style = Stroke(width = 3f))
-        drawCircle(color = pieceColor, center = pos, radius = baseRadius * 0.8f)
+        drawPiece(this, pos, vertexId, selectedPiece, checker, baseRadius, pieceColor, borderColor, colors)
+    }
+}
 
-        // Indicador de mejora
-        if (checker.isUpgraded) {
-            val upgradeColor =
-                if (checker.color == WHITE) colors.blackPieceColor
-                else colors.whitePieceColor
+fun drawPiece(
+    drawScope: DrawScope,
+    pos: Offset,
+    vertexId: String,
+    selectedPiece: String?,
+    checker: Checker,
+    baseRadius: Float,
+    pieceColor: Color,
+    borderColor: Color,
+    colors: BoardColors
+) {
+    drawScope.drawCircle(color = borderColor, center = pos, radius = baseRadius, style = Stroke(width = 3f))
+    drawScope.drawCircle(color = pieceColor, center = pos, radius = baseRadius * 0.8f)
 
-            drawCircle(
-                color = upgradeColor,
-                center = pos,
-                radius = baseRadius * 0.6f,
-                style = Stroke(width = 2f)
-            )
-            drawCircle(
-                color = upgradeColor,
-                center = pos,
-                radius = baseRadius * 0.2f
-            )
+    // Indicador de mejora
+    if (checker.isUpgraded) {
+        val upgradeColor =
+            if (checker.color == WHITE) colors.blackPieceColor
+            else colors.whitePieceColor
+
+        drawScope.drawCircle(
+            color = upgradeColor,
+            center = pos,
+            radius = baseRadius * 0.6f,
+            style = Stroke(width = 2f)
+        )
+        drawScope.drawCircle(
+            color = upgradeColor,
+            center = pos,
+            radius = baseRadius * 0.2f
+        )
+    }
+
+    // Resaltado de selección
+    if (vertexId == selectedPiece) {
+        drawScope.drawCircle(
+            color = colors.selectionIndicatorColor,
+            center = pos,
+            radius = baseRadius * 1.2f,
+            style = Stroke(width = 3f)
+        )
+    }
+}
+
+fun drawVertices(
+    drawScope: DrawScope,
+    canvasSize: Size,
+    vWidth: Float,
+    gameState: GameState,
+    orientation: BoardOrientation,
+    selectedPiece: String?,
+    highlightedMoves: List<String>,
+    colors: BoardColors
+) {
+    vertices.forEach { vertexId ->
+        val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
+        val checker = gameState.checkers[vertexId]
+
+        val vertexColor = when {
+            vertexId == selectedPiece -> colors.vertexSelectedColor
+            highlightedMoves.contains(vertexId) -> colors.vertexHighlightColor
+            checker != null -> colors.vertexOccupiedColor
+            else -> colors.vertexDefaultColor
         }
 
-        // Resaltado de selección
-        if (vertexId == selectedPiece) {
-            drawCircle(
-                color = colors.selectionIndicatorColor,
-                center = pos,
-                radius = baseRadius * 1.2f,
-                style = Stroke(width = 3f)
-            )
+        drawScope.drawCircle(color = vertexColor, center = pos, radius = vWidth / 10)
+
+        // Borde del vértice
+        drawScope.drawCircle(
+            color = colors.textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
+        )
+
+        // Etiqueta del vértice
+        drawScope.drawContext.canvas.nativeCanvas.apply {
+            drawText(
+                vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
+                    color = colors.textColor.hashCode()
+                    textSize = vWidth / 6
+                    isAntiAlias = true
+                })
         }
+    }
+}
+
+fun drawEdges(drawScope: DrawScope, canvasSize: Size, orientation: BoardOrientation, colors: BoardColors) {
+    edges.forEach { (from, to) ->
+        val fromPos = getVisualPosition(from, canvasSize.width, canvasSize.height, orientation)
+        val toPos = getVisualPosition(to, canvasSize.width, canvasSize.height, orientation)
+        drawScope.drawLine(color = colors.edgeColor, start = fromPos, end = toPos, strokeWidth = 6f)
     }
 }
 
