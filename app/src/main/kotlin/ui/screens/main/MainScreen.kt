@@ -3,6 +3,7 @@ package com.agustin.tarati.ui.screens.main
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,7 +63,6 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.Move
-import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.TurnIndicator
@@ -178,6 +178,7 @@ fun MainScreen(navController: NavController) {
     }
 
     fun startNewGame(playerSide: Color) {
+        viewModel.endEditing()
         viewModel.updatePlayerSide(playerSide)
         viewModel.updateHistory(emptyList())
         viewModel.updateMoveIndex(-1)
@@ -297,40 +298,18 @@ fun MainScreen(navController: NavController) {
     @Composable
     fun EditControls() {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Selector de color (esquina superior izquierda)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                ColorToggleButton(
-                    currentColor = vmEditColor,
-                    onColorToggle = { viewModel.toggleEditColor() }
-                )
-            }
+                // Selector de color (esquina superior izquierda)
+                ColorToggleButton(currentColor = vmEditColor, onColorToggle = { viewModel.toggleEditColor() })
 
-            // Selector de color para el jugador (centro)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp)
-            ) {
-                PlayerSideToggleButton(
-                    playerSide = vmPlayerSide,
-                    onPlayerSideToggle = { viewModel.togglePlayerSide() }
-                )
-            }
+                // Selector de Lado (centro superior)
+                PlayerSideToggleButton(playerSide = vmPlayerSide, onPlayerSideToggle = { viewModel.togglePlayerSide() })
 
-            // Selector de turno (esquina superior derecha)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                TurnToggleButton(
-                    currentTurn = vmEditTurn,
-                    onTurnToggle = { viewModel.toggleEditTurn() }
-                )
+                // Selector de turno (esquina superior derecha)
+                TurnToggleButton(currentTurn = vmEditTurn, onTurnToggle = { viewModel.toggleEditTurn() })
             }
 
             // Botón rotar (esquina inferior izquierda)
@@ -407,21 +386,23 @@ fun MainScreen(navController: NavController) {
             Sidebar(
                 modifier = Modifier.systemBarsPadding(),
                 gameState = vmGameState,
-                moveHistory = vmHistory.map { it.first },
-                currentMoveIndex = vmMoveIndex,
-                isAIEnabled = vmAIEnabled,
-                difficulty = vmDifficulty,
                 playerSide = vmPlayerSide,
+                currentMoveIndex = vmMoveIndex,
+                moveHistory = vmHistory.map { it.first },
+                onMoveToCurrent = ::moveToCurrentState,
+                onUndo = ::undoMove,
+                onRedo = ::redoMove,
+                difficulty = vmDifficulty,
+                onDifficultyChange = {
+                    viewModel.updateDifficulty(it)
+                },
+                isAIEnabled = vmAIEnabled,
+                onToggleAI = { viewModel.updateAIEnabled(!vmAIEnabled) },
                 onSettings = { navController.navigate(SettingsScreenDest.route) },
                 onNewGame = { playerSide ->
                     viewModel.updatePlayerSide(playerSide)
                     showNewGameDialog = true
                 },
-                onToggleAI = { viewModel.updateAIEnabled(!vmAIEnabled) },
-                onDifficultyChange = { viewModel.updateDifficulty(it) },
-                onUndo = ::undoMove,
-                onRedo = ::redoMove,
-                onMoveToCurrent = ::moveToCurrentState,
                 onEditBoard = {
                     scope.launch { drawerState.close() }
                     viewModel.toggleEditing()
@@ -491,12 +472,7 @@ fun MainScreen(navController: NavController) {
                             boardOrientation = if (vmIsEditing) {
                                 vmEditBoardOrientation
                             } else {
-                                when {
-                                    isLandscapeScreen && vmPlayerSide == BLACK -> BoardOrientation.LANDSCAPE_BLACK
-                                    isLandscapeScreen && vmPlayerSide == WHITE -> BoardOrientation.LANDSCAPE_WHITE
-                                    vmPlayerSide == BLACK -> BoardOrientation.PORTRAIT_BLACK
-                                    else -> BoardOrientation.PORTRAIT_WHITE
-                                }
+                                toBoardOrientation(isLandscapeScreen, vmPlayerSide)
                             },
                             newGame = resetBoard,
                             onResetCompleted = onResetBoardCompleted,
@@ -529,71 +505,139 @@ fun MainScreen(navController: NavController) {
 }
 
 @Composable
-fun TurnToggleButton(currentTurn: Color, onTurnToggle: () -> Unit) {
-    val backgroundColor = when (currentTurn) {
+fun backgroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
+    return when (currentColor) {
         WHITE -> MaterialTheme.colorScheme.surface
         BLACK -> MaterialTheme.colorScheme.onSurface
     }
+}
 
-    val contentColor = when (currentTurn) {
+@Composable
+fun foregroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
+    return when (currentColor) {
         WHITE -> MaterialTheme.colorScheme.onSurface
         BLACK -> MaterialTheme.colorScheme.surface
     }
-
-    FloatingActionButton(
-        onClick = onTurnToggle,
-        containerColor = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(backgroundColor, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                if (currentTurn == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor
-            )
-        }
-    }
 }
 
+@Composable
+fun TurnToggleButton(currentTurn: Color, onTurnToggle: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        FloatingActionButton(
+            onClick = onTurnToggle,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            val backgroundColor = backgroundColor(currentTurn)
+            val contentColor = foregroundColor(currentTurn)
+
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(backgroundColor, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (currentTurn == WHITE)
+                        localizedString(R.string.w)
+                    else localizedString(R.string.b),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        LocalizedText(
+            R.string.turn,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
 
 @Composable
 fun PlayerSideToggleButton(playerSide: Color, onPlayerSideToggle: () -> Unit) {
-    val backgroundColor = when (playerSide) {
-        WHITE -> MaterialTheme.colorScheme.surface
-        BLACK -> MaterialTheme.colorScheme.onSurface
-    }
-
-    val contentColor = when (playerSide) {
-        WHITE -> MaterialTheme.colorScheme.onSurface
-        BLACK -> MaterialTheme.colorScheme.surface
-    }
-
-    FloatingActionButton(
-        onClick = onPlayerSideToggle,
-        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(backgroundColor, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-            contentAlignment = Alignment.Center
+        FloatingActionButton(
+            onClick = onPlayerSideToggle,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            modifier = Modifier.size(40.dp)
         ) {
-            Text(
-                if (playerSide == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor
-            )
+            val backgroundColor = backgroundColor(playerSide)
+            val contentColor = foregroundColor(playerSide)
+
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(backgroundColor, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (playerSide == WHITE)
+                        localizedString(R.string.w)
+                    else localizedString(R.string.b),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            localizedString(R.string.side),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
-// Componentes para los controles de Edición
+@Composable
+fun ColorToggleButton(currentColor: Color, onColorToggle: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        FloatingActionButton(
+            onClick = onColorToggle,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            val backgroundColor = backgroundColor(currentColor)
+            val contentColor = foregroundColor(currentColor)
+
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(backgroundColor, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (currentColor == WHITE)
+                        localizedString(R.string.w)
+                    else localizedString(R.string.b),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        LocalizedText(
+            R.string.piece,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+// Contador de Piezas en Edición de Tablero
 @Composable
 fun PieceCounter(whiteCount: Int, blackCount: Int, isValid: Boolean) {
     Card(
@@ -622,7 +666,7 @@ fun PieceCounter(whiteCount: Int, blackCount: Int, isValid: Boolean) {
                 )
             }
 
-            Text(" - ", modifier = Modifier.padding(horizontal = 8.dp))
+            Text(" — ", modifier = Modifier.padding(horizontal = 8.dp))
 
             // Contador negro
             Box(
@@ -649,38 +693,6 @@ fun PieceCounter(whiteCount: Int, blackCount: Int, isValid: Boolean) {
                     modifier = Modifier.size(16.dp)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun ColorToggleButton(currentColor: Color, onColorToggle: () -> Unit) {
-    val backgroundColor = when (currentColor) {
-        WHITE -> MaterialTheme.colorScheme.surface
-        BLACK -> MaterialTheme.colorScheme.onSurface
-    }
-
-    val contentColor = when (currentColor) {
-        WHITE -> MaterialTheme.colorScheme.onSurface
-        BLACK -> MaterialTheme.colorScheme.surface
-    }
-
-    FloatingActionButton(
-        onClick = onColorToggle,
-        containerColor = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(backgroundColor, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                if (currentColor == WHITE) localizedString(R.string.w) else localizedString(R.string.b),
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor
-            )
         }
     }
 }
@@ -813,18 +825,18 @@ private fun MainScreenPreviewContent(
                 Sidebar(
                     modifier = Modifier.systemBarsPadding(),
                     gameState = previewGameState,
-                    moveHistory = exampleMoveHistory,
-                    currentMoveIndex = 2,
-                    isAIEnabled = true,
-                    difficulty = Difficulty.MEDIUM,
                     playerSide = playerSide,
-                    onSettings = { },
-                    onNewGame = { },
-                    onToggleAI = { },
-                    onDifficultyChange = { },
+                    currentMoveIndex = 2,
+                    moveHistory = exampleMoveHistory,
+                    onMoveToCurrent = ::initialGameState,
                     onUndo = { },
                     onRedo = { },
-                    onMoveToCurrent = ::initialGameState,
+                    difficulty = Difficulty.MEDIUM,
+                    onDifficultyChange = { },
+                    isAIEnabled = true,
+                    onToggleAI = { },
+                    onSettings = { },
+                    onNewGame = { },
                     onEditBoard = { }
                 ) { }
             }

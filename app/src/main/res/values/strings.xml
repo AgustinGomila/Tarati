@@ -65,4 +65,6 @@
     <string name="start">Start</string>
     <string name="turn">Turn</string>
     <string name="player_side">Side</string>
+    <string name="piece">Piece</string>
+    <string name="side">Side</string>
 </resources>

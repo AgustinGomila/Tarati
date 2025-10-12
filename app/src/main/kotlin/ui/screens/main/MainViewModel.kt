@@ -1,24 +1,17 @@
 package com.agustin.tarati.ui.screens.main
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import org.koin.core.context.GlobalContext.get
 
 class MainViewModel() : ViewModel() {
-
-    var sr: SettingsRepository = get().get()
-
     private val _gameState = MutableStateFlow(initialGameState())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
     fun updateGameState(newState: GameState) {
@@ -35,9 +28,6 @@ class MainViewModel() : ViewModel() {
     val difficulty: StateFlow<Difficulty> = _difficulty.asStateFlow()
     fun updateDifficulty(newDifficulty: Difficulty) {
         _difficulty.value = newDifficulty
-        viewModelScope.launch {
-            sr.setDifficulty(newDifficulty)
-        }
     }
 
     private val _moveIndex = MutableStateFlow(-1)
@@ -66,10 +56,6 @@ class MainViewModel() : ViewModel() {
         _playerSide.value = newSide
     }
 
-    fun setEditColor(color: Color) {
-        _editColor.value = color
-    }
-
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 
@@ -83,6 +69,10 @@ class MainViewModel() : ViewModel() {
     val editBoardOrientation: StateFlow<BoardOrientation> = _editBoardOrientation.asStateFlow()
 
     // Métodos para edición
+    fun endEditing() {
+        _isEditing.value = false
+    }
+
     fun toggleEditing() {
         _isEditing.value = !_isEditing.value
         if (_isEditing.value) {
@@ -142,7 +132,12 @@ class MainViewModel() : ViewModel() {
             }
             // Caso 4: Pieza del color opuesto - reemplazar solo si la distribución lo permite
             else -> {
-                if (canReplacePiece(_editColor.value, currentChecker.color, pieceCounts)) {
+                if (canReplacePiece(
+                        newColor = _editColor.value,
+                        oldColor = currentChecker.color,
+                        currentCounts = pieceCounts
+                    )
+                ) {
                     mutableCheckers[vertexId] = Checker(_editColor.value, false)
                 }
             }
