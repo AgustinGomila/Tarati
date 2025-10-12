@@ -1,6 +1,6 @@
 package com.agustin.tarati.game.logic
 
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BoardOrientationTest {
@@ -10,8 +10,8 @@ class BoardOrientationTest {
         val board = NormalizedBoard(0.5f, 0.5f)
         val rotated = board.rotate(BoardOrientation.PORTRAIT_WHITE)
 
-        Assert.assertEquals(0.5f, rotated.x, 0.01f)
-        Assert.assertEquals(0.5f, rotated.y, 0.01f)
+        assertEquals(0.5f, rotated.x, 0.01f)
+        assertEquals(0.5f, rotated.y, 0.01f)
     }
 
     @Test
@@ -19,8 +19,8 @@ class BoardOrientationTest {
         val board = NormalizedBoard(0.5f, 0.5f)
         val rotated = board.rotate(BoardOrientation.PORTRAIT_BLACK)
 
-        Assert.assertEquals(0.5f, rotated.x, 0.01f)
-        Assert.assertEquals(0.5f, rotated.y, 0.01f)
+        assertEquals(0.5f, rotated.x, 0.01f)
+        assertEquals(0.5f, rotated.y, 0.01f)
     }
 
     @Test
@@ -28,8 +28,8 @@ class BoardOrientationTest {
         val board = NormalizedBoard(0.5f, 0.5f)
         val rotated = board.rotate(BoardOrientation.LANDSCAPE_WHITE)
 
-        Assert.assertEquals(0.5f, rotated.x, 0.01f)
-        Assert.assertEquals(0.5f, rotated.y, 0.01f)
+        assertEquals(0.5f, rotated.x, 0.01f)
+        assertEquals(0.5f, rotated.y, 0.01f)
     }
 
     @Test
@@ -37,8 +37,8 @@ class BoardOrientationTest {
         val board = NormalizedBoard(0.5f, 0.5f)
         val rotated = board.rotate(BoardOrientation.LANDSCAPE_BLACK)
 
-        Assert.assertEquals(0.5f, rotated.x, 0.01f)
-        Assert.assertEquals(0.5f, rotated.y, 0.01f)
+        assertEquals(0.5f, rotated.x, 0.01f)
+        assertEquals(0.5f, rotated.y, 0.01f)
     }
 
     @Test
@@ -49,9 +49,9 @@ class BoardOrientationTest {
         val topLeftRotated = topLeft.rotate(BoardOrientation.PORTRAIT_BLACK)
         val bottomRightRotated = bottomRight.rotate(BoardOrientation.PORTRAIT_BLACK)
 
-        Assert.assertEquals(1f, topLeftRotated.x, 0.01f)
-        Assert.assertEquals(1f, topLeftRotated.y, 0.01f)
-        Assert.assertEquals(0f, bottomRightRotated.x, 0.01f)
-        Assert.assertEquals(0f, bottomRightRotated.y, 0.01f)
+        assertEquals(1f, topLeftRotated.x, 0.01f)
+        assertEquals(1f, topLeftRotated.y, 0.01f)
+        assertEquals(0f, bottomRightRotated.x, 0.01f)
+        assertEquals(0f, bottomRightRotated.y, 0.01f)
     }
 }

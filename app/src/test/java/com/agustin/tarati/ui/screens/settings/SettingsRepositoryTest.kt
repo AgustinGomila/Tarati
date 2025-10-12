@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SettingsRepositoryTest {
@@ -29,7 +31,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.isDarkTheme.take(1).toList()[0]
 
-        Assert.assertTrue("Dark theme should be enabled", result)
+        assertTrue("Dark theme should be enabled", result)
     }
 
     @Test
@@ -43,7 +45,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.isDarkTheme.take(1).toList()[0]
 
-        Assert.assertFalse("Dark theme should be disabled by default", result)
+        assertFalse("Dark theme should be disabled by default", result)
     }
 
     @Test
@@ -57,7 +59,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.difficulty.take(1).toList()[0]
 
-        Assert.assertEquals("Difficulty should be HARD", Difficulty.HARD, result)
+        assertEquals("Difficulty should be HARD", Difficulty.HARD, result)
     }
 
     @Test
@@ -71,7 +73,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.difficulty.take(1).toList()[0]
 
-        Assert.assertEquals("Difficulty should be DEFAULT", Difficulty.DEFAULT, result)
+        assertEquals("Difficulty should be DEFAULT", Difficulty.DEFAULT, result)
     }
 
     @Test
@@ -85,7 +87,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.language.take(1).toList()[0]
 
-        Assert.assertEquals("Language should be ENGLISH", AppLanguage.ENGLISH, result)
+        assertEquals("Language should be ENGLISH", AppLanguage.ENGLISH, result)
     }
 
     @Test
@@ -99,7 +101,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.language.take(1).toList()[0]
 
-        Assert.assertEquals("Language should be SPANISH by default", AppLanguage.SPANISH, result)
+        assertEquals("Language should be SPANISH by default", AppLanguage.SPANISH, result)
     }
 
     @Test
@@ -113,7 +115,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.labelsVisibility.take(1).toList()[0]
 
-        Assert.assertEquals("Labels should be visible", true, result)
+        assertEquals("Labels should be visible", true, result)
     }
 
     @Test
@@ -127,7 +129,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.labelsVisibility.take(1).toList()[0]
 
-        Assert.assertTrue("Labels should be visible by default", result)
+        assertTrue("Labels should be visible by default", result)
     }
 
     // Tests de escritura

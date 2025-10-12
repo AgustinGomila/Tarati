@@ -3,7 +3,9 @@ package  com.agustin.tarati.game.ai
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.logic.GameStateBuilder
 import com.agustin.tarati.game.logic.createGameState
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameStateBuilderIntegrationTest {
@@ -22,7 +24,7 @@ class GameStateBuilderIntegrationTest {
         // AI should be able to analyze this state
         val result = TaratiAI.getNextBestMove(state, depth = 3)
 
-        Assert.assertNotNull("AI should return a result", result)
+        assertNotNull("AI should return a result", result)
         // The move might be null if no valid moves, but the result should not be null
     }
 
@@ -42,11 +44,11 @@ class GameStateBuilderIntegrationTest {
         }
 
         // Verify the state
-        Assert.assertEquals("Turn should be WHITE", Color.WHITE, state.currentTurn)
-        Assert.assertEquals("Should have 6 checkers total", 6, state.checkers.size)
-        Assert.assertEquals("Should have 3 white checkers", 3, state.checkers.values.count { it.color == Color.WHITE })
-        Assert.assertEquals("Should have 3 black checkers", 3, state.checkers.values.count { it.color == Color.BLACK })
-        Assert.assertEquals("Should have 2 upgraded checkers", 2, state.checkers.values.count { it.isUpgraded })
+        assertEquals("Turn should be WHITE", Color.WHITE, state.currentTurn)
+        assertEquals("Should have 6 checkers total", 6, state.checkers.size)
+        assertEquals("Should have 3 white checkers", 3, state.checkers.values.count { it.color == Color.WHITE })
+        assertEquals("Should have 3 black checkers", 3, state.checkers.values.count { it.color == Color.BLACK })
+        assertEquals("Should have 2 upgraded checkers", 2, state.checkers.values.count { it.isUpgraded })
     }
 
     @Test
@@ -63,6 +65,6 @@ class GameStateBuilderIntegrationTest {
 
         // The white king at A1 should have multiple move options
         val kingMoves = possibleMoves.filter { it.from == "C7" }
-        Assert.assertTrue("King should have multiple move options", kingMoves.isNotEmpty())
+        assertTrue("King should have multiple move options", kingMoves.isNotEmpty())
     }
 }

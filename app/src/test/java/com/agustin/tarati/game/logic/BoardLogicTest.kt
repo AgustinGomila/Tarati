@@ -5,7 +5,10 @@ import com.agustin.tarati.game.ai.TaratiAI.normalizedPositions
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BoardLogicTest {
@@ -19,15 +22,15 @@ class BoardLogicTest {
 
         val newState = applyMoveToBoard(initialState, "C1", "B1")
 
-        Assert.assertFalse(
+        assertFalse(
             "Original position should be empty",
             newState.checkers.containsKey("C1")
         )
-        Assert.assertTrue(
+        assertTrue(
             "New position should contain checker",
             newState.checkers.containsKey("B1")
         )
-        Assert.assertEquals(
+        assertEquals(
             "Checker should retain color",
             Color.WHITE, newState.checkers["B1"]!!.color
         )
@@ -44,8 +47,8 @@ class BoardLogicTest {
         val newState = applyMoveToBoard(initialState, "C6", "C7")
 
         val checker = newState.checkers["C7"]
-        Assert.assertNotNull("Checker should exist at C7", checker)
-        Assert.assertTrue(
+        assertNotNull("Checker should exist at C7", checker)
+        assertTrue(
             "White checker in black home base should be upgraded",
             checker!!.isUpgraded
         )
@@ -62,8 +65,8 @@ class BoardLogicTest {
         val newState = applyMoveToBoard(initialState, "C2", "C1")
 
         val checker = newState.checkers["C1"]
-        Assert.assertNotNull("Checker should exist at C1", checker)
-        Assert.assertTrue(
+        assertNotNull("Checker should exist at C1", checker)
+        assertTrue(
             "Black checker in white home base should be upgraded",
             checker!!.isUpgraded
         )
@@ -82,8 +85,8 @@ class BoardLogicTest {
         val newState = applyMoveToBoard(initialState, "C1", "B1")
 
         val flippedChecker = newState.checkers["C2"]
-        Assert.assertNotNull("Checker should still exist at C2", flippedChecker)
-        Assert.assertEquals(
+        assertNotNull("Checker should still exist at C2", flippedChecker)
+        assertEquals(
             "Adjacent black checker should flip to white",
             Color.WHITE, flippedChecker!!.color
         )
@@ -102,8 +105,8 @@ class BoardLogicTest {
         val newState = applyMoveToBoard(initialState, "C1", "B1")
 
         val sameColorChecker = newState.checkers["C2"]
-        Assert.assertNotNull("Checker should still exist at C2", sameColorChecker)
-        Assert.assertEquals(
+        assertNotNull("Checker should still exist at C2", sameColorChecker)
+        assertEquals(
             "Same color checker should not flip",
             Color.WHITE, sameColorChecker!!.color
         )
@@ -118,7 +121,7 @@ class BoardLogicTest {
 
         val newState = applyMoveToBoard(initialState, "C2", "B1") // C2 doesn't exist
 
-        Assert.assertEquals(
+        assertEquals(
             "Should return original state when from position not found",
             initialState, newState
         )
@@ -133,7 +136,7 @@ class BoardLogicTest {
         )
 
         vertices.forEach { vertex ->
-            Assert.assertTrue(
+            assertTrue(
                 "Normalized positions should contain $vertex",
                 normalizedPositions.containsKey(vertex)
             )

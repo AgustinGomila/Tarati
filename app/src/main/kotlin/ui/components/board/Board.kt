@@ -29,6 +29,7 @@ import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.edges
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
@@ -174,7 +175,7 @@ private fun movePiece(
             // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
             val checker = gameState.checkers[tappedVertex]
             if (checker != null && checker.color == gameState.currentTurn) {
-                val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
+                val validMoves = adjacencyMap[tappedVertex]?.filter { to ->
                     !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
                         checker.color,
                         tappedVertex,
@@ -206,7 +207,7 @@ private fun selectPiece(
         println("Piece selected: $tappedVertex")
 
         // Calcular movimientos válidos
-        val validMoves = GameBoard.adjacencyMap[tappedVertex]?.filter { to ->
+        val validMoves = adjacencyMap[tappedVertex]?.filter { to ->
             val isValid = !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
                 checker.color,
                 tappedVertex,

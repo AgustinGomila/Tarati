@@ -1,6 +1,8 @@
 package com.agustin.tarati.ui.components.board
 
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BoardViewModelTest {
@@ -8,13 +10,13 @@ class BoardViewModelTest {
     @Test
     fun initialState_hasNullSelectedPiece() {
         val viewModel = BoardViewModel()
-        Assert.assertNull("Initial selected piece should be null", viewModel.selectedPiece.value)
+        assertNull("Initial selected piece should be null", viewModel.selectedPiece.value)
     }
 
     @Test
     fun initialState_hasEmptyHighlightedMoves() {
         val viewModel = BoardViewModel()
-        Assert.assertTrue(
+        assertTrue(
             "Initial highlighted moves should be empty",
             viewModel.validMoves.value.isEmpty()
         )
@@ -25,10 +27,10 @@ class BoardViewModelTest {
         val viewModel = BoardViewModel()
 
         viewModel.updateSelectedPiece("C1")
-        Assert.assertEquals("Selected piece should be C1", "C1", viewModel.selectedPiece.value)
+        assertEquals("Selected piece should be C1", "C1", viewModel.selectedPiece.value)
 
         viewModel.updateSelectedPiece("B2")
-        Assert.assertEquals("Selected piece should be B2", "B2", viewModel.selectedPiece.value)
+        assertEquals("Selected piece should be B2", "B2", viewModel.selectedPiece.value)
     }
 
     @Test
@@ -37,7 +39,7 @@ class BoardViewModelTest {
         viewModel.updateSelectedPiece("C1")
 
         viewModel.updateSelectedPiece(null)
-        Assert.assertNull(
+        assertNull(
             "Selected piece should be null after setting to null",
             viewModel.selectedPiece.value
         )
@@ -49,7 +51,7 @@ class BoardViewModelTest {
         val moves = listOf("C2", "B1", "A1")
 
         viewModel.updateValidMoves(moves)
-        Assert.assertEquals(
+        assertEquals(
             "Highlighted moves should match input",
             moves, viewModel.validMoves.value
         )
@@ -61,7 +63,7 @@ class BoardViewModelTest {
         viewModel.updateValidMoves(listOf("C2", "B1"))
 
         viewModel.updateValidMoves(emptyList())
-        Assert.assertTrue(
+        assertTrue(
             "Highlighted moves should be empty",
             viewModel.validMoves.value.isEmpty()
         )
@@ -75,11 +77,11 @@ class BoardViewModelTest {
 
         viewModel.resetSelection()
 
-        Assert.assertNull(
+        assertNull(
             "Selected piece should be null after reset",
             viewModel.selectedPiece.value
         )
-        Assert.assertTrue(
+        assertTrue(
             "Highlighted moves should be empty after reset",
             viewModel.validMoves.value.isEmpty()
         )
@@ -103,14 +105,14 @@ class BoardViewModelTest {
         highlightedMovesValues.add(viewModel.validMoves.value)
 
         // Verify state changes
-        Assert.assertNull("First selected piece should be null", selectedPieceValues[0])
-        Assert.assertEquals("Second selected piece should be C1", "C1", selectedPieceValues[1])
+        assertNull("First selected piece should be null", selectedPieceValues[0])
+        assertEquals("Second selected piece should be C1", "C1", selectedPieceValues[1])
 
-        Assert.assertTrue(
+        assertTrue(
             "First highlighted moves should be empty",
             highlightedMovesValues[0].isEmpty()
         )
-        Assert.assertEquals(
+        assertEquals(
             "Second highlighted moves should have one item",
             listOf("C2"), highlightedMovesValues[1]
         )

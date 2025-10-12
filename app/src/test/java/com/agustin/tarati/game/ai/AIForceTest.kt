@@ -106,7 +106,7 @@ class AIForceTest {
         val movesNew = movesOriginal.toMutableList()
 
         // Aplicar ambos algoritmos
-        TaratiAI.sortMoves(movesOriginal, gameState, isMaximizingPlayer = true)
+        sortMoves(movesOriginal, gameState, isMaximizingPlayer = true)
         sortMoves(movesNew, gameState, isMaximizingPlayer = true)
 
         // Ambos deberían priorizar el movimiento de mate en este caso simple

@@ -11,7 +11,9 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.koin.core.context.GlobalContext.startKoin
@@ -45,38 +47,38 @@ class MainViewModelTest {
     fun initialGameState_hasCorrectSetup() {
         val gameState = MainViewModel.initialGameState()
 
-        Assert.assertEquals("Initial turn should be WHITE", Color.WHITE, gameState.currentTurn)
-        Assert.assertEquals("Should have 8 checkers total", 8, gameState.checkers.size)
-        Assert.assertEquals(
+        assertEquals("Initial turn should be WHITE", Color.WHITE, gameState.currentTurn)
+        assertEquals("Should have 8 checkers total", 8, gameState.checkers.size)
+        assertEquals(
             "Should have 4 white checkers",
             4,
             gameState.checkers.values.count { it.color == Color.WHITE })
-        Assert.assertEquals(
+        assertEquals(
             "Should have 4 black checkers",
             4,
             gameState.checkers.values.count { it.color == Color.BLACK })
 
         // Verify specific positions
-        Assert.assertTrue("C1 should have white checker", gameState.checkers["C1"]?.color == Color.WHITE)
-        Assert.assertTrue("C7 should have black checker", gameState.checkers["C7"]?.color == Color.BLACK)
-        Assert.assertTrue("D1 should have white checker", gameState.checkers["D1"]?.color == Color.WHITE)
-        Assert.assertTrue("D3 should have black checker", gameState.checkers["D3"]?.color == Color.BLACK)
+        assertTrue("C1 should have white checker", gameState.checkers["C1"]?.color == Color.WHITE)
+        assertTrue("C7 should have black checker", gameState.checkers["C7"]?.color == Color.BLACK)
+        assertTrue("D1 should have white checker", gameState.checkers["D1"]?.color == Color.WHITE)
+        assertTrue("D3 should have black checker", gameState.checkers["D3"]?.color == Color.BLACK)
     }
 
     @Test
     fun cleanGameState_hasNoCheckers() {
         val gameState = MainViewModel.cleanGameState()
 
-        Assert.assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
-        Assert.assertEquals("Turn should be WHITE by default", Color.WHITE, gameState.currentTurn)
+        assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
+        assertEquals("Turn should be WHITE by default", Color.WHITE, gameState.currentTurn)
     }
 
     @Test
     fun cleanGameState_withCustomTurn() {
         val gameState = MainViewModel.cleanGameState(Color.BLACK)
 
-        Assert.assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
-        Assert.assertEquals("Turn should be BLACK", Color.BLACK, gameState.currentTurn)
+        assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
+        assertEquals("Turn should be BLACK", Color.BLACK, gameState.currentTurn)
     }
 
     @Test
@@ -88,7 +90,7 @@ class MainViewModelTest {
 
         viewModel.updateGameState(newState)
 
-        Assert.assertEquals("Game state should be updated", newState, viewModel.gameState.value)
+        assertEquals("Game state should be updated", newState, viewModel.gameState.value)
     }
 
     @Test
@@ -99,7 +101,7 @@ class MainViewModelTest {
 
         viewModel.updateHistory(history)
 
-        Assert.assertEquals("History should be updated", history, viewModel.history.value)
+        assertEquals("History should be updated", history, viewModel.history.value)
     }
 
     @Test
@@ -110,7 +112,7 @@ class MainViewModelTest {
 
         viewModel.updateDifficulty(newDifficulty)
 
-        Assert.assertEquals("Difficulty should be updated", newDifficulty, viewModel.difficulty.value)
+        assertEquals("Difficulty should be updated", newDifficulty, viewModel.difficulty.value)
         coVerify { mockSettingsRepository.setDifficulty(newDifficulty) }
     }
 
@@ -118,7 +120,7 @@ class MainViewModelTest {
     fun updateMoveIndex_changesIndex() {
         viewModel.updateMoveIndex(5)
 
-        Assert.assertEquals("Move index should be 5", 5, viewModel.moveIndex.value)
+        assertEquals("Move index should be 5", 5, viewModel.moveIndex.value)
     }
 
     @Test
@@ -126,7 +128,7 @@ class MainViewModelTest {
         viewModel.updateMoveIndex(2)
         viewModel.incrementMoveIndex()
 
-        Assert.assertEquals("Move index should be 3", 3, viewModel.moveIndex.value)
+        assertEquals("Move index should be 3", 3, viewModel.moveIndex.value)
     }
 
     @Test
@@ -134,37 +136,37 @@ class MainViewModelTest {
         viewModel.updateMoveIndex(2)
         viewModel.decrementMoveIndex()
 
-        Assert.assertEquals("Move index should be 1", 1, viewModel.moveIndex.value)
+        assertEquals("Move index should be 1", 1, viewModel.moveIndex.value)
     }
 
     @Test
     fun updateAIEnabled_changesAIState() {
         viewModel.updateAIEnabled(false)
 
-        Assert.assertFalse("AI should be disabled", viewModel.aIEnabled.value)
+        assertFalse("AI should be disabled", viewModel.aIEnabled.value)
     }
 
     @Test
     fun updatePlayerSide_changesPlayerSide() {
         viewModel.updatePlayerSide(Color.BLACK)
 
-        Assert.assertEquals("Player side should be BLACK", Color.BLACK, viewModel.playerSide.value)
+        assertEquals("Player side should be BLACK", Color.BLACK, viewModel.playerSide.value)
     }
 
     @Test
     fun initialState_hasDefaultValues() {
-        Assert.assertEquals(
+        assertEquals(
             "Initial game state should match factory",
             MainViewModel.initialGameState(), viewModel.gameState.value
         )
-        Assert.assertTrue("Initial history should be empty", viewModel.history.value.isEmpty())
-        Assert.assertEquals(
+        assertTrue("Initial history should be empty", viewModel.history.value.isEmpty())
+        assertEquals(
             "Initial difficulty should be DEFAULT",
             Difficulty.DEFAULT, viewModel.difficulty.value
         )
-        Assert.assertEquals("Initial move index should be -1", -1, viewModel.moveIndex.value)
-        Assert.assertTrue("Initial AI should be enabled", viewModel.aIEnabled.value)
-        Assert.assertEquals(
+        assertEquals("Initial move index should be -1", -1, viewModel.moveIndex.value)
+        assertTrue("Initial AI should be enabled", viewModel.aIEnabled.value)
+        assertEquals(
             "Initial player side should be WHITE",
             Color.WHITE, viewModel.playerSide.value
         )

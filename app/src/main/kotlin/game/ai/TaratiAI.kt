@@ -3,7 +3,9 @@ package com.agustin.tarati.game.ai
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.GameBoard
+import com.agustin.tarati.game.core.GameBoard.adjacencyMap
+import com.agustin.tarati.game.core.GameBoard.edges
+import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
@@ -152,7 +154,7 @@ object TaratiAI {
             if (checker.color != gameState.currentTurn) continue
 
             // Usar el mapa de adyacencia para obtener solo vértices conectados
-            val connectedVertices = GameBoard.adjacencyMap[from] ?: emptyList()
+            val connectedVertices = adjacencyMap[from] ?: emptyList()
             for (to in connectedVertices) {
                 if (isValidMove(gameState, from, to)) {
                     possibleMoves.add(Move(from, to))
@@ -179,8 +181,8 @@ object TaratiAI {
         var placedChecker = movedChecker
 
         // Check for upgrades when moved into opponent home base
-        val whiteBase = GameBoard.homeBases[WHITE] ?: emptyList()
-        val blackBase = GameBoard.homeBases[BLACK] ?: emptyList()
+        val whiteBase = homeBases[WHITE] ?: emptyList()
+        val blackBase = homeBases[BLACK] ?: emptyList()
         if (whiteBase.contains(to) && movedChecker.color == BLACK) {
             placedChecker = movedChecker.copy(isUpgraded = true)
         } else if (blackBase.contains(to) && movedChecker.color == WHITE) {
@@ -189,7 +191,7 @@ object TaratiAI {
         mutable[to] = placedChecker
 
         // Flip adjacent checkers (for each edge containing 'to', flip the other vertex if opponent)
-        for (edge in GameBoard.edges) {
+        for (edge in edges) {
             val (a, b) = edge
             if (a != to && b != to) continue
 
@@ -240,7 +242,7 @@ object TaratiAI {
 
     fun isValidMove(gs: GameState, from: String, to: String): Boolean {
         // Verificar que from y to sean adyacentes
-        val isAdjacent = GameBoard.adjacencyMap[from]?.contains(to) ?: false
+        val isAdjacent = adjacencyMap[from]?.contains(to) ?: false
         if (!isAdjacent) return false
 
         if (from == to) return false

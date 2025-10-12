@@ -9,7 +9,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.koin.core.context.GlobalContext.startKoin
@@ -50,10 +52,10 @@ class SettingsViewModelTest {
     fun initialState_hasDefaultValues() = runTest {
         val state = viewModel.settingsState.value
 
-        Assert.assertEquals("Initial theme should be AUTO", AppTheme.MODE_AUTO, state.appTheme)
-        Assert.assertEquals("Initial difficulty should be DEFAULT", Difficulty.DEFAULT, state.difficulty)
-        Assert.assertEquals("Initial language should be SPANISH", AppLanguage.SPANISH, state.language)
-        Assert.assertFalse("Initial labels should be hidden", state.labelsVisibility)
+        assertEquals("Initial theme should be AUTO", AppTheme.MODE_AUTO, state.appTheme)
+        assertEquals("Initial difficulty should be DEFAULT", Difficulty.DEFAULT, state.difficulty)
+        assertEquals("Initial language should be SPANISH", AppLanguage.SPANISH, state.language)
+        assertFalse("Initial labels should be hidden", state.labelsVisibility)
     }
 
     @Test
@@ -87,11 +89,11 @@ class SettingsViewModelTest {
     @Test
     fun themeLogic_correctlyConvertsBooleanToTheme() {
         // Test directo de la lógica de conversión
-        Assert.assertEquals(
+        assertEquals(
             "false should convert to AUTO",
             AppTheme.MODE_AUTO, convertDarkThemeToAppTheme(false)
         )
-        Assert.assertEquals(
+        assertEquals(
             "true should convert to NIGHT",
             AppTheme.MODE_NIGHT, convertDarkThemeToAppTheme(true)
         )
@@ -129,8 +131,8 @@ class SettingsViewModelTest {
 
         // Verificar que el estado inicial refleja los valores del repositorio
         // (aunque no podamos verificar el `combine`, podemos verificar que el ViewModel se inicializa correctamente)
-        Assert.assertNotNull("ViewModel should be created", testViewModel)
-        Assert.assertNotNull("Settings state should be available", testViewModel.settingsState)
+        assertNotNull("ViewModel should be created", testViewModel)
+        assertNotNull("Settings state should be available", testViewModel.settingsState)
     }
 
     // Test para verificar múltiples llamadas secuenciales

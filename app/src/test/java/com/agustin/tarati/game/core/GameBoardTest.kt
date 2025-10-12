@@ -2,49 +2,56 @@ package com.agustin.tarati.game.core
 
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.adjacencyMap
+import com.agustin.tarati.game.core.GameBoard.edges
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.core.GameBoard.homeBases
+import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.logic.BoardOrientation
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameBoardTest {
 
     @Test
     fun adjacencyMap_containsAllVertices() {
-        GameBoard.vertices.forEach { vertex ->
-            Assert.assertTrue(
+        vertices.forEach { vertex ->
+            assertTrue(
                 "Adjacency map should contain all vertices",
-                GameBoard.adjacencyMap.containsKey(vertex)
+                adjacencyMap.containsKey(vertex)
             )
         }
     }
 
     @Test
     fun adjacencyMap_hasBidirectionalConnections() {
-        GameBoard.edges.forEach { (from, to) ->
-            Assert.assertTrue(
+        edges.forEach { (from, to) ->
+            assertTrue(
                 "$from should connect to $to",
-                GameBoard.adjacencyMap[from]?.contains(to) == true
+                adjacencyMap[from]?.contains(to) == true
             )
-            Assert.assertTrue(
+            assertTrue(
                 "$to should connect to $from",
-                GameBoard.adjacencyMap[to]?.contains(from) == true
+                adjacencyMap[to]?.contains(from) == true
             )
         }
     }
 
     @Test
     fun homeBases_containCorrectVertices() {
-        val whiteHome = GameBoard.homeBases[WHITE]!!
-        val blackHome = GameBoard.homeBases[BLACK]!!
+        val whiteHome = homeBases[WHITE]!!
+        val blackHome = homeBases[BLACK]!!
 
-        Assert.assertEquals("White home should have 4 vertices", 4, whiteHome.size)
-        Assert.assertEquals("Black home should have 4 vertices", 4, blackHome.size)
+        assertEquals("White home should have 4 vertices", 4, whiteHome.size)
+        assertEquals("Black home should have 4 vertices", 4, blackHome.size)
 
-        Assert.assertTrue("White home should contain C1", whiteHome.contains("C1"))
-        Assert.assertTrue("White home should contain C2", whiteHome.contains("C2"))
-        Assert.assertTrue("Black home should contain C7", blackHome.contains("C7"))
-        Assert.assertTrue("Black home should contain C8", blackHome.contains("C8"))
+        assertTrue("White home should contain C1", whiteHome.contains("C1"))
+        assertTrue("White home should contain C2", whiteHome.contains("C2"))
+        assertTrue("Black home should contain C7", blackHome.contains("C7"))
+        assertTrue("Black home should contain C8", blackHome.contains("C8"))
     }
 
     @Test
@@ -56,11 +63,11 @@ class GameBoardTest {
             BoardOrientation.PORTRAIT_WHITE
         )
 
-        Assert.assertTrue(
+        assertTrue(
             "Position should be within canvas bounds",
             position.x in 0f..500f
         )
-        Assert.assertTrue(
+        assertTrue(
             "Position should be within canvas bounds",
             position.y in 0f..500f
         )
@@ -77,10 +84,10 @@ class GameBoardTest {
             BoardOrientation.PORTRAIT_WHITE
         )
 
-        Assert.assertNotNull("Should find a vertex for nearby tap", vertex)
-        Assert.assertTrue(
+        assertNotNull("Should find a vertex for nearby tap", vertex)
+        assertTrue(
             "Found vertex should be in vertices list",
-            GameBoard.vertices.contains(vertex)
+            vertices.contains(vertex)
         )
     }
 
@@ -94,6 +101,6 @@ class GameBoardTest {
             BoardOrientation.PORTRAIT_WHITE
         )
 
-        Assert.assertNull("Should return null when no vertex is close enough", vertex)
+        assertNull("Should return null when no vertex is close enough", vertex)
     }
 }
