@@ -72,4 +72,6 @@
     <string name="player_side">Lado</string>
     <string name="piece">Pieza</string>
     <string name="side">Lado</string>
+    <string name="clear">Limpiar</string>
+    <string name="rotate">Rotar</string>
 </resources>
