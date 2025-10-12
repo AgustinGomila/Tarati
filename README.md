@@ -22,6 +22,8 @@ Tarati es un juego de mesa estratégico creado por **George Spencer Brown**, el 
 (*Laws of Form*). Este juego combina elementos de ajedrez y damas con mecánicas únicas de movimiento y captura, basadas
 en el cálculo de distinciones de Spencer Brown.
 
+<img src="screenshots/board.png" alt="Logo" style="display: block; margin: 0 auto;">
+
 > *"Un juego de distinciones y decisiones" - George Spencer Brown*
 
 Esta aplicación es una adaptación completa a **Kotlin y Jetpack Compose** de

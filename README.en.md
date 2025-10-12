@@ -24,6 +24,8 @@ distinctions.
 
 > *"A game of distinctions and decisions" - George Spencer Brown*
 
+<img src="screenshots/board.png" alt="Logo" style="display: block; margin: 0 auto;">
+
 This application is a complete adaptation to **Kotlin and Jetpack Compose** of
 the [original React implementation](https://github.com/adamblvck/tarati-react) created by Adam Blvck.
 

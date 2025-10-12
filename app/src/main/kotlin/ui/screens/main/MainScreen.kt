@@ -1103,7 +1103,7 @@ fun MainScreenPreview_Editing_Portrait() {
 @Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
 @Composable
 fun MainScreenPreview_Editing_Landscape() {
-    TaratiTheme {
+    TaratiTheme(true) {
         val exampleGameState = initialGameState()
 
         var isEditing by remember { mutableStateOf(true) }
