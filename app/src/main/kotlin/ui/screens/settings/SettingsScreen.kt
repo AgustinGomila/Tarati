@@ -79,8 +79,11 @@ fun SettingsScreen(
             ThemeOption(currTheme, onThemeChange)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // LabelsVisibilityOption(currLabelsVisibility, onLabelsVisibilityChange)
-            // HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            LabelsVisibilityOption(currLabelsVisibility) {
+                viewModel.setLabelsVisibility(it)
+                onLabelsVisibilityChange(it)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }

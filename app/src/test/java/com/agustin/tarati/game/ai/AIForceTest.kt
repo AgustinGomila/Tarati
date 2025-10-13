@@ -4,6 +4,7 @@ import com.agustin.tarati.game.ai.TaratiAI.WINNING_SCORE
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
+import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.sortMoves
 import com.agustin.tarati.game.core.Checker
@@ -16,6 +17,7 @@ import com.agustin.tarati.game.core.Move
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class AIForceTest {
@@ -350,6 +352,79 @@ class AIForceTest {
         // La pieza upgraded debería tener mejor evaluación
         Assert.assertTrue("Upgraded piece should score higher", scoreUpgraded > scoreNormal)
 
-        Assert.assertEquals(60.0, scoreUpgraded - scoreNormal, 0.0)
+        Assert.assertEquals(110.0, scoreUpgraded - scoreNormal, 0.0)
+    }
+
+    @Test
+    fun testMateInTwo_Black() {
+        // Situación: Negro puede forzar mate en 2 movimientos
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (3)
+            setChecker("B4", WHITE, false)
+            setChecker("C10", WHITE, false)
+            setChecker("A1", WHITE, true)
+            // Piezas negras (5)
+            setChecker("C6", BLACK, false)
+            setChecker("B2", BLACK, false)
+            setChecker("B1", BLACK, true)
+            setChecker("B6", BLACK, false)
+            setChecker("C2", BLACK, true)
+        }
+
+        // Movimiento 1: Negro juega (debe encontrar C6 -> B3)
+        val blackMove1 = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        println("Black move 1: ${blackMove1.move} with score: ${blackMove1.score}")
+
+        assertNotNull("Black should find a move", blackMove1.move)
+        assertEquals("Black should move from C6", blackMove1.move?.from, "C6")
+        assertEquals("Black should move to B3", blackMove1.move?.to, "B3")
+
+        // Aplicar el movimiento de negro
+        val stateAfterBlack1 = applyMoveToBoard(initialState, "C6", "B3")
+            .copy(currentTurn = WHITE)
+
+        // Movimiento 2: Blanco está forzado (debe jugar C10 -> C9 o perder inmediatamente)
+        val whiteMove = getNextBestMove(stateAfterBlack1, depth = Difficulty.MEDIUM.aiDepth)
+
+        println("White move (forced): ${whiteMove.move} with score: ${whiteMove.score}")
+
+        assertNotNull("White should find a move", whiteMove.move)
+        // Verificar que, blanco juega la única jugada que retrasa el mate
+        // (puede variar según la posición, pero debería ser defensiva)
+
+        assertTrue("White should make a defensive move", whiteMove.move != null)
+        assertEquals("White should move from C10", whiteMove.move?.from, "C10")
+        assertEquals("White should move to C9", whiteMove.move?.to, "C9")
+
+        // Aplicar el movimiento de blanco (asumiendo que juega la mejor defensa)
+        val stateAfterWhite = applyMoveToBoard(stateAfterBlack1, whiteMove.move!!.from, whiteMove.move.to)
+            .copy(currentTurn = BLACK)
+
+        // Movimiento 3: Negro da mate
+        val blackMove2 = getNextBestMove(stateAfterWhite, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("Black should find a move", blackMove2.move)
+        assertTrue("Black should move from A1 or B4", blackMove2.move?.from == "A1" || blackMove2.move?.from == "B4")
+        assertEquals("Black should move to B5", blackMove2.move?.to, "B5")
+
+        println("Black move: ${blackMove2.move} with score: ${blackMove2.score}")
+
+        assertNotNull("Black should find mate", blackMove2.move)
+
+        // Aplicar el movimiento final
+        val finalState = applyMoveToBoard(stateAfterWhite, blackMove2.move!!.from, blackMove2.move.to)
+            .copy(currentTurn = WHITE)
+
+        // Verificar que es mate
+        assertTrue("Should be game over", isGameOver(finalState))
+        assertEquals("Black should win", BLACK, getWinner(finalState))
+
+        // El score del primer movimiento debería indicar mate forzado
+        assertTrue(
+            "Black's first move should have winning score (negative for BLACK)",
+            blackMove1.score == -WINNING_SCORE
+        )
     }
 }

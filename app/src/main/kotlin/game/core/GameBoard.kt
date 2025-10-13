@@ -22,6 +22,8 @@ object GameBoard {
         "D1", "D2", "D3", "D4" // Domestic
     )
 
+    val centerVertices: List<String> = listOf("A1", "B1", "B2", "B3", "B4", "B5", "B6")
+
     val edges: List<Pair<String, String>> = listOf(
         // Home base White
         "D1" to "D2", "D1" to "C1", "D2" to "C2",

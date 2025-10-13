@@ -1,6 +1,5 @@
 package com.agustin.tarati.ui.screens.main
 
-import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
@@ -8,10 +7,7 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -107,18 +103,6 @@ class MainViewModelTest {
     }
 
     @Test
-    fun updateDifficulty_changesDifficultyAndSaves() = runTest {
-        val newDifficulty = Difficulty.HARD
-
-        coEvery { mockSettingsRepository.setDifficulty(newDifficulty) } returns Unit
-
-        viewModel.updateDifficulty(newDifficulty)
-
-        assertEquals("Difficulty should be updated", newDifficulty, viewModel.difficulty.value)
-        coVerify { mockSettingsRepository.setDifficulty(newDifficulty) }
-    }
-
-    @Test
     fun updateMoveIndex_changesIndex() {
         viewModel.updateMoveIndex(5)
 
@@ -162,10 +146,7 @@ class MainViewModelTest {
             initialGameState(), viewModel.gameState.value
         )
         assertTrue("Initial history should be empty", viewModel.history.value.isEmpty())
-        assertEquals(
-            "Initial difficulty should be DEFAULT",
-            Difficulty.DEFAULT, viewModel.difficulty.value
-        )
+
         assertEquals("Initial move index should be -1", -1, viewModel.moveIndex.value)
         assertTrue("Initial AI should be enabled", viewModel.aIEnabled.value)
         assertEquals(

@@ -81,6 +81,7 @@ import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
+import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,7 +90,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(navController: NavController, settingsViewModel: SettingsViewModel = viewModel()) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -105,10 +106,13 @@ fun MainScreen(navController: NavController) {
 
     val vmGameState by viewModel.gameState.collectAsState(initialGameState())
     val vmHistory by viewModel.history.collectAsState(emptyList())
-    val vmDifficulty by viewModel.difficulty.collectAsState(Difficulty.DEFAULT)
     val vmMoveIndex by viewModel.moveIndex.collectAsState(-1)
     val vmAIEnabled by viewModel.aIEnabled.collectAsState(true)
     val vmPlayerSide by viewModel.playerSide.collectAsState(WHITE)
+
+    val settingsState by settingsViewModel.settingsState.collectAsState()
+    val vmDifficulty = settingsState.difficulty
+    val vmLabelsVisible = settingsState.labelsVisibility
 
     var stopAI by remember { mutableStateOf(false) }
     var resetBoard by remember { mutableStateOf(false) }
@@ -381,9 +385,7 @@ fun MainScreen(navController: NavController) {
                 onUndo = ::undoMove,
                 onRedo = ::redoMove,
                 difficulty = vmDifficulty,
-                onDifficultyChange = {
-                    viewModel.updateDifficulty(it)
-                },
+                onDifficultyChange = { settingsViewModel.setDifficulty(it) },
                 isAIEnabled = vmAIEnabled,
                 onToggleAI = { viewModel.updateAIEnabled(!vmAIEnabled) },
                 onSettings = { navController.navigate(SettingsScreenDest.route) },
@@ -394,8 +396,9 @@ fun MainScreen(navController: NavController) {
                 onEditBoard = {
                     scope.launch { drawerState.close() }
                     viewModel.toggleEditing()
-                }
-            ) { showAboutDialog = true }
+                },
+                onAboutClick = { showAboutDialog = true },
+            )
         }
     ) {
         Scaffold(
@@ -433,7 +436,8 @@ fun MainScreen(navController: NavController) {
                         onApplyMove = { from, to -> applyMove(from, to) },
                         handleEditPiece = { d -> handleEditPiece(d) },
                         resetBoard = resetBoard,
-                        content = { EditControls(isLandscapeScreen) }
+                        content = { EditControls(isLandscapeScreen) },
+                        labelsVisible = vmLabelsVisible
                     )
                 }
             }
@@ -486,6 +490,7 @@ fun CreateBoard(
     onApplyMove: (String, String) -> Unit,
     handleEditPiece: (String) -> Unit,
     resetBoard: Boolean,
+    labelsVisible: Boolean,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -500,6 +505,7 @@ fun CreateBoard(
             } else {
                 toBoardOrientation(isLandscapeScreen, playerSide)
             },
+            labelsVisible = labelsVisible,
             newGame = resetBoard,
             onResetCompleted = onResetBoardCompleted,
             onMove = { from, to ->
@@ -1007,6 +1013,7 @@ private fun MainScreenPreviewContent(
     playerSide: Color = WHITE,
     landScape: Boolean = false,
     isEditing: Boolean = false,
+    labelsVisible: Boolean = true,
 ) {
     TaratiTheme(darkTheme = darkTheme) {
         val drawerState = rememberDrawerState(initialValue = drawerStateValue)
@@ -1023,6 +1030,7 @@ private fun MainScreenPreviewContent(
         var previewGameState by remember { mutableStateOf(initialGameState()) }
         var playerSide by remember { mutableStateOf(playerSide) }
         var isEditing by remember { mutableStateOf(isEditing) }
+        var labelsVisible by remember { mutableStateOf(labelsVisible) }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -1042,8 +1050,9 @@ private fun MainScreenPreviewContent(
                     onToggleAI = { },
                     onSettings = { },
                     onNewGame = { },
-                    onEditBoard = { }
-                ) { }
+                    onEditBoard = { },
+                    onAboutClick = { },
+                )
             }
         ) {
             Scaffold(
@@ -1078,6 +1087,7 @@ private fun MainScreenPreviewContent(
                             Board(
                                 gameState = previewGameState,
                                 boardOrientation = toBoardOrientation(landScape, playerSide),
+                                labelsVisible = labelsVisible,
                                 onMove = { from, to -> println("Move from $from to $to") },
                                 isEditing = isEditing,
                             )
@@ -1183,9 +1193,9 @@ fun MainScreenPreview_Editing_Portrait() {
             Board(
                 gameState = exampleGameState,
                 boardOrientation = boardOrientation,
+                labelsVisible = false,
                 onMove = { _, _ -> },
                 isEditing = isEditing,
-                onEditPiece = { }
             )
 
             EditControlsPreview(
@@ -1231,7 +1241,6 @@ fun MainScreenPreview_Editing_Landscape() {
                 boardOrientation = boardOrientation,
                 onMove = { _, _ -> },
                 isEditing = isEditing,
-                onEditPiece = { }
             )
 
             EditControlsPreview(

@@ -48,12 +48,13 @@ fun Board(
     modifier: Modifier = Modifier,
     gameState: GameState,
     boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
+    labelsVisible: Boolean = true,
     newGame: Boolean = false,
     onResetCompleted: () -> Unit = {},
     onMove: (from: String, to: String) -> Unit,
     isEditing: Boolean = false,
     onEditPiece: (String) -> Unit = { },
-    viewModel: BoardViewModel = viewModel()
+    viewModel: BoardViewModel = viewModel(),
 ) {
     LaunchedEffect(newGame) {
         if (newGame) {
@@ -100,11 +101,12 @@ fun Board(
             drawBoardContent(
                 gameState = gameState,
                 orientation = boardOrientation,
+                labelsVisibles = labelsVisible,
                 vWidth = vWidth,
                 selectedPiece = vmSelectedPiece,
                 validMoves = vmValidMoves,
                 canvasSize = size,
-                colors = boardColors
+                colors = boardColors,
             )
         }
     }
@@ -226,6 +228,7 @@ private fun selectPiece(
 private fun DrawScope.drawBoardContent(
     gameState: GameState,
     orientation: BoardOrientation,
+    labelsVisibles: Boolean,
     vWidth: Float,
     selectedPiece: String?,
     validMoves: List<String>,
@@ -251,7 +254,7 @@ private fun DrawScope.drawBoardContent(
     drawEdges(this, canvasSize, orientation, colors)
 
     // Vértices
-    drawVertices(this, canvasSize, vWidth, gameState, orientation, selectedPiece, validMoves, colors)
+    drawVertices(this, labelsVisibles, canvasSize, vWidth, gameState, orientation, selectedPiece, validMoves, colors)
 
     // Piezas
     gameState.checkers.forEach { (vertexId, checker) ->
@@ -314,6 +317,7 @@ fun drawPiece(
 
 fun drawVertices(
     drawScope: DrawScope,
+    labelsVisibles: Boolean,
     canvasSize: Size,
     vWidth: Float,
     gameState: GameState,
@@ -340,14 +344,16 @@ fun drawVertices(
             color = colors.textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
         )
 
-        // Etiqueta del vértice
-        drawScope.drawContext.canvas.nativeCanvas.apply {
-            drawText(
-                vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
-                    color = colors.textColor.hashCode()
-                    textSize = vWidth / 6
-                    isAntiAlias = true
-                })
+        if (labelsVisibles) {
+            // Etiqueta del vértice
+            drawScope.drawContext.canvas.nativeCanvas.apply {
+                drawText(
+                    vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
+                        color = colors.textColor.hashCode()
+                        textSize = vWidth / 6
+                        isAntiAlias = true
+                    })
+            }
         }
     }
 }
@@ -428,6 +434,7 @@ fun BoardPreview_BlackPlayer() {
             Board(
                 gameState = exampleGameState,
                 boardOrientation = BoardOrientation.PORTRAIT_BLACK,
+                labelsVisible = false,
                 onMove = { from, to -> println("Move from $from to $to") },
                 viewModel = vm,
             )
@@ -449,6 +456,7 @@ fun BoardPreview_Landscape_BlackPlayer() {
             Board(
                 gameState = exampleGameState,
                 boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
+                labelsVisible = false,
                 onMove = { from, to -> println("Move from $from to $to") },
                 viewModel = vm,
             )

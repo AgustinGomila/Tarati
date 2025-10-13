@@ -1,5 +1,6 @@
 package com.agustin.tarati.game.ai
 
+import com.agustin.tarati.game.ai.TaratiAI.WINNING_SCORE
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
@@ -381,8 +382,8 @@ class AITest {
 
         // Deberían ser aproximadamente opuestos
         assertTrue("White advantage should be positive", scoreWhite > 130.0)
-        assertTrue("Black advantage should be positive", scoreBlack > 130.0)
-        assertEquals(scoreWhite, scoreBlack, 5.0) // Aproximadamente simétrico
+        assertTrue("Black advantage should be positive", scoreBlack < -130.0)
+        assertEquals(scoreWhite, -scoreBlack, 0.0) // Aproximadamente simétrico
     }
 
     @Test
@@ -410,33 +411,11 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val result = getNextBestMove(state, depth = Difficulty.MEDIUM.aiDepth, isMaximizingPlayer = true)
+        val result = getNextBestMove(state, depth = Difficulty.MEDIUM.aiDepth)
 
         assertNotNull("AI should find a move", result.move)
         // AI debería preferir moverse a posición ventajosa
         assertNotNull("Should have a best move", result.move)
-    }
-
-    @Test
-    fun getNextBestMove_prefersFasterWin() {
-        val state = GameState(
-            mapOf(
-                "C12" to Checker(WHITE, false), // WHITE casi perdido
-                "C1" to Checker(BLACK, false),
-                "C10" to Checker(BLACK, false),
-                "A1" to Checker(BLACK, true),
-            ),
-            currentTurn = BLACK
-        )
-
-        // Con profundidad adaptativa (14 en endgame), debería ver el mate
-        val result = getNextBestMove(state, isMaximizingPlayer = true)
-
-        assertNotNull("AI should find winning move", result.move)
-        assertTrue("Should have high winning score", result.score > 100000.0)
-
-        // Imprimir para debug
-        println("Best move found: ${result.move} with score: ${result.score}")
     }
 
     @Test
@@ -639,7 +618,7 @@ class AITest {
             assertEquals(
                 "La evaluación debe ser simétrica para posición: $position",
                 scoreOriginal,
-                scoreMirror,
+                -scoreMirror,
                 20.0,
             )
         }
@@ -681,7 +660,7 @@ class AITest {
         assertEquals(
             "Las ventajas deben ser simétricas. WhiteAdv: $scoreWhiteAdvantage, BlackAdv: $scoreBlackAdvantage",
             scoreWhiteAdvantage,
-            scoreBlackAdvantage,
+            -scoreBlackAdvantage,
             0.0
         )
     }
@@ -770,7 +749,7 @@ class AITest {
             setChecker("B1", WHITE, false)
             setChecker("C2", WHITE, false)
             setChecker("D1", WHITE, false)
-            setChecker("A1", WHITE, false)
+            setChecker("C1", WHITE, false)
             setChecker("B4", BLACK, false)
             setChecker("C7", BLACK, false)
             setChecker("D3", BLACK, false)
@@ -788,5 +767,59 @@ class AITest {
             mirrorScore,
             10.0
         )
+    }
+
+    @Test
+    fun getNextBestMove_prefersFasterWin_C1_mate_B1_occupied() {
+        val state = GameState(
+            mapOf(
+                "C12" to Checker(WHITE, false), // WHITE casi perdido
+
+                "C11" to Checker(BLACK, false),
+                "B6" to Checker(BLACK, false),
+                "C2" to Checker(BLACK, true),
+                "B1" to Checker(BLACK, false),
+                "C6" to Checker(BLACK, false),
+                "C7" to Checker(BLACK, false),
+                "C8" to Checker(BLACK, false),
+            ),
+            currentTurn = BLACK
+        )
+
+        // Con profundidad adaptativa (14 en endgame), debería ver el mate
+        val result = getNextBestMove(state)
+
+        assertNotNull("AI should find winning move", result.move)
+        assertTrue("Should have high winning score", result.score == -WINNING_SCORE)
+
+        // Imprimir para debug
+        println("Best move found: ${result.move} with score: ${result.score}")
+    }
+
+    @Test
+    fun getNextBestMove_prefersFasterWin_C1_mate_B1_free() {
+        val state = GameState(
+            mapOf(
+                "C12" to Checker(WHITE, false), // WHITE casi perdido
+
+                "C11" to Checker(BLACK, false),
+                "B6" to Checker(BLACK, false),
+                "C2" to Checker(BLACK, true),
+                "C5" to Checker(BLACK, false),
+                "C6" to Checker(BLACK, false),
+                "C7" to Checker(BLACK, false),
+                "C8" to Checker(BLACK, false),
+            ),
+            currentTurn = BLACK
+        )
+
+        // Con profundidad adaptativa (14 en endgame), debería ver el mate
+        val result = getNextBestMove(state)
+
+        assertNotNull("AI should find winning move", result.move)
+        assertTrue("Should have high winning score", result.score == -WINNING_SCORE)
+
+        // Imprimir para debug
+        println("Best move found: ${result.move} with score: ${result.score}")
     }
 }

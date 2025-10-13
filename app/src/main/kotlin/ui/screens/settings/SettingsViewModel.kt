@@ -2,6 +2,7 @@ package com.agustin.tarati.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ class SettingsViewModel() : ViewModel() {
                 sr.isDarkTheme,
                 sr.difficulty,
                 sr.language,
-                sr.labelsVisibility
+                sr.labelsVisibility,
             ) { isDark, difficulty, language, labelsVisible ->
                 SettingsState(
                     appTheme = if (isDark) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO,
@@ -57,6 +58,12 @@ class SettingsViewModel() : ViewModel() {
     fun setLabelsVisibility(visible: Boolean) {
         viewModelScope.launch {
             sr.setLabelsVisibility(visible)
+        }
+    }
+
+    fun setDifficulty(newDifficulty: Difficulty) {
+        viewModelScope.launch {
+            sr.setDifficulty(newDifficulty)
         }
     }
 }

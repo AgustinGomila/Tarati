@@ -1,8 +1,6 @@
 package com.agustin.tarati.ui.screens.main
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
@@ -15,7 +13,6 @@ import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext.get
 
 class MainViewModel() : ViewModel() {
@@ -32,15 +29,6 @@ class MainViewModel() : ViewModel() {
     val history: StateFlow<List<Pair<Move, GameState>>> = _history.asStateFlow()
     fun updateHistory(newHistory: List<Pair<Move, GameState>>) {
         _history.value = newHistory
-    }
-
-    private val _difficulty = MutableStateFlow(Difficulty.DEFAULT)
-    val difficulty: StateFlow<Difficulty> = _difficulty.asStateFlow()
-    fun updateDifficulty(newDifficulty: Difficulty) {
-        _difficulty.value = newDifficulty
-        viewModelScope.launch {
-            sr.setDifficulty(newDifficulty)
-        }
     }
 
     private val _moveIndex = MutableStateFlow(-1)

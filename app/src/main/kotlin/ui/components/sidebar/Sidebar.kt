@@ -516,7 +516,8 @@ fun SidebarPreview() {
             onSettings = { },
             onNewGame = { },
             onEditBoard = { },
-        ) { }
+            onAboutClick = { },
+        )
     }
 }
 
@@ -547,7 +548,8 @@ fun SidebarPreview_Dark() {
             onSettings = { },
             onNewGame = { },
             onEditBoard = { },
-        ) { }
+            onAboutClick = { },
+        )
     }
 }
 
@@ -579,6 +581,7 @@ fun SidebarPreview_CustomState() {
             onSettings = { },
             onNewGame = { },
             onEditBoard = { },
-        ) { }
+            onAboutClick = { },
+        )
     }
 }
