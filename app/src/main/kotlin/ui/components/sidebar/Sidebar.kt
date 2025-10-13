@@ -47,11 +47,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.preview.customGameState
@@ -328,37 +330,46 @@ fun HistorialControls(
 }
 
 @Composable
-fun GameStateIndicator(gameState: GameState, playerSide: Any) {
+fun GameStateIndicator(gameState: GameState, playerSide: Color) {
+    val winner = getWinner(gameState)
+    val relevantSide = winner ?: gameState.currentTurn
+
+    val (color, backgroundColor) = when (relevantSide) {
+        WHITE -> MaterialTheme.colorScheme.onPrimary to MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSecondary to MaterialTheme.colorScheme.secondary
+    }
+
+    val textToShow = when {
+        winner != null -> {
+            val resultText = when (playerSide) {
+                winner -> R.string.you_won
+                else -> R.string.you_lost
+            }
+            localizedString(resultText, localizedString(playerSide.getColorStringResource()))
+        }
+
+        else -> {
+            val turnText = localizedString(gameState.currentTurn.getColorStringResource())
+            val sideTurnText = localizedString(
+                when (gameState.currentTurn) {
+                    playerSide -> R.string.your_turn
+                    else -> R.string.opponent_turn
+                }
+            )
+            "$turnText: $sideTurnText"
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (gameState.currentTurn == BLACK)
-                    MaterialTheme.colorScheme.secondary
-                else
-                    MaterialTheme.colorScheme.primary
-            ),
+            .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
-        val currentPlayerText = when {
-            gameState.currentTurn == playerSide -> stringResource(R.string.your_turn)
-            else -> stringResource(R.string.opponent_turn)
-        }
-
-        val turnText = localizedString(
-            when (gameState.currentTurn) {
-                BLACK -> R.string.black
-                else -> R.string.white
-            }
-        )
-
         Text(
-            "$currentPlayerText: $turnText",
-            color = if (gameState.currentTurn == BLACK)
-                MaterialTheme.colorScheme.onSecondary
-            else
-                MaterialTheme.colorScheme.onPrimary,
+            text = textToShow,
+            color = color,
             style = MaterialTheme.typography.bodyLarge
         )
     }

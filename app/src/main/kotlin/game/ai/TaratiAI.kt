@@ -10,7 +10,7 @@ import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.hashBoard
-import com.agustin.tarati.game.core.switchColor
+import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.NormalizedBoard
 import com.agustin.tarati.game.logic.PositionHelper.getPosition
 import kotlin.math.max
@@ -118,10 +118,22 @@ object TaratiAI {
     fun isGameOver(gameState: GameState): Boolean {
         val whitePieces = gameState.checkers.values.count { it.color == WHITE }
         val blackPieces = gameState.checkers.values.count { it.color == BLACK }
-        if (whitePieces == 0 || blackPieces == 0) return true
+        return if (whitePieces == 0 || blackPieces == 0) true else getAllPossibleMoves(gameState).isEmpty()
 
-        val possibleMoves = getAllPossibleMoves(gameState)
-        return possibleMoves.isEmpty()
+    }
+
+    fun playerWon(gameState: GameState, playerSide: Color): Boolean {
+        val op = playerSide.opponent()
+        val opPieces = gameState.checkers.values.count { it.color == op }
+        return if (opPieces == 0) true else getAllPossibleMoves(gameState, op).isEmpty()
+
+    }
+
+    fun getWinner(gameState: GameState): Color? {
+        return when {
+            !isGameOver(gameState) -> null
+            else -> if (playerWon(gameState, WHITE)) WHITE else BLACK
+        }
     }
 
     fun evaluateBoard(gameState: GameState): Double {
@@ -148,10 +160,14 @@ object TaratiAI {
     }
 
     fun getAllPossibleMoves(gameState: GameState): MutableList<Move> {
+        return getAllPossibleMoves(gameState, gameState.currentTurn)
+    }
+
+    fun getAllPossibleMoves(gameState: GameState, playerSide: Color): MutableList<Move> {
         val possibleMoves = mutableListOf<Move>()
 
         for ((from, checker) in gameState.checkers) {
-            if (checker.color != gameState.currentTurn) continue
+            if (checker.color != playerSide) continue
 
             // Usar el mapa de adyacencia para obtener solo vértices conectados
             val connectedVertices = adjacencyMap[from] ?: emptyList()
@@ -161,14 +177,21 @@ object TaratiAI {
                 }
             }
         }
-        return possibleMoves
+
+        val priorityMoves = possibleMoves.sortedByDescending { move ->
+            // Priorizar movimientos que capturan piezas
+            val newState = applyMoveAI(gameState, move.from, move.to)
+            evaluateBoard(newState) - evaluateBoard(gameState)
+        }
+
+        return priorityMoves.toMutableList()
     }
 
     private fun applyMoveAI(boardState: GameState, from: String, to: String): GameState {
         // Apply move using the board mutator (does NOT toggle turn)
         val newState = applyMoveToBoard(boardState, from, to)
         // toggle turn (Does this outside applyMoveToBoard; AI.ApplyMoveAI must toggle)
-        val nextTurn = boardState.currentTurn.switchColor()
+        val nextTurn = boardState.currentTurn.opponent()
         return newState.copy(currentTurn = nextTurn)
     }
 

@@ -76,4 +76,7 @@
     <string name="rotate">Rotar</string>
     <string name="ai_thinking">IA pensando...</string>
     <string name="human_turn">Turno humano</string>
+    <string name="player_wins">%1$s ganó</string>
+    <string name="you_won">Ganaste con %1$s</string>
+    <string name="you_lost">Perdiste con %1$s</string>
 </resources>

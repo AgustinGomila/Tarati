@@ -69,7 +69,8 @@ import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
-import com.agustin.tarati.game.core.switchColor
+import com.agustin.tarati.game.core.getColorStringResource
+import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.ui.components.board.Board
@@ -131,7 +132,7 @@ fun MainScreen(navController: NavController) {
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
 
-        val nextTurn = vmGameState.currentTurn.switchColor()
+        val nextTurn = vmGameState.currentTurn.opponent()
         val nextState = newBoardState.copy(currentTurn = nextTurn)
 
         val newEntry = Pair(Move(from, to), nextState)
@@ -147,23 +148,20 @@ fun MainScreen(navController: NavController) {
         viewModel.updateGameState(nextState)
 
         if (isGameOver(nextState)) {
-            val winner = nextState.currentTurn.switchColor()
-            val winnerName = if (winner == WHITE)
-                context.getString(R.string.white)
-            else
-                context.getString(R.string.black)
-
-            gameOverMessage = context.getString(
-                R.string.game_over_wins,
-                winnerName
+            gameOverMessage = String.format(
+                context.getString(R.string.game_over_wins),
+                context.getString(nextState.currentTurn.opponent().getColorStringResource())
             )
             showGameOverDialog = true
             stopAI = true
         }
     }
 
-    LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty, vmPlayerSide) {
-        if (!vmAIEnabled || stopAI) return@LaunchedEffect
+    LaunchedEffect(vmGameState.currentTurn, vmAIEnabled, stopAI, vmDifficulty, vmPlayerSide, vmIsEditing) {
+        if (!vmAIEnabled || stopAI || vmIsEditing) {
+            println("DEBUG: AI blocked - AIEnabled: $vmAIEnabled, stopAI: $stopAI, isEditing: $vmIsEditing")
+            return@LaunchedEffect
+        }
 
         // La IA juega cuando:
         // 1. Está habilitada
@@ -172,9 +170,10 @@ fun MainScreen(navController: NavController) {
         val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide &&
                 !isGameOver(vmGameState)
 
-        println("AI Check: enabled=${true}, playerSide=$vmPlayerSide, currentTurn=${vmGameState.currentTurn}, shouldPlay=$shouldAIPlay")
+        println("DEBUG: AI Check - currentTurn: ${vmGameState.currentTurn}, playerSide: $vmPlayerSide, shouldPlay: $shouldAIPlay")
 
         if (shouldAIPlay) {
+            println("DEBUG: AI starting to think...")
             delay(500)
             val result = try {
                 withContext(Dispatchers.Default) {
@@ -503,9 +502,7 @@ fun CreateBoard(
             newGame = resetBoard,
             onResetCompleted = onResetBoardCompleted,
             onMove = { from, to ->
-                if (!isEditing) {
-                    onApplyMove(from, to)
-                }
+                if (!isEditing) onApplyMove(from, to)
             },
             isEditing = isEditing,
             onEditPiece = handleEditPiece
@@ -1196,11 +1193,11 @@ fun MainScreenPreview_Editing_Portrait() {
                 isValidDistribution = isValidDistribution,
                 isCompletedDistribution = isCompletedDistribution,
                 editColor = editColor,
-                onEditColorToggle = { editColor = editColor.switchColor() },
+                onEditColorToggle = { editColor = editColor.opponent() },
                 playerSide = playerSide,
-                onPlayerSideToggle = { playerSide = playerSide.switchColor() },
+                onPlayerSideToggle = { playerSide = playerSide.opponent() },
                 editTurn = editTurn,
-                onEditTurnToggle = { editTurn = editTurn.switchColor() },
+                onEditTurnToggle = { editTurn = editTurn.opponent() },
                 onRotateBoard = { toBoardOrientation(isLandscape, playerSide) },
                 onClearBoard = { }
             ) { isEditing = false }
@@ -1242,11 +1239,11 @@ fun MainScreenPreview_Editing_Landscape() {
                 isValidDistribution = isValidDistribution,
                 isCompletedDistribution = isCompletedDistribution,
                 editColor = editColor,
-                onEditColorToggle = { editColor = editColor.switchColor() },
+                onEditColorToggle = { editColor = editColor.opponent() },
                 playerSide = playerSide,
-                onPlayerSideToggle = { playerSide = playerSide.switchColor() },
+                onPlayerSideToggle = { playerSide = playerSide.opponent() },
                 editTurn = editTurn,
-                onEditTurnToggle = { editTurn = editTurn.switchColor() },
+                onEditTurnToggle = { editTurn = editTurn.opponent() },
                 onRotateBoard = { toBoardOrientation(isLandscape, playerSide) },
                 onClearBoard = { }
             ) { isEditing = false }
