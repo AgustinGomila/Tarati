@@ -170,7 +170,7 @@ class AIForceTest {
         }
 
         val score = evaluateBoard(gameState)
-        assertTrue("La evaluación debería ser positiva para blanco. Score: $score", score > 0)
+        assertTrue("La evaluación debería ser positiva para blanco. Score: $score", score > 90000)
     }
 
     @Test
@@ -244,7 +244,7 @@ class AIForceTest {
         val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
 
         // Debería identificar el camino hacia el ahogado
-        assertTrue(result.score >= 350)
+        assertTrue(result.score >= 40000)
     }
 
     @Test
@@ -300,7 +300,7 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne_Black() {
+    fun testMateInOne() {
         // Situación: Negro puede forzar mate en 1 movimientos
         val gameState = createGameState {
             setTurn(BLACK)
@@ -329,6 +329,64 @@ class AIForceTest {
     }
 
     @Test
+    fun testMateInOne_quickCheckmateShouldBePrioritized1() {
+        // Situación: Negro puede forzar mate en 1 movimientos
+        val gameState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (1)
+            setChecker("C10", WHITE, false)
+            // Piezas negras (7)
+            setChecker("C8", BLACK, true) // <-- Mejorada da posibilidad de mate en 2
+            setChecker("A1", BLACK, true)
+            setChecker("B4", BLACK, false)
+            setChecker("B3", BLACK, false)
+            setChecker("C7", BLACK, false)
+            setChecker("B2", BLACK, false)
+            setChecker("C3", BLACK, false)
+        }
+
+        val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
+
+        println(result)
+
+        assertTrue(result.move != null)
+        assertTrue(
+            (result.move?.from == "A1" && result.move.to == "B5") ||
+                    (result.move?.from == "C8" && result.move.to == "C9") ||
+                    (result.move?.from == "B4" && result.move.to == "B5")
+        )
+    }
+
+    @Test
+    fun testMateInOne_quickCheckmateShouldBePrioritized2() {
+        // Situación: Negro puede forzar mate en 1 movimientos
+        val gameState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (1)
+            setChecker("C10", WHITE, false)
+            // Piezas negras (7)
+            setChecker("C8", BLACK, false)
+            setChecker("A1", BLACK, true)
+            setChecker("B4", BLACK, false)
+            setChecker("B3", BLACK, false)
+            setChecker("C7", BLACK, false)
+            setChecker("B2", BLACK, false)
+            setChecker("C3", BLACK, false)
+        }
+
+        val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
+
+        println(result)
+
+        assertTrue(result.move != null)
+        assertTrue(
+            (result.move?.from == "A1" && result.move.to == "B5") ||
+                    (result.move?.from == "C8" && result.move.to == "C9") ||
+                    (result.move?.from == "B4" && result.move.to == "B5")
+        )
+    }
+
+    @Test
     fun evaluateBoard_upgradedPieceIsMoreValuable() {
         val stateNormal = GameState(
             mapOf(
@@ -352,7 +410,7 @@ class AIForceTest {
         // La pieza upgraded debería tener mejor evaluación
         Assert.assertTrue("Upgraded piece should score higher", scoreUpgraded > scoreNormal)
 
-        Assert.assertEquals(110.0, scoreUpgraded - scoreNormal, 0.0)
+        Assert.assertEquals(10000.0, scoreUpgraded - scoreNormal, 10.0)
     }
 
     @Test

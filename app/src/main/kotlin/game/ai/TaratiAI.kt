@@ -44,10 +44,6 @@ object TaratiAI {
             }
         }
 
-    fun clearTranspositionTable() {
-        transpositionTable.clear()
-    }
-
     fun getNextBestMove(
         gameState: GameState,
         depth: Int = Difficulty.MEDIUM.aiDepth,
@@ -171,7 +167,8 @@ object TaratiAI {
             val score: Double,
             val capturesUpgraded: Int,
             val capturesNormal: Int,
-            val leadsToUpgrade: Boolean
+            val leadsToUpgrade: Boolean,
+            val isWinningMove: Boolean // Nuevo campo
         )
 
         val moveEvals = moves.map { move ->
@@ -183,23 +180,28 @@ object TaratiAI {
             val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
             val upgradeBonus = if (leadsToUpgrade) UPGRADE_OPPORTUNITY_SCORE.toDouble() else 0.0
 
+            // Verificar si este movimiento gana el juego
+            val isWinningMove = isGameOver(newState) && getWinner(newState) == gameState.currentTurn
+
             val totalScore = quickScore + upgradeBonus +
                     upgradedCaptures * CAPTURE_UPGRADED_BONUS +
                     normalCaptures * CAPTURE_NORMAL_BONUS
 
-            MoveEval(move, totalScore, upgradedCaptures, normalCaptures, leadsToUpgrade)
+            MoveEval(move, totalScore, upgradedCaptures, normalCaptures, leadsToUpgrade, isWinningMove)
         }
 
         val sorted = if (isMaximizingPlayer) {
             moveEvals.sortedWith(
-                compareByDescending<MoveEval> { it.capturesUpgraded }
+                compareByDescending<MoveEval> { it.isWinningMove }
+                    .thenByDescending { it.capturesUpgraded }
                     .thenByDescending { it.capturesNormal }
                     .thenByDescending { it.leadsToUpgrade }
                     .thenByDescending { it.score }
             )
         } else {
             moveEvals.sortedWith(
-                compareBy<MoveEval> { it.capturesUpgraded }
+                compareByDescending<MoveEval> { it.isWinningMove } // Priorizar movimientos ganadores para minimizador
+                    .thenBy { it.capturesUpgraded }
                     .thenBy { it.capturesNormal }
                     .thenBy { it.leadsToUpgrade }
                     .thenBy { it.score }
@@ -376,7 +378,7 @@ object TaratiAI {
 
         var score = 0.0
 
-        score += (whiteMaterial - blackMaterial)
+        score += (whiteMaterial - blackMaterial) * MATERIAL_SCORE
         score += (whiteCenterControl - blackCenterControl) * CONTROL_CENTER_SCORE
         score += (whiteMobility - blackMobility) * MOBILITY_SCORE
         score += (whiteHomeControl - blackHomeControl) * HOME_BASE_CONTROL_SCORE

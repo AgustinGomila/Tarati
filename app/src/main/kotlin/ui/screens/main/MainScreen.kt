@@ -62,7 +62,6 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
-import com.agustin.tarati.game.ai.TaratiAI.clearTranspositionTable
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Color
@@ -208,7 +207,6 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
         showAboutDialog = false
 
         // Reiniciar estado de IA
-        clearTranspositionTable()
         stopAI = false
 
         scope.launch {
