@@ -123,7 +123,7 @@ ventaja decisiva en número o posición.
 El juego termina cuando:
 
 * Ningún jugador puede mover (bloqueo total), o
-* Se alcanza una condición acordada (por ejemplo, número de turnos o diferencia de fichas).
+* Se alcanza una condición acordada (por ejemplo, número de turnos).
 
 Gana quien **controle más piezas en el tablero** o cumpla el objetivo acordado.
 

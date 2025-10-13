@@ -123,7 +123,7 @@ decisive advantage in number or position.
 The game ends when:
 
 * No player can move (total blockage), or
-* An agreed condition is met (e.g., number of turns or piece difference).
+* An agreed condition is met (e.g., number of turns).
 
 The player who **controls more pieces on the board** or meets the agreed objective wins.
 
