@@ -7,6 +7,8 @@ import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.cleanGameState
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
@@ -143,12 +145,7 @@ class MainViewModel() : ViewModel() {
             }
             // Caso 4: Pieza del color opuesto - reemplazar solo si la distribución lo permite
             else -> {
-                if (canReplacePiece(
-                        newColor = _editColor.value,
-                        oldColor = currentChecker.color,
-                        currentCounts = pieceCounts
-                    )
-                ) {
+                if (canReplacePiece(currentCounts = pieceCounts)) {
                     mutableCheckers[vertexId] = Checker(_editColor.value, false)
                 }
             }
@@ -173,9 +170,7 @@ class MainViewModel() : ViewModel() {
         return isValidDistribution(newWhiteCount, newBlackCount)
     }
 
-    private fun canReplacePiece(newColor: Color, oldColor: Color, currentCounts: PieceCounts): Boolean {
-        // Si reemplazamos una pieza del color opuesto, los conteos no cambian
-        // Solo verificamos que la distribución sea válida
+    private fun canReplacePiece(currentCounts: PieceCounts): Boolean {
         return isValidDistribution(currentCounts.white, currentCounts.black)
     }
 
@@ -210,25 +205,5 @@ class MainViewModel() : ViewModel() {
         _isEditing.value = false
         _history.value = emptyList()
         _moveIndex.value = -1
-    }
-
-    companion object {
-        fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
-            val map = mapOf(
-                "C1" to Checker(Color.WHITE, false),
-                "C2" to Checker(Color.WHITE, false),
-                "D1" to Checker(Color.WHITE, false),
-                "D2" to Checker(Color.WHITE, false),
-                "C7" to Checker(Color.BLACK, false),
-                "C8" to Checker(Color.BLACK, false),
-                "D3" to Checker(Color.BLACK, false),
-                "D4" to Checker(Color.BLACK, false)
-            )
-            return GameState(checkers = map, currentTurn = currentTurn)
-        }
-
-        fun cleanGameState(currentTurn: Color = Color.WHITE): GameState {
-            return GameState(checkers = mapOf(), currentTurn = currentTurn)
-        }
     }
 }

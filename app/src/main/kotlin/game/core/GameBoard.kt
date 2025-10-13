@@ -1,13 +1,20 @@
 package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset
-import com.agustin.tarati.game.ai.TaratiAI.normalizedPositions
 import com.agustin.tarati.game.core.Color.BLACK
+import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.logic.BoardOrientation
+import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 object GameBoard {
+    private const val REFERENCE_BOARD_SIZE = 1100f
+    private const val VERTEX_WIDTH = 250f
+    private const val BOARD_MARGIN_PERCENT = 0.8f
+    private const val FORWARD_MOVE_THRESHOLD = 10f
+
     val vertices: List<String> = listOf(
         "A1", // Absolute Middle
         "B1", "B2", "B3", "B4", "B5", "B6", // Boundary
@@ -41,7 +48,7 @@ object GameBoard {
     )
 
     val homeBases: Map<Color, List<String>> = mapOf(
-        Color.WHITE to listOf("C1", "C2", "D1", "D2"),
+        WHITE to listOf("C1", "C2", "D1", "D2"),
         BLACK to listOf("C7", "C8", "D3", "D4")
     )
 
@@ -76,7 +83,7 @@ object GameBoard {
 
         // Calcular el área cuadrada centrada
         val minDimension = minOf(canvasWidth, canvasHeight)
-        val squareSize = minDimension * 0.8f // 80% del lado menor, con margen
+        val squareSize = minDimension * BOARD_MARGIN_PERCENT // 80% del lado menor, con margen
 
         // Calcular offsets para centrar el cuadrado
         val offsetX = (canvasWidth - squareSize) / 2
@@ -87,6 +94,21 @@ object GameBoard {
         val y = offsetY + rotated.y * squareSize
 
         return Offset(x, y)
+    }
+
+    val normalizedPositions: Map<String, NormalizedBoard> by lazy {
+        val tempMap = mutableMapOf<String, NormalizedBoard>()
+        val referenceSize = REFERENCE_BOARD_SIZE to REFERENCE_BOARD_SIZE // Tamaño de referencia para normalizar
+
+        vertices.forEach { vertexId ->
+            val position = getPosition(vertexId, referenceSize, VERTEX_WIDTH)
+            // Normalizar las coordenadas (0-1)
+            val normalizedX = position.x / referenceSize.first
+            val normalizedY = position.y / referenceSize.second
+            tempMap[vertexId] = NormalizedBoard(normalizedX, normalizedY)
+        }
+
+        tempMap.toMap()
     }
 
     fun findClosestVertex(
@@ -110,5 +132,117 @@ object GameBoard {
         }
 
         return closestVertex
+    }
+
+    fun isForwardMove(color: Color, from: String, to: String): Boolean {
+        val boardCenter = VERTEX_WIDTH to VERTEX_WIDTH
+        val vWidth = VERTEX_WIDTH
+        val fromPos = getPosition(from, boardCenter, vWidth)
+        val toPos = getPosition(to, boardCenter, vWidth)
+
+        return if (color == WHITE) {
+            fromPos.y - toPos.y > FORWARD_MOVE_THRESHOLD
+        } else {
+            toPos.y - fromPos.y > FORWARD_MOVE_THRESHOLD
+        }
+    }
+
+    fun isValidMove(gs: GameState, from: String, to: String): Boolean {
+        val isAdjacent = adjacencyMap[from]?.contains(to) ?: false
+        if (!isAdjacent) return false
+
+        val checker = gs.checkers[from] ?: return false
+        if (gs.checkers.containsKey(to)) return false
+
+        if (checker.color != gs.currentTurn) return false
+
+        if (!checker.isUpgraded) {
+            val boardCenter = VERTEX_WIDTH to VERTEX_WIDTH
+            val vWidth = VERTEX_WIDTH
+
+            val fromPos = getPosition(from, boardCenter, vWidth)
+            val toPos = getPosition(to, boardCenter, vWidth)
+
+            return if (checker.color == WHITE) {
+                fromPos.y - toPos.y > FORWARD_MOVE_THRESHOLD
+            } else {
+                toPos.y - fromPos.y > FORWARD_MOVE_THRESHOLD
+            }
+        }
+
+        return true
+    }
+
+    fun getAllPossibleMoves(gameState: GameState): MutableList<Move> {
+        val possibleMoves = mutableListOf<Move>()
+
+        for ((from, checker) in gameState.checkers) {
+            if (checker.color != gameState.currentTurn) continue
+
+            // Usar el mapa de adyacencia para obtener solo vértices conectados
+            val connectedVertices = adjacencyMap[from] ?: emptyList()
+            for (to in connectedVertices) {
+                if (isValidMove(gameState, from, to)) {
+                    possibleMoves.add(Move(from, to))
+                }
+            }
+        }
+
+        return possibleMoves
+    }
+
+    fun getPosition(vertexId: String, boardSize: Pair<Float, Float>, vWidth: Float): Position {
+        val (width, height) = boardSize
+        val centerX = width / 2
+        val centerY = height / 2
+
+        if (vertexId == "A1") {
+            return Position(centerX, centerY)
+        }
+
+        val type = vertexId[0]
+        val position = vertexId.substring(1).toInt()
+
+        return when (type) {
+            'B' -> {
+                val angle = (position - 1) * (Math.PI / 3)
+                Position(
+                    x = centerX + vWidth * cos(angle + Math.PI / 2).toFloat(),
+                    y = centerY + vWidth * sin(angle + Math.PI / 2).toFloat()
+                )
+            }
+
+            'C' -> {
+                val angle = (position - 1) * (Math.PI / 6) - Math.PI / 12 + Math.PI / 2
+                val radius =
+                    vWidth * (1 + sqrt(11.0 / 13)).toFloat() - (Math.PI / 12).toFloat() + (Math.PI / 2).toFloat()
+                Position(
+                    x = centerX + radius * cos(angle).toFloat(),
+                    y = centerY + radius * sin(angle).toFloat()
+                )
+            }
+
+            'D' -> {
+                val down = if (position > 2) -1 else 1
+                val left = if (position == 1 || position == 4) 1 else -1
+                Position(
+                    x = centerX + vWidth / 2 / left,
+                    y = centerY + vWidth * 3 * down
+                )
+            }
+
+            else -> Position(centerX, centerY)
+        }
+    }
+}
+
+data class NormalizedBoard(val x: Float, val y: Float) {
+    fun rotate(orientation: BoardOrientation): NormalizedBoard {
+        return when (orientation) {
+            BoardOrientation.PORTRAIT_WHITE -> NormalizedBoard(x, y)
+            BoardOrientation.PORTRAIT_BLACK -> NormalizedBoard(1 - x, 1 - y)
+            BoardOrientation.LANDSCAPE_WHITE -> NormalizedBoard(y, 1 - x)
+            BoardOrientation.LANDSCAPE_BLACK -> NormalizedBoard(1 - y, x)
+        }
     }
 }

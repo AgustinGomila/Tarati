@@ -2,7 +2,7 @@ package com.agustin.tarati.game.logic
 
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
-import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.cleanGameState
+import com.agustin.tarati.game.core.cleanGameState
 
 // Builder para crear estados de juego complejos
 class GameStateBuilder(initialState: GameState = cleanGameState()) {

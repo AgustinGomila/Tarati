@@ -4,6 +4,7 @@ import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -24,7 +25,7 @@ class GameIntegrationTest {
         )
 
         // White makes a move
-        val whiteMove = getNextBestMove(state, depth = 2)
+        val whiteMove = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
         assertNotNull("White should have a valid move", whiteMove.move)
 
         // Apply white move
@@ -32,7 +33,7 @@ class GameIntegrationTest {
         state = state.copy(currentTurn = Color.BLACK)
 
         // Black makes a move
-        val blackMove = getNextBestMove(state, depth = 2)
+        val blackMove = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
         assertNotNull("Black should have a valid move", blackMove.move)
 
         // Apply black move
@@ -69,7 +70,7 @@ class GameIntegrationTest {
             assertNotNull("AI should return a move at depth $depth", result.move)
             assertTrue(
                 "Move should be valid",
-                TaratiAI.isValidMove(state, result.move!!.from, result.move.to)
+                isValidMove(state, result.move!!.from, result.move.to)
             )
 
             println("Depth $depth took ${endTime - startTime}ms")

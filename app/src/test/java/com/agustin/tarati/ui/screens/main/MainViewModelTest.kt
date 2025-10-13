@@ -5,6 +5,8 @@ import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.cleanGameState
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -45,7 +47,7 @@ class MainViewModelTest {
 
     @Test
     fun initialGameState_hasCorrectSetup() {
-        val gameState = MainViewModel.initialGameState()
+        val gameState = initialGameState()
 
         assertEquals("Initial turn should be WHITE", Color.WHITE, gameState.currentTurn)
         assertEquals("Should have 8 checkers total", 8, gameState.checkers.size)
@@ -67,7 +69,7 @@ class MainViewModelTest {
 
     @Test
     fun cleanGameState_hasNoCheckers() {
-        val gameState = MainViewModel.cleanGameState()
+        val gameState = cleanGameState()
 
         assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
         assertEquals("Turn should be WHITE by default", Color.WHITE, gameState.currentTurn)
@@ -75,7 +77,7 @@ class MainViewModelTest {
 
     @Test
     fun cleanGameState_withCustomTurn() {
-        val gameState = MainViewModel.cleanGameState(Color.BLACK)
+        val gameState = cleanGameState(Color.BLACK)
 
         assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
         assertEquals("Turn should be BLACK", Color.BLACK, gameState.currentTurn)
@@ -96,7 +98,7 @@ class MainViewModelTest {
     @Test
     fun updateHistory_changesHistory() {
         val move = Move("C1", "B1")
-        val gameState = MainViewModel.initialGameState()
+        val gameState = initialGameState()
         val history = listOf(Pair(move, gameState))
 
         viewModel.updateHistory(history)
@@ -157,7 +159,7 @@ class MainViewModelTest {
     fun initialState_hasDefaultValues() {
         assertEquals(
             "Initial game state should match factory",
-            MainViewModel.initialGameState(), viewModel.gameState.value
+            initialGameState(), viewModel.gameState.value
         )
         assertTrue("Initial history should be empty", viewModel.history.value.isEmpty())
         assertEquals(

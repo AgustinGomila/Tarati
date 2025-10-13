@@ -1,6 +1,6 @@
 package com.agustin.tarati.ui.components.board
 
-import com.agustin.tarati.game.ai.TaratiAI.normalizedPositions
+import com.agustin.tarati.game.core.GameBoard.normalizedPositions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

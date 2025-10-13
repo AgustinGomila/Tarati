@@ -20,7 +20,7 @@ compose-bom = "2025.10.00"
 
 # Testing
 junit = "4.13.2"
-kotlinxCoroutines = "1.7.3"
+kotlinxCoroutines = "1.10.2"
 mockk = "1.14.6"
 
 [libraries]

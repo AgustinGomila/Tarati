@@ -5,19 +5,25 @@ import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.edges
+import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
-import com.agustin.tarati.game.core.GameBoard.vertices
+import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.hashBoard
 import com.agustin.tarati.game.core.opponent
-import com.agustin.tarati.game.logic.NormalizedBoard
-import com.agustin.tarati.game.logic.PositionHelper.getPosition
 import kotlin.math.max
 import kotlin.math.min
 
 object TaratiAI {
-    private const val WINNING_SCORE = 1_000_000.0
+    const val WINNING_SCORE = 1_000_000.0
+    private const val MATERIAL_SCORE = 100
+    private const val UPGRADE_SCORE = 50
+    private const val OPPONENT_BASE_PRESSURE_SCORE = 40
+    private const val CONTROL_CENTER_SCORE = 30
+    private const val HOME_BASE_CONTROL_SCORE = 25
+    private const val MOBILITY_SCORE = 5
+
     private const val MAX_TABLE_SIZE = 10000
 
     private data class TranspositionEntry(val depth: Int, val result: Result)
@@ -29,20 +35,27 @@ object TaratiAI {
             }
         }
 
+    fun clearTranspositionTable() {
+        transpositionTable.clear()
+    }
+
     fun getNextBestMove(
         gameState: GameState,
-        depth: Int = 8,
+        depth: Int = Difficulty.MEDIUM.aiDepth,
         isMaximizingPlayer: Boolean = true,
         alphaInit: Double = Double.NEGATIVE_INFINITY,
         betaInit: Double = Double.POSITIVE_INFINITY
     ): Result {
+        // Limitar profundidad máxima
+        val safeDepth = min(depth, Difficulty.CHAMPION.aiDepth)
+
         val boardHash = gameState.hashBoard()
         transpositionTable[boardHash]?.let { entry ->
-            if (entry.depth >= depth) return entry.result
+            if (entry.depth >= safeDepth) return entry.result
         }
 
         val gameOver = isGameOver(gameState)
-        if (depth == 0 || gameOver) {
+        if (safeDepth == 0 || gameOver) {
             val score = evaluateBoard(gameState)
             val finalScore = if (gameOver) {
                 if (score < 0) WINNING_SCORE else -WINNING_SCORE
@@ -62,7 +75,7 @@ object TaratiAI {
             val newGameState = applyMoveAI(gameState, move.from, move.to)
             val childResult = getNextBestMove(
                 gameState = newGameState,
-                depth = depth - 1,
+                depth = safeDepth - 1,
                 isMaximizingPlayer = !isMaximizingPlayer,
                 alphaInit = alpha,
                 betaInit = beta
@@ -93,98 +106,137 @@ object TaratiAI {
     }
 
     fun sortMoves(moves: MutableList<Move>, gameState: GameState, isMaximizingPlayer: Boolean) {
+        val moveScores = moves.associateWith { move ->
+            quickEvaluate(applyMoveAI(gameState, move.from, move.to))
+        }
+
         moves.sortWith { a, b ->
-            val newStateA = applyMoveAI(gameState, a.from, a.to)
-            val newStateB = applyMoveAI(gameState, b.from, b.to)
-            val scoreA = if (isGameOver(newStateA)) {
-                if (isMaximizingPlayer) WINNING_SCORE else -WINNING_SCORE
-            } else quickEvaluate(newStateA)
-            val scoreB = if (isGameOver(newStateB)) {
-                if (isMaximizingPlayer) WINNING_SCORE else -WINNING_SCORE
-            } else quickEvaluate(newStateB)
-            if (isMaximizingPlayer) scoreB.compareTo(scoreA) else scoreA.compareTo(scoreB)
+            val scoreA = moveScores[a]!!
+            val scoreB = moveScores[b]!!
+            if (isMaximizingPlayer) scoreB.compareTo(scoreA)
+            else scoreA.compareTo(scoreB)
         }
     }
 
     fun quickEvaluate(gameState: GameState): Double {
         var score = 0.0
+        var whitePieces = 0
+        var blackPieces = 0
+
+        // Solo evaluación básica de material
         for ((_, checker) in gameState.checkers) {
-            score += if (checker.color == BLACK) 1.0 else -1.0
-            if (checker.isUpgraded) score += if (checker.color == BLACK) 0.5 else -0.5
+            if (checker.color == WHITE) {
+                whitePieces += if (checker.isUpgraded) 2 else 1
+            } else {
+                blackPieces += if (checker.isUpgraded) 2 else 1
+            }
         }
+
+        score += (whitePieces - blackPieces) * MATERIAL_SCORE
         return score
     }
 
     fun isGameOver(gameState: GameState): Boolean {
         val whitePieces = gameState.checkers.values.count { it.color == WHITE }
         val blackPieces = gameState.checkers.values.count { it.color == BLACK }
-        return if (whitePieces == 0 || blackPieces == 0) true else getAllPossibleMoves(gameState).isEmpty()
 
-    }
+        // Victoria por eliminación
+        if (whitePieces == 0 || blackPieces == 0) return true
 
-    fun playerWon(gameState: GameState, playerSide: Color): Boolean {
-        val op = playerSide.opponent()
-        val opPieces = gameState.checkers.values.count { it.color == op }
-        return if (opPieces == 0) true else getAllPossibleMoves(gameState, op).isEmpty()
-
+        // Victoria por bloqueo total
+        return getAllPossibleMoves(gameState).isEmpty()
     }
 
     fun getWinner(gameState: GameState): Color? {
+        if (!isGameOver(gameState)) return null
+
+        val whitePieces = gameState.checkers.values.count { it.color == WHITE }
+        val blackPieces = gameState.checkers.values.count { it.color == BLACK }
+
+        // Si un jugador se quedó sin piezas
+        if (whitePieces == 0) return BLACK
+        if (blackPieces == 0) return WHITE
+
+        // Si ambos tienen piezas, gana quien tenga más
         return when {
-            !isGameOver(gameState) -> null
-            else -> if (playerWon(gameState, WHITE)) WHITE else BLACK
+            whitePieces > blackPieces -> WHITE
+            blackPieces > whitePieces -> BLACK
+            else -> null // Empate
         }
     }
 
     fun evaluateBoard(gameState: GameState): Double {
         var score = 0.0
-        var whitePieces = 0.0
-        var blackPieces = 0.0
+        var whitePieces = 0
+        var blackPieces = 0
         var whiteUpgrades = 0
         var blackUpgrades = 0
+        var whiteCenterControl = 0
+        var blackCenterControl = 0
+        var whiteMobility = 0
+        var blackMobility = 0
 
-        for ((_, checker) in gameState.checkers) {
-            val pieceValue = if (checker.isUpgraded) 1.5 else 1.0
+        var whiteHomeControl = 0
+        var blackHomeControl = 0
+        var whiteOpponentPressure = 0
+        var blackOpponentPressure = 0
+
+        // Definir vértices centrales (posición estratégica)
+        val centerVertices = listOf("A1", "B1", "B2", "B3", "B4", "B5", "B6")
+
+        // Primera pasada: contar piezas, mejoras y control del centro
+        for ((vertex, checker) in gameState.checkers) {
             if (checker.color == WHITE) {
-                whitePieces += pieceValue
+                whitePieces++
                 if (checker.isUpgraded) whiteUpgrades++
+                if (vertex in centerVertices) whiteCenterControl++
             } else {
-                blackPieces += pieceValue
+                blackPieces++
                 if (checker.isUpgraded) blackUpgrades++
+                if (vertex in centerVertices) blackCenterControl++
             }
         }
 
-        score += (whitePieces - blackPieces) * 97.0
-        score += (whiteUpgrades - blackUpgrades) * 117.0
-        return score
-    }
+        // Segunda pasada: calcular movilidad
+        for ((vertex, checker) in gameState.checkers) {
+            val adjacentVertices = adjacencyMap[vertex] ?: emptyList()
+            val possibleMoves = adjacentVertices.count { to ->
+                !gameState.checkers.containsKey(to) &&
+                        (checker.isUpgraded || isForwardMove(checker.color, vertex, to))
+            }
 
-    fun getAllPossibleMoves(gameState: GameState): MutableList<Move> {
-        return getAllPossibleMoves(gameState, gameState.currentTurn)
-    }
+            if (checker.color == WHITE) {
+                whiteMobility += possibleMoves
+            } else {
+                blackMobility += possibleMoves
+            }
+        }
 
-    fun getAllPossibleMoves(gameState: GameState, playerSide: Color): MutableList<Move> {
-        val possibleMoves = mutableListOf<Move>()
+        // Calcular control de base propia y presión en base oponente
+        for ((vertex, checker) in gameState.checkers) {
+            when (checker.color) {
+                WHITE -> {
+                    if (vertex in homeBases[WHITE]!!) whiteHomeControl++
+                    if (vertex in homeBases[BLACK]!!) whiteOpponentPressure++
+                }
 
-        for ((from, checker) in gameState.checkers) {
-            if (checker.color != playerSide) continue
-
-            // Usar el mapa de adyacencia para obtener solo vértices conectados
-            val connectedVertices = adjacencyMap[from] ?: emptyList()
-            for (to in connectedVertices) {
-                if (isValidMove(gameState, from, to)) {
-                    possibleMoves.add(Move(from, to))
+                BLACK -> {
+                    if (vertex in homeBases[BLACK]!!) blackHomeControl++
+                    if (vertex in homeBases[WHITE]!!) blackOpponentPressure++
                 }
             }
         }
 
-        val priorityMoves = possibleMoves.sortedByDescending { move ->
-            // Priorizar movimientos que capturan piezas
-            val newState = applyMoveAI(gameState, move.from, move.to)
-            evaluateBoard(newState) - evaluateBoard(gameState)
-        }
+        val perspective = if (gameState.currentTurn == WHITE) 1 else -1
 
-        return priorityMoves.toMutableList()
+        score += (whitePieces - blackPieces) * MATERIAL_SCORE * perspective
+        score += (whiteUpgrades - blackUpgrades) * UPGRADE_SCORE * perspective
+        score += (whiteCenterControl - blackCenterControl) * CONTROL_CENTER_SCORE * perspective
+        score += (whiteMobility - blackMobility) * MOBILITY_SCORE * perspective
+        score += (whiteHomeControl - blackHomeControl) * HOME_BASE_CONTROL_SCORE * perspective
+        score += (whiteOpponentPressure - blackOpponentPressure) * OPPONENT_BASE_PRESSURE_SCORE * perspective
+
+        return score
     }
 
     private fun applyMoveAI(boardState: GameState, from: String, to: String): GameState {
@@ -233,62 +285,5 @@ object TaratiAI {
         }
 
         return GameState(mutable.toMap(), prevState.currentTurn)
-    }
-
-    val normalizedPositions: Map<String, NormalizedBoard> by lazy {
-        val tempMap = mutableMapOf<String, NormalizedBoard>()
-        val referenceSize = 1100f to 1100f // Tamaño de referencia para normalizar
-
-        vertices.forEach { vertexId ->
-            val position = getPosition(vertexId, referenceSize, 250f)
-            // Normalizar las coordenadas (0-1)
-            val normalizedX = position.x / referenceSize.first
-            val normalizedY = position.y / referenceSize.second
-            tempMap[vertexId] = NormalizedBoard(normalizedX, normalizedY)
-        }
-
-        tempMap.toMap()
-    }
-
-    fun isForwardMove(color: Color, from: String, to: String): Boolean {
-        val boardCenter = 250f to 250f
-        val vWidth = 250f
-        val fromPos = getPosition(from, boardCenter, vWidth)
-        val toPos = getPosition(to, boardCenter, vWidth)
-
-        return if (color == WHITE) {
-            fromPos.y - toPos.y > 10
-        } else {
-            toPos.y - fromPos.y > 10
-        }
-    }
-
-    fun isValidMove(gs: GameState, from: String, to: String): Boolean {
-        // Verificar que from y to sean adyacentes
-        val isAdjacent = adjacencyMap[from]?.contains(to) ?: false
-        if (!isAdjacent) return false
-
-        if (from == to) return false
-
-        val checker = gs.checkers[from] ?: return false
-        if (gs.checkers.containsKey(to)) return false
-
-        if (checker.color != gs.currentTurn) return false
-
-        if (!checker.isUpgraded) {
-            val boardCenter = 250f to 250f
-            val vWidth = 250f
-
-            val fromPos = getPosition(from, boardCenter, vWidth)
-            val toPos = getPosition(to, boardCenter, vWidth)
-
-            return if (checker.color == WHITE) {
-                fromPos.y - toPos.y > 10
-            } else {
-                toPos.y - fromPos.y > 10
-            }
-        }
-
-        return true
     }
 }

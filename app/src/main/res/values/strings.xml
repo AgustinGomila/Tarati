@@ -64,14 +64,10 @@
     <string name="rotate_board">Rotate board</string>
     <string name="start">Start</string>
     <string name="turn">Turn</string>
-    <string name="player_side">Side</string>
     <string name="piece">Piece</string>
     <string name="side">Side</string>
-    <string name="clear">Clear</string>
-    <string name="rotate">Rotate</string>
-    <string name="ai_thinking">AI thinking...</string>
+    <string name="ai_thinking">AI thinking…</string>
     <string name="human_turn">Human turn</string>
-    <string name="player_wins">%1$s wins</string>
     <string name="you_won">You won with %1$s</string>
     <string name="you_lost">You lost with %1$s</string>
 </resources>

@@ -1,9 +1,9 @@
 package com.agustin.tarati.game.logic
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
-import com.agustin.tarati.game.ai.TaratiAI.normalizedPositions
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameBoard.normalizedPositions
 import com.agustin.tarati.game.core.GameState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
