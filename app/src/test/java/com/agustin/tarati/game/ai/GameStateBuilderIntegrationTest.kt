@@ -1,5 +1,6 @@
 package  com.agustin.tarati.game.ai
 
+import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.logic.GameStateBuilder
@@ -23,7 +24,7 @@ class GameStateBuilderIntegrationTest {
         }
 
         // AI should be able to analyze this state
-        val result = TaratiAI.getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
+        val result = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
 
         assertNotNull("AI should return a result", result)
         // The move might be null if no valid moves, but the result should not be null

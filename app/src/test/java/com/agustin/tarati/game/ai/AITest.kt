@@ -1,7 +1,7 @@
 package com.agustin.tarati.game.ai
 
-import com.agustin.tarati.game.ai.TaratiAI.WINNING_SCORE
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
+import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
@@ -790,7 +790,7 @@ class AITest {
         val result = getNextBestMove(state)
 
         assertNotNull("AI should find winning move", result.move)
-        assertTrue("Should have high winning score", result.score == -WINNING_SCORE)
+        assertTrue("Should have high winning score", result.score == -evalConfig.winningScore)
 
         // Imprimir para debug
         println("Best move found: ${result.move} with score: ${result.score}")
@@ -817,7 +817,7 @@ class AITest {
         val result = getNextBestMove(state)
 
         assertNotNull("AI should find winning move", result.move)
-        assertTrue("Should have high winning score", result.score == -WINNING_SCORE)
+        assertTrue("Should have high winning score", result.score == -evalConfig.winningScore)
 
         // Imprimir para debug
         println("Best move found: ${result.move} with score: ${result.score}")

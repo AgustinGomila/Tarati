@@ -14,26 +14,32 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.hashBoard
 import com.agustin.tarati.game.core.opponent
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 object TaratiAI {
-    const val WINNING_SCORE = 1_000_000.0
-
-    // Pesos ajustados según prioridades del juego
-    private const val UPGRADED_PIECE_SCORE = 200  // Piezas mejoradas valen el doble
-    private const val CAPTURE_UPGRADED_BONUS = 150  // Bonus por voltear mejoradas
-    private const val MATERIAL_SCORE = 100
-    private const val UPGRADE_OPPORTUNITY_SCORE = 80  // Estar cerca de base enemiga
-    private const val CAPTURE_NORMAL_BONUS = 50  // Bonus por voltear normales
-    private const val OPPONENT_BASE_PRESSURE_SCORE = 40
-    private const val CONTROL_CENTER_SCORE = 30
-    private const val HOME_BASE_CONTROL_SCORE = 25
-    private const val MOBILITY_SCORE = 5
-
-    private const val MAX_TABLE_SIZE = 10000
+    private const val MAX_TABLE_SIZE = 10000  // Transposition table default size
     private const val DEFAULT_TIME_LIMIT_MS = 5000L  // 5 segundos por defecto
+
+    // Configuración global (thread-safe)
+    private val globalConfigRef: AtomicReference<EvaluationConfig> =
+        AtomicReference(EvaluationConfig())
+
+    /**
+     * Establece la configuración global (inmutable).
+     */
+    @Suppress("unused")
+    fun setEvaluationConfig(config: EvaluationConfig) {
+        globalConfigRef.set(config)
+    }
+
+    /**
+     * Obtiene la configuración global actual.
+     */
+    val evalConfig: EvaluationConfig
+        get() = globalConfigRef.get()
 
     private data class TranspositionEntry(val depth: Int, val result: Result)
 
@@ -44,10 +50,13 @@ object TaratiAI {
             }
         }
 
+    /**
+     * Obtener mejor movimiento.
+     */
     fun getNextBestMove(
         gameState: GameState,
         depth: Int = Difficulty.MEDIUM.aiDepth,
-        debug: Boolean = false
+        debug: Boolean = false,
     ): Result {
         // Determinar automáticamente si el jugador actual es maximizador
         val isMaximizingPlayer = (gameState.currentTurn == WHITE)
@@ -57,7 +66,7 @@ object TaratiAI {
             isMaximizingPlayer = isMaximizingPlayer,
             alphaInit = Double.NEGATIVE_INFINITY,
             betaInit = Double.POSITIVE_INFINITY,
-            debug = debug
+            debug = debug,
         )
     }
 
@@ -67,7 +76,7 @@ object TaratiAI {
         isMaximizingPlayer: Boolean,
         alphaInit: Double,
         betaInit: Double,
-        debug: Boolean = false
+        debug: Boolean = false,
     ): Result {
         val safeDepth = min(depth, Difficulty.CHAMPION.aiDepth)
 
@@ -87,8 +96,8 @@ object TaratiAI {
                 val winner = getWinner(gameState)
                 if (debug) println("[TERMINAL] gameOver=${true}, winner=$winner, currentTurn=${gameState.currentTurn}")
                 when (winner) {
-                    WHITE -> WINNING_SCORE
-                    BLACK -> -WINNING_SCORE
+                    WHITE -> evalConfig.winningScore
+                    BLACK -> -evalConfig.winningScore
                     else -> score // Empate (no debería pasar según reglas)
                 }
             } else {
@@ -105,7 +114,7 @@ object TaratiAI {
 
         val possibleMoves = getAllPossibleMoves(gameState)
 
-        // Verificar que todos los movimientos sean legales
+        // Verificar que todos los movimientos sean legales (debug)
         if (debug) {
             println("[SEARCH] depth=$safeDepth, isMax=$isMaximizingPlayer, turn=${gameState.currentTurn}, moves=${possibleMoves.size}")
             possibleMoves.forEach { move ->
@@ -126,7 +135,7 @@ object TaratiAI {
                 isMaximizingPlayer = !isMaximizingPlayer,
                 alphaInit = alpha,
                 betaInit = beta,
-                debug = debug
+                debug = debug,
             )
             val score = childResult.score
 
@@ -161,14 +170,18 @@ object TaratiAI {
     }
 
     // Ordenamiento considerando capturas de piezas mejoradas
-    fun sortMoves(moves: MutableList<Move>, gameState: GameState, isMaximizingPlayer: Boolean) {
+    fun sortMoves(
+        moves: MutableList<Move>,
+        gameState: GameState,
+        isMaximizingPlayer: Boolean
+    ) {
         data class MoveEval(
             val move: Move,
             val score: Double,
             val capturesUpgraded: Int,
             val capturesNormal: Int,
             val leadsToUpgrade: Boolean,
-            val isWinningMove: Boolean // Nuevo campo
+            val isWinningMove: Boolean
         )
 
         val moveEvals = moves.map { move ->
@@ -178,14 +191,14 @@ object TaratiAI {
 
             // Bonus si el movimiento lleva a mejora
             val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
-            val upgradeBonus = if (leadsToUpgrade) UPGRADE_OPPORTUNITY_SCORE.toDouble() else 0.0
+            val upgradeBonus = if (leadsToUpgrade) evalConfig.upgradeOpportunityScore.toDouble() else 0.0
 
             // Verificar si este movimiento gana el juego
             val isWinningMove = isGameOver(newState) && getWinner(newState) == gameState.currentTurn
 
             val totalScore = quickScore + upgradeBonus +
-                    upgradedCaptures * CAPTURE_UPGRADED_BONUS +
-                    normalCaptures * CAPTURE_NORMAL_BONUS
+                    upgradedCaptures * evalConfig.captureUpgradedBonus +
+                    normalCaptures * evalConfig.captureNormalBonus
 
             MoveEval(move, totalScore, upgradedCaptures, normalCaptures, leadsToUpgrade, isWinningMove)
         }
@@ -200,7 +213,7 @@ object TaratiAI {
             )
         } else {
             moveEvals.sortedWith(
-                compareByDescending<MoveEval> { it.isWinningMove } // Priorizar movimientos ganadores para minimizador
+                compareByDescending<MoveEval> { it.isWinningMove }
                     .thenBy { it.capturesUpgraded }
                     .thenBy { it.capturesNormal }
                     .thenBy { it.leadsToUpgrade }
@@ -248,7 +261,7 @@ object TaratiAI {
         var blackThreatsToUpgraded = 0
 
         for ((vertex, checker) in gameState.checkers) {
-            val materialValue = if (checker.isUpgraded) UPGRADED_PIECE_SCORE else MATERIAL_SCORE
+            val materialValue = if (checker.isUpgraded) evalConfig.upgradedPieceScore else evalConfig.materialScore
 
             if (checker.color == WHITE) {
                 whiteMaterial += materialValue
@@ -271,7 +284,7 @@ object TaratiAI {
         }
 
         score += (whiteMaterial - blackMaterial)
-        score += (whiteThreatsToUpgraded - blackThreatsToUpgraded) * 15 // Bonus por amenazar mejoradas
+        score += (whiteThreatsToUpgraded - blackThreatsToUpgraded) * evalConfig.quickThreatWeight
         return score
     }
 
@@ -320,7 +333,7 @@ object TaratiAI {
 
         // Primera pasada: material, mejoras y control del centro
         for ((vertex, checker) in gameState.checkers) {
-            val materialValue = if (checker.isUpgraded) UPGRADED_PIECE_SCORE else MATERIAL_SCORE
+            val materialValue = if (checker.isUpgraded) evalConfig.upgradedPieceScore else evalConfig.materialScore
 
             if (checker.color == WHITE) {
                 whiteMaterial += materialValue
@@ -378,12 +391,12 @@ object TaratiAI {
 
         var score = 0.0
 
-        score += (whiteMaterial - blackMaterial) * MATERIAL_SCORE
-        score += (whiteCenterControl - blackCenterControl) * CONTROL_CENTER_SCORE
-        score += (whiteMobility - blackMobility) * MOBILITY_SCORE
-        score += (whiteHomeControl - blackHomeControl) * HOME_BASE_CONTROL_SCORE
-        score += (whiteOpponentPressure - blackOpponentPressure) * OPPONENT_BASE_PRESSURE_SCORE
-        score += (whiteUpgradeOpportunities - blackUpgradeOpportunities) * UPGRADE_OPPORTUNITY_SCORE
+        score += (whiteMaterial - blackMaterial) * evalConfig.materialScore
+        score += (whiteCenterControl - blackCenterControl) * evalConfig.controlCenterScore
+        score += (whiteMobility - blackMobility) * evalConfig.mobilityScore
+        score += (whiteHomeControl - blackHomeControl) * evalConfig.homeBaseControlScore
+        score += (whiteOpponentPressure - blackOpponentPressure) * evalConfig.opponentBasePressureScore
+        score += (whiteUpgradeOpportunities - blackUpgradeOpportunities) * evalConfig.upgradeOpportunityScore
 
         return score
     }
@@ -433,41 +446,29 @@ object TaratiAI {
     // Historial para detectar repetición triple
     private val positionHistory = mutableMapOf<String, Int>()
 
-    /**
-     * Limpia el historial de posiciones
-     */
     @Suppress("unused")
     fun clearPositionHistory() {
         positionHistory.clear()
     }
 
-    /**
-     * Registrar posición en el historial
-     */
     @Suppress("unused")
     fun recordPosition(gameState: GameState) {
         val hash = gameState.hashBoard()
         positionHistory[hash] = (positionHistory[hash] ?: 0) + 1
     }
 
-    /**
-     * Verificar si hay triple repetición
-     */
     @Suppress("unused")
     fun hasTripleRepetition(gameState: GameState): Boolean {
         val hash = gameState.hashBoard()
         return (positionHistory[hash] ?: 0) >= 3
     }
 
-    /**
-     * Búsqueda iterativa con límite de tiempo
-     */
     @Suppress("unused")
     fun getNextBestMoveWithTimeLimit(
         gameState: GameState,
         maxDepth: Int = Difficulty.MEDIUM.aiDepth,
         timeLimitMs: Long = DEFAULT_TIME_LIMIT_MS,
-        debug: Boolean = false
+        debug: Boolean = false,
     ): Result {
         val startTime = System.currentTimeMillis()
         var bestResult = Result(0.0, null)
@@ -486,7 +487,7 @@ object TaratiAI {
             }
 
             // Si encontramos victoria garantizada, no buscar más profundo
-            if (abs(result.score) >= WINNING_SCORE * 0.9) {
+            if (abs(result.score) >= evalConfig.winningScore * 0.9) {
                 if (debug) println("Found winning/losing line at depth $depth")
                 break
             }

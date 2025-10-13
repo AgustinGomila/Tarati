@@ -1,11 +1,12 @@
 package com.agustin.tarati.game.ai
 
-import com.agustin.tarati.game.ai.TaratiAI.WINNING_SCORE
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
+import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
+import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.sortMoves
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
@@ -31,7 +32,7 @@ class AIForceTest {
         )
         val gameState = GameState(checkers, currentTurn = BLACK)
 
-        val score = TaratiAI.quickEvaluate(gameState)
+        val score = quickEvaluate(gameState)
 
         // 1 negro (-1) vs. 1 blanco (+1) = 0
         assertEquals(0.0, score)
@@ -53,7 +54,7 @@ class AIForceTest {
         )
 
         // En sortMoves, si algún movimiento lleva a game over, debe ser priorizado
-        sortMoves(moves, gameState, isMaximizingPlayer = true)
+        sortMoves(moves, gameState, true)
 
         // Verificar que no hay movimientos que lleven a game over en esta posición
         // (ninguno debería capturar D2 directamente)
@@ -250,7 +251,7 @@ class AIForceTest {
     @Test
     fun testMateInTwo_ForcedSequence() {
         // Situación: Blanco puede forzar mate en 2 movimientos
-        val gameState = com.agustin.tarati.game.logic.createGameState {
+        val gameState = createGameState {
             setTurn(WHITE)
             // Piezas negras (2)
             setChecker("C1", BLACK, false)
@@ -267,7 +268,7 @@ class AIForceTest {
         val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
 
         // El movimiento debería ser parte de una secuencia ganadora
-        assertTrue(result.score == WINNING_SCORE) // Puntuación muy alta indica victoria inminente
+        assertTrue(result.score == evalConfig.winningScore) // Puntuación muy alta indica victoria inminente
     }
 
     @Test
@@ -482,7 +483,7 @@ class AIForceTest {
         // El score del primer movimiento debería indicar mate forzado
         assertTrue(
             "Black's first move should have winning score (negative for BLACK)",
-            blackMove1.score == -WINNING_SCORE
+            blackMove1.score == -evalConfig.winningScore
         )
     }
 }
