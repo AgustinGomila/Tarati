@@ -1,6 +1,7 @@
 package  com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.logic.GameStateBuilder
 import com.agustin.tarati.game.logic.createGameState
 import org.junit.Assert.assertEquals
@@ -22,7 +23,7 @@ class GameStateBuilderIntegrationTest {
         }
 
         // AI should be able to analyze this state
-        val result = TaratiAI.getNextBestMove(state, depth = 3)
+        val result = TaratiAI.getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
 
         assertNotNull("AI should return a result", result)
         // The move might be null if no valid moves, but the result should not be null
@@ -61,7 +62,7 @@ class GameStateBuilderIntegrationTest {
             .build()
 
         // Now test specific functionality with this controlled state
-        val possibleMoves = TaratiAI.getAllPossibleMoves(testState)
+        val possibleMoves = getAllPossibleMoves(testState)
 
         // The white king at A1 should have multiple move options
         val kingMoves = possibleMoves.filter { it.from == "C7" }

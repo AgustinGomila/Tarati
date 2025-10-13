@@ -62,6 +62,7 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
+import com.agustin.tarati.game.ai.TaratiAI.clearTranspositionTable
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Color
@@ -70,6 +71,7 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.toBoardOrientation
@@ -79,11 +81,9 @@ import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
-import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -174,7 +174,7 @@ fun MainScreen(navController: NavController) {
 
         if (shouldAIPlay) {
             println("DEBUG: AI starting to think...")
-            delay(500)
+
             val result = try {
                 withContext(Dispatchers.Default) {
                     getNextBestMove(vmGameState, depth = vmDifficulty.aiDepth)
@@ -204,6 +204,7 @@ fun MainScreen(navController: NavController) {
         showAboutDialog = false
 
         // Reiniciar estado de IA
+        clearTranspositionTable()
         stopAI = false
 
         scope.launch {

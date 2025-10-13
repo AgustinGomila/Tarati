@@ -4,10 +4,10 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.game.logic.modifyChecker
 import com.agustin.tarati.game.logic.withTurn
-import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
 
 /**
  * Estados de juego predefinidos para previews

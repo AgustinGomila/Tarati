@@ -1,5 +1,6 @@
 package com.agustin.tarati.game.logic
 
+import com.agustin.tarati.game.core.NormalizedBoard
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

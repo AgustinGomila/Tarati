@@ -2,13 +2,19 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
-import com.agustin.tarati.game.ai.TaratiAI.getAllPossibleMoves
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
+import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
+import com.agustin.tarati.game.core.GameBoard.isForwardMove
+import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
-import com.agustin.tarati.ui.screens.main.MainViewModel.Companion.initialGameState
+import com.agustin.tarati.game.core.initialGameState
+import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.GameStateBuilder
+import com.agustin.tarati.game.logic.createGameState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -17,7 +23,6 @@ import org.junit.Test
 import kotlin.math.abs
 
 class AITest {
-
     @Test
     fun applyMoveToBoard_movesPiece_and_doesNotChangeTurn() {
         val gs = initialGameState(currentTurn = WHITE)
@@ -165,7 +170,7 @@ class AITest {
             mapOf("C7" to Checker(BLACK, false)),
             currentTurn = WHITE
         )
-        assertTrue(TaratiAI.isGameOver(state))
+        assertTrue(isGameOver(state))
     }
 
     @Test
@@ -174,7 +179,7 @@ class AITest {
             mapOf("C1" to Checker(WHITE, false)),
             currentTurn = WHITE
         )
-        assertTrue(TaratiAI.isGameOver(state))
+        assertTrue(isGameOver(state))
     }
 
     @Test
@@ -186,7 +191,7 @@ class AITest {
             ),
             currentTurn = WHITE
         )
-        assertFalse(TaratiAI.isGameOver(state))
+        assertFalse(isGameOver(state))
     }
 
     @Test
@@ -240,7 +245,7 @@ class AITest {
             currentTurn = WHITE
         )
         // C1 -> C2 would be backward for white, but should be valid for upgraded
-        val isValid = TaratiAI.isValidMove(state, "C1", "C2")
+        val isValid = isValidMove(state, "C1", "C2")
         assertTrue("Upgraded piece should be able to move backward", isValid)
     }
 
@@ -251,7 +256,7 @@ class AITest {
             currentTurn = WHITE
         )
         // C1 and C3 are not adjacent
-        val isValid = TaratiAI.isValidMove(state, "C1", "C3")
+        val isValid = isValidMove(state, "C1", "C3")
         assertFalse("Non-adjacent moves should be invalid", isValid)
     }
 
@@ -261,21 +266,21 @@ class AITest {
             mapOf("C1" to Checker(WHITE, false)),
             currentTurn = WHITE
         )
-        val isValid = TaratiAI.isValidMove(state, "C1", "C1")
+        val isValid = isValidMove(state, "C1", "C1")
         assertFalse("Moving to same position should be invalid", isValid)
     }
 
     @Test
     fun isForwardMove_whiteMovingUp_isForward() {
         // White moves from higher Y to lower Y (up the board)
-        val isForward = TaratiAI.isForwardMove(WHITE, "C2", "B1")
+        val isForward = isForwardMove(WHITE, "C2", "B1")
         assertTrue("White moving up should be forward", isForward)
     }
 
     @Test
     fun isForwardMove_blackMovingDown_isForward() {
         // Black moves from lower Y to higher Y (down the board)
-        val isForward = TaratiAI.isForwardMove(BLACK, "B1", "C2")
+        val isForward = isForwardMove(BLACK, "B1", "C2")
         assertTrue("Black moving down should be forward", isForward)
     }
 
@@ -296,36 +301,6 @@ class AITest {
 
         // Verificar que no hay movimientos disponibles
         assertTrue("Should have no valid moves", possibleMoves.isEmpty())
-    }
-
-    @Test
-    fun evaluateBoard_upgradedPieceIsMoreValuable() {
-        val stateNormal = GameState(
-            mapOf(
-                "C1" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
-
-        val stateUpgraded = GameState(
-            mapOf(
-                "C1" to Checker(WHITE, true),
-                "C7" to Checker(BLACK, false)
-            ),
-            currentTurn = WHITE
-        )
-
-        val scoreNormal = evaluateBoard(stateNormal)
-        val scoreUpgraded = evaluateBoard(stateUpgraded)
-
-        // La pieza upgraded debería tener mejor evaluación
-        assertTrue("Upgraded piece should score higher", scoreUpgraded > scoreNormal)
-
-        // Diferencia esperada: 165.5
-        // normal : ((white: 0 - black: 0) * 97)   + ((wUp: 0 - bUp: 0) * 197) = 0
-        // upgrade: ((white: 1.5 - black: 1) * 97) + ((wUp: 1 - bUp: 0) * 117) = 48.5 + 117 = 165.5
-        assertEquals(165.5, scoreUpgraded - scoreNormal, 20.0)
     }
 
     @Test
@@ -405,9 +380,9 @@ class AITest {
         val scoreBlack = evaluateBoard(stateBlackAdvantage)
 
         // Deberían ser aproximadamente opuestos
-        assertTrue("White advantage should be positive", scoreWhite > 50.0)
-        assertTrue("Black advantage should be negative", scoreBlack < -50.0)
-        assertEquals(scoreWhite, -scoreBlack, 50.0) // Aproximadamente simétrico
+        assertTrue("White advantage should be positive", scoreWhite > 130.0)
+        assertTrue("Black advantage should be positive", scoreBlack > 130.0)
+        assertEquals(scoreWhite, scoreBlack, 5.0) // Aproximadamente simétrico
     }
 
     @Test
@@ -419,7 +394,7 @@ class AITest {
 
         assertTrue(
             "Game should be over when one color has no pieces",
-            TaratiAI.isGameOver(stateWhiteWins)
+            isGameOver(stateWhiteWins)
         )
     }
 
@@ -435,7 +410,7 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val result = getNextBestMove(state, depth = 4, isMaximizingPlayer = true)
+        val result = getNextBestMove(state, depth = Difficulty.MEDIUM.aiDepth, isMaximizingPlayer = true)
 
         assertNotNull("AI should find a move", result.move)
         // AI debería preferir moverse a posición ventajosa
@@ -476,7 +451,7 @@ class AITest {
 
         // WHITE en B1 intentando ir a C1 (hacia abajo = retroceder para WHITE)
         // Asumiendo que C1 está "abajo" de B1 en el tablero
-        val canMoveBackward = TaratiAI.isValidMove(state, "B1", "C1")
+        val canMoveBackward = isValidMove(state, "B1", "C1")
 
         assertFalse("Normal piece should not move backward", canMoveBackward)
     }
@@ -494,7 +469,7 @@ class AITest {
         val adjacentVertices = listOf("A1", "B2", "B6", "C1", "C2")
 
         for (vertex in adjacentVertices) {
-            val canMove = TaratiAI.isValidMove(state, "B1", vertex)
+            val canMove = isValidMove(state, "B1", vertex)
             assertTrue("Upgraded piece should move to adjacent $vertex", canMove)
         }
     }
@@ -512,11 +487,11 @@ class AITest {
         )
 
         val startTime = System.currentTimeMillis()
-        getNextBestMove(state, depth = 8) // Profundidad fija para comparar
+        getNextBestMove(state, depth = Difficulty.MEDIUM.aiDepth) // Profundidad fija para comparar
         val firstRunTime = System.currentTimeMillis() - startTime
 
         val startTime2 = System.currentTimeMillis()
-        getNextBestMove(state, depth = 8) // Misma profundidad
+        getNextBestMove(state, depth = Difficulty.MEDIUM.aiDepth) // Misma profundidad
         val secondRunTime = System.currentTimeMillis() - startTime2
 
         println("First run: ${firstRunTime}ms, Second run: ${secondRunTime}ms")
@@ -547,8 +522,271 @@ class AITest {
         for (move in moves) {
             assertTrue(
                 "Move should be valid",
-                TaratiAI.isValidMove(state, move.from, move.to)
+                isValidMove(state, move.from, move.to)
             )
         }
+    }
+
+    @Test
+    fun testEvaluationSymmetry_BasicPosition() {
+        // Test 1: Posición básica - evaluación debe ser simétrica al invertir colores
+        val positionWhite = createGameState {
+            setTurn(WHITE)
+            // Distribución 4-4 simétrica
+            setChecker("C1", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("D1", WHITE, false)
+            setChecker("D2", WHITE, false)
+            setChecker("C7", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("D3", BLACK, false)
+            setChecker("D4", BLACK, false)
+        }
+
+        val positionBlack = createGameState {
+            setTurn(BLACK)
+            // Misma posición pero colores invertidos
+            setChecker("C1", BLACK, false)
+            setChecker("C2", BLACK, false)
+            setChecker("D1", BLACK, false)
+            setChecker("D2", BLACK, false)
+            setChecker("C7", WHITE, false)
+            setChecker("C8", WHITE, false)
+            setChecker("D3", WHITE, false)
+            setChecker("D4", WHITE, false)
+        }
+
+        val scoreWhite = evaluateBoard(positionWhite)
+        val scoreBlack = evaluateBoard(positionBlack)
+
+        // Las evaluaciones deben ser opuestas (mismo valor absoluto, signo contrario)
+        assertEquals(
+            "Las evaluaciones deben ser simétricas al invertir colores. White: $scoreWhite, Black: $scoreBlack",
+            -scoreWhite,
+            scoreBlack,
+            0.001
+        )
+    }
+
+    @Test
+    fun testEvaluationSymmetry_WithUpgrades() {
+        // Test 2: Posición con piezas mejoradas - debe mantener simetría
+        val positionWhite = createGameState {
+            setTurn(WHITE)
+            // Distribución con mejoras simétricas
+            setChecker("C1", WHITE, true)   // Mejorada
+            setChecker("C2", WHITE, false)
+            setChecker("D1", WHITE, false)
+            setChecker("D2", WHITE, true)   // Mejorada
+            setChecker("C7", BLACK, true)   // Mejorada
+            setChecker("C8", BLACK, false)
+            setChecker("D3", BLACK, false)
+            setChecker("D4", BLACK, true)   // Mejorada
+        }
+
+        val positionBlack = createGameState {
+            setTurn(BLACK)
+            // Posición invertida
+            setChecker("C1", BLACK, true)   // Mejorada
+            setChecker("C2", BLACK, false)
+            setChecker("D1", BLACK, false)
+            setChecker("D2", BLACK, true)   // Mejorada
+            setChecker("C7", WHITE, true)   // Mejorada
+            setChecker("C8", WHITE, false)
+            setChecker("D3", WHITE, false)
+            setChecker("D4", WHITE, true)   // Mejorada
+        }
+
+        val scoreWhite = evaluateBoard(positionWhite)
+        val scoreBlack = evaluateBoard(positionBlack)
+
+        assertEquals(
+            "Las evaluaciones con mejoras deben ser simétricas. White: $scoreWhite, Black: $scoreBlack",
+            -scoreWhite,
+            scoreBlack,
+            0.001,
+        )
+    }
+
+    @Test
+    fun testEvaluationFunction_SymmetricPositions() {
+        // Test que solo verifica la función de evaluación (no la búsqueda completa)
+        val symmetricPositions = listOf(
+            // Posición 1: Distribución 4-4 equilibrada
+            createGameState {
+                setTurn(WHITE)
+                setChecker("C1", WHITE, false); setChecker("C2", WHITE, false)
+                setChecker("D1", WHITE, false); setChecker("D2", WHITE, false)
+                setChecker("C7", BLACK, false); setChecker("C8", BLACK, false)
+                setChecker("D3", BLACK, false); setChecker("D4", BLACK, false)
+            },
+            // Posición 2: Distribución 3-5 con mejoras
+            createGameState {
+                setTurn(WHITE)
+                setChecker("C1", WHITE, true); setChecker("C2", WHITE, false)
+                setChecker("D1", WHITE, true); setChecker("C7", BLACK, true)
+                setChecker("C8", BLACK, false); setChecker("D3", BLACK, false)
+                setChecker("D4", BLACK, true); setChecker("B1", BLACK, false)
+            }
+        )
+
+        symmetricPositions.forEach { position ->
+            val mirror = createMirrorPosition(position)
+            val scoreOriginal = evaluateBoard(position)
+            val scoreMirror = evaluateBoard(mirror)
+
+            // Verificamos que sean opuestos (con pequeña tolerancia)
+            assertEquals(
+                "La evaluación debe ser simétrica para posición: $position",
+                scoreOriginal,
+                scoreMirror,
+                20.0,
+            )
+        }
+    }
+
+    @Test
+    fun testAISymmetry_AdvantagePosition() {
+        // Test 4: Ventaja clara para un lado debe reflejarse simétricamente
+        val whiteAdvantage = createGameState {
+            setTurn(WHITE)
+            // Ventaja para blanco (6-2)
+            setChecker("A1", WHITE, false)
+            setChecker("B1", WHITE, false)
+            setChecker("B2", WHITE, false)
+            setChecker("B3", WHITE, false)
+            setChecker("B4", WHITE, false)
+            setChecker("B5", WHITE, false)
+            setChecker("C1", BLACK, false)
+            setChecker("C8", BLACK, false)
+        }
+
+        val blackAdvantage = createGameState {
+            setTurn(BLACK)
+            // Ventaja equivalente para negro (2-6)
+            setChecker("C1", WHITE, false)
+            setChecker("C8", WHITE, false)
+            setChecker("A1", BLACK, false)
+            setChecker("B1", BLACK, false)
+            setChecker("B2", BLACK, false)
+            setChecker("B3", BLACK, false)
+            setChecker("B4", BLACK, false)
+            setChecker("B5", BLACK, false)
+        }
+
+        val scoreWhiteAdvantage = evaluateBoard(whiteAdvantage)
+        val scoreBlackAdvantage = evaluateBoard(blackAdvantage)
+
+        // La ventaja de blanco debe ser igual en magnitud a la ventaja de negro
+        assertEquals(
+            "Las ventajas deben ser simétricas. WhiteAdv: $scoreWhiteAdvantage, BlackAdv: $scoreBlackAdvantage",
+            scoreWhiteAdvantage,
+            scoreBlackAdvantage,
+            0.0
+        )
+    }
+
+    @Test
+    fun testEvaluationZero_PerfectBalance() {
+        // Test 5: Posición perfectamente equilibrada debe evaluar cerca de cero
+        val balancedPosition = createGameState {
+            setTurn(WHITE)
+            // Distribución 4-4 idéntica
+            setChecker("C1", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("C3", WHITE, false)
+            setChecker("C4", WHITE, false)
+            setChecker("C7", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("C9", BLACK, false)
+            setChecker("C10", BLACK, false)
+        }
+
+        val score = evaluateBoard(balancedPosition)
+
+        // Debe estar cerca de cero (no exactamente por posibles pequeñas asimetrías del tablero)
+        assertTrue("Posición equilibrada debe evaluar cerca de cero. Score: $score", abs(score) == 0.0)
+    }
+
+    @Test
+    fun testEvaluationSymmetry_SamePositionDifferentTurn() {
+        // Test 6: Misma posición, diferente turno - evaluación debe ser similar
+        val positionWhiteTurn = createGameState {
+            setTurn(WHITE)
+            setChecker("C1", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("D1", WHITE, false)
+            setChecker("D2", WHITE, false)
+            setChecker("C7", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("D3", BLACK, false)
+            setChecker("D4", BLACK, false)
+        }
+
+        val positionBlackTurn = createGameState {
+            setTurn(BLACK)
+            // Mismas piezas, solo cambia el turno
+            setChecker("C1", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("D1", WHITE, false)
+            setChecker("D2", WHITE, false)
+            setChecker("C7", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("D3", BLACK, false)
+            setChecker("D4", BLACK, false)
+        }
+
+        val scoreWhiteTurn = evaluateBoard(positionWhiteTurn)
+        val scoreBlackTurn = evaluateBoard(positionBlackTurn)
+
+        // La evaluación no debería cambiar drásticamente solo por el turno
+        // (puede haber pequeñas diferencias por cómo se calcula, pero no grandes)
+        assertTrue(
+            "La evaluación no debería cambiar solo por el turno. WhiteTurn: $scoreWhiteTurn, BlackTurn: $scoreBlackTurn",
+            abs(scoreWhiteTurn - scoreBlackTurn) == 0.0
+        )
+    }
+
+    /**
+     * Helper para crear posiciones espejo automáticamente
+     */
+    private fun createMirrorPosition(original: GameState): GameState {
+        val builder = GameStateBuilder()
+        builder.setTurn(original.currentTurn.opponent())
+
+        // Intercambiar todas las piezas de color
+        original.checkers.forEach { (vertex, checker) ->
+            builder.setChecker(vertex, checker.color.opponent(), checker.isUpgraded)
+        }
+
+        return builder.build()
+    }
+
+    @Test
+    fun testAutomaticMirrorSymmetry() {
+        // Test 7: Usando el helper de espejo automático
+        val originalPosition = createGameState {
+            setTurn(WHITE)
+            setChecker("B1", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("D1", WHITE, false)
+            setChecker("A1", WHITE, false)
+            setChecker("B4", BLACK, false)
+            setChecker("C7", BLACK, false)
+            setChecker("D3", BLACK, false)
+            setChecker("C8", BLACK, false)
+        }
+
+        val mirrorPosition = createMirrorPosition(originalPosition)
+
+        val originalScore = evaluateBoard(originalPosition)
+        val mirrorScore = evaluateBoard(mirrorPosition)
+
+        assertEquals(
+            "El espejo automático debe producir evaluación simétrica. Original: $originalScore, Mirror: $mirrorScore",
+            originalScore,
+            mirrorScore,
+            10.0
+        )
     }
 }

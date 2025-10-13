@@ -23,15 +23,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agustin.tarati.game.ai.TaratiAI.isForwardMove
-import com.agustin.tarati.game.ai.TaratiAI.isValidMove
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.GameBoard
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.edges
+import com.agustin.tarati.game.core.GameBoard.findClosestVertex
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.core.GameBoard.isForwardMove
+import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -75,7 +75,7 @@ fun Board(
             .background(MaterialTheme.colorScheme.surface)
             .pointerInput(gameState, vmSelectedPiece, boardOrientation, isEditing) {
                 detectTapGestures { offset ->
-                    val closestVertex = GameBoard.findClosestVertex(
+                    val closestVertex = findClosestVertex(
                         tapOffset = offset,
                         canvasWidth = size.width.toFloat(),
                         canvasHeight = size.height.toFloat(),

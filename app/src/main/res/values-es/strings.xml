@@ -69,14 +69,10 @@
     <string name="rotate_board">Rotar tablero</string>
     <string name="start">Comenzar</string>
     <string name="turn">Turno</string>
-    <string name="player_side">Lado</string>
     <string name="piece">Pieza</string>
     <string name="side">Lado</string>
-    <string name="clear">Limpiar</string>
-    <string name="rotate">Rotar</string>
-    <string name="ai_thinking">IA pensando...</string>
+    <string name="ai_thinking">IA pensando…</string>
     <string name="human_turn">Turno humano</string>
-    <string name="player_wins">%1$s ganó</string>
     <string name="you_won">Ganaste con %1$s</string>
     <string name="you_lost">Perdiste con %1$s</string>
 </resources>
