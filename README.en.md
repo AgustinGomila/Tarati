@@ -1,4 +1,4 @@
-# 🎮 Tarati — A Board Game by George Spencer Brown
+# 🌀 Tarati — A Board Game by George Spencer Brown
 
 <img src="screenshots/logo.png" alt="Logo" style="display: block; margin: 0 auto;">
 
@@ -27,7 +27,7 @@ distinctions.
 <img src="screenshots/board.png" alt="Logo" style="display: block; margin: 0 auto;">
 
 This application is a complete adaptation to **Kotlin and Jetpack Compose** of
-the [original React implementation](https://github.com/adamblvck/tarati-react) created by Adam Blvck.
+the [original React implementation](https://github.com/adamblvck/tarati-react) created by **Adam Blvck**.
 
 ## 🚀 Features
 
@@ -57,28 +57,17 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
     - 🟠 Hard (depth 6)
     - 🔴 Champion (depth 8)
 
-## 📥 Download
+### 🎮 Controls
 
-### Latest Version: v1.0.0
-
-[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/releases)
-
-**System Requirements:**
-
-- Android 8.0 (API 26) or higher
-- 5-10 MB free space
-- Touch screen
-
-**Installation:**
-
-1. Download the APK file from the link above
-2. Allow "Install from unknown sources" if prompted
-3. Run the APK file and follow the instructions
-4. Enjoy the game!
+- **New Game**: Reset the current game
+- **Edit Board**: Create positions and play them
+- **Enable/Disable AI**: Play against AI or a friend
+- **Back/Forward**: Navigate through move history
+- **Difficulty**: Adjust AI level
 
 ---
 
-## 🎮 How to Play
+## ☘️ How to Play
 
 **Tarati** is an abstract strategy game for two players.  
 Each player controls a set of pieces that compete to dominate the board through movement, upgrading, and flipping enemy
@@ -129,12 +118,48 @@ The player who **controls more pieces on the board** or meets the agreed objecti
 
 ---
 
-### Controls
+## 🧠 Symbols and Meaning
 
-- **New Game**: Reset the current game
-- **Enable/Disable AI**: Play against AI or a friend
-- **Back/Forward**: Navigate through move history
-- **Difficulty**: Adjust AI level
+The Tarati board represents a deep symbolic structure:
+
+| Element                 | Quantity     | Symbolic Meaning              |
+|-------------------------|--------------|-------------------------------|
+| **Pieces**              | 4 per player | The 4 classical elements      |
+| **Circumference (C)**   | 12 positions | The 12 zodiac signs           |
+| **Boundary (B)**        | 6 positions  | 6 hermetic planetary concepts |
+| **Absolute Center (A)** | 1 position   | The Sun, Tiphereth            |
+
+## 🖼️ Screenshots
+
+| <img src="/screenshots/screenshot1.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot2.png" alt="Tarati Screenshot" width="300"/> |
+|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| <img src="/screenshots/screenshot4.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot3.png" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot5.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot6.png" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot7.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot8.png" alt="Tarati Screenshot" width="300"/> |
+| <img src="/screenshots/screenshot10.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot9.png" alt="Tarati Screenshot" width="300"/> |
+
+* Intuitive and simple interface designed with Jetpack Compose
+
+---
+
+## 📥 Download
+
+### Latest Version: v1.0.0
+
+[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/AgustinGomila/Tarati/releases)
+
+**System Requirements:**
+
+- Android 8.0 (API 26) or higher
+- 5-10 MB free space
+- Touch screen
+
+**Installation:**
+
+1. Download the APK file from the link above
+2. Allow "Install from unknown sources" if prompted
+3. Run the APK file and follow the instructions
+4. Enjoy the game!
 
 ## 🏗️ Technologies
 
@@ -145,12 +170,13 @@ The player who **controls more pieces on the board** or meets the agreed objecti
 -Material Design 3
 -Koin 4.1.1
 -DataStore 1.1.7
+-JUnit 4.13.2
 -Coroutines for asynchronous operations
         -MVVM Architecture
         -Minimax algorithm with Alpha -Beta pruning
 ```
 
-### Project Structure
+### 💻 Project Structure
 
 ```
 ├── game/
@@ -171,40 +197,19 @@ The player who **controls more pieces on the board** or meets the agreed objecti
     ├── localization/   # Language manager
     ├── theme/          # Design system
     └── preview/        # Preview utilities
+    * and more than 140 tests
 ```
-
-## 🧠 Symbols and Meaning
-
-The Tarati board represents a deep symbolic structure:
-
-| Element                 | Quantity     | Symbolic Meaning              |
-|-------------------------|--------------|-------------------------------|
-| **Pieces**              | 4 per player | The 4 classical elements      |
-| **Circumference (C)**   | 12 positions | The 12 zodiac signs           |
-| **Boundary (B)**        | 6 positions  | 6 hermetic planetary concepts |
-| **Absolute Center (A)** | 1 position   | The Sun, Tiphereth            |
-
-## 🖼️ Screenshots
-
-| <img src="/screenshots/screenshot1.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot2.png" alt="Tarati Screenshot" width="300"/>  |
-|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| <img src="/screenshots/screenshot3.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot4.png" alt="Tarati Screenshot" width="300"/>  |
-| <img src="/screenshots/screenshot5.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot6.png" alt="Tarati Screenshot" width="300"/>  |
-| <img src="/screenshots/screenshot7.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot8.png" alt="Tarati Screenshot" width="300"/>  |
-| <img src="/screenshots/screenshot9.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot10.png" alt="Tarati Screenshot" width="300"/> |
-
-* Intuitive and simple interface designed with Jetpack Compose
 
 ## 👥 Credits and Acknowledgments
 
-### Contributions
+### 💡 Contributions
 
 - **Original Concept**: George Spencer Brown - *Laws of Form*
 - **React Implementation
   **: [Adam Blvck](https://github.com/adamblvck) - [tarati-react](https://github.com/adamblvck/tarati-react)
 - **Android Port**: Agustín Gomila - Complete adaptation to Kotlin/Jetpack Compose
 
-### Philosophical Inspiration
+### 💭 Philosophical Inspiration
 
 Tarati is based on George Spencer Brown's revolutionary work in *Laws of Form*, which introduces the Calculus of
 Distinctions - a mathematically complete system for notation and calculation with distinctions.
@@ -251,7 +256,7 @@ Contributions are welcome. Please:
 ### ⭐ Enjoying the game? Give the repository a star!
 
 _"To teach pride in knowledge is to put up an effective barrier against any advance upon what is already known."_
-—**George Spencer-Brown**
+—**George Spencer Brown**
 
 </div>
 
