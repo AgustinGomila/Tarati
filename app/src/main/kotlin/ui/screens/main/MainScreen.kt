@@ -73,7 +73,6 @@ import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.BoardEvents
@@ -1539,40 +1538,5 @@ fun EditControlsPreview(
                 onClearBoard = onClearBoard
             )
         }
-    }
-}
-
-// Función helper para crear estados de juego comunes en previews
-@Suppress("unused")
-@Composable
-fun rememberPreviewGameState(
-    initialState: GameState = initialGameState(),
-    customSetup: (GameState.() -> Unit)? = null
-): GameState {
-    return remember {
-        if (customSetup != null) {
-            createGameState { customSetup(this.build()) }
-        } else {
-            initialState
-        }
-    }
-}
-
-// Función helper para crear BoardState común en previews
-@Suppress("unused")
-@Composable
-fun rememberPreviewBoardState(
-    gameState: GameState = initialGameState(),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
-    labelsVisible: Boolean = true,
-    isEditing: Boolean = false
-): BoardState {
-    return remember(gameState, boardOrientation, labelsVisible, isEditing) {
-        BoardState(
-            gameState = gameState,
-            boardOrientation = boardOrientation,
-            labelsVisible = labelsVisible,
-            isEditing = isEditing
-        )
     }
 }

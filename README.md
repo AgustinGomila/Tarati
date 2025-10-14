@@ -129,6 +129,8 @@ El tablero de Tarati representa una estructura simbólica profunda:
 | **Frontera (B)**        | 6 posiciones  | 6 conceptos planetarios herméticos |
 | **Centro Absoluto (A)** | 1 posición    | El Sol, Tiphereth                  |
 
+---
+
 ## 🖼️ Capturas de Pantalla
 
 | <img src="/screenshots/screenshot1.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot2.png" alt="Tarati Screenshot" width="300"/> |
@@ -139,8 +141,6 @@ El tablero de Tarati representa una estructura simbólica profunda:
 | <img src="/screenshots/screenshot10.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot9.png" alt="Tarati Screenshot" width="300"/> |
 
 * Interfaz intuitiva y sencilla diseñada con Jetpack Compose
-
----
 
 ## 📥 Descargar
 
@@ -195,9 +195,11 @@ El tablero de Tarati representa una estructura simbólica profunda:
     ├── navigation/     # Sistema de navegación
     ├── localization/   # Administrador de idiomas
     ├── theme/          # Sistema de diseño
-    └── preview/        # Utilidades para vistas previas
+    └── helpers/        # Utilidades para vistas previas
     * y más de 140 tests
 ```
+
+---
 
 ## 👥 Créditos y Agradecimientos
 

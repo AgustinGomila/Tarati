@@ -129,6 +129,8 @@ The Tarati board represents a deep symbolic structure:
 | **Boundary (B)**        | 6 positions  | 6 hermetic planetary concepts |
 | **Absolute Center (A)** | 1 position   | The Sun, Tiphereth            |
 
+---
+
 ## 🖼️ Screenshots
 
 | <img src="/screenshots/screenshot1.png" alt="Tarati Screenshot" width="300"/>  | <img src="/screenshots/screenshot2.png" alt="Tarati Screenshot" width="300"/> |
@@ -139,8 +141,6 @@ The Tarati board represents a deep symbolic structure:
 | <img src="/screenshots/screenshot10.png" alt="Tarati Screenshot" width="300"/> | <img src="/screenshots/screenshot9.png" alt="Tarati Screenshot" width="300"/> |
 
 * Intuitive and simple interface designed with Jetpack Compose
-
----
 
 ## 📥 Download
 
@@ -196,9 +196,11 @@ The Tarati board represents a deep symbolic structure:
     ├── navigation/     # Navigation system
     ├── localization/   # Language manager
     ├── theme/          # Design system
-    └── preview/        # Preview utilities
+    └── helpers/        # Preview utilities
     * and more than 140 tests
 ```
+
+---
 
 ## 👥 Credits and Acknowledgments
 
