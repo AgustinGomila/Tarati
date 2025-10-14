@@ -55,9 +55,9 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
+import com.agustin.tarati.ui.helpers.customGameState
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
-import com.agustin.tarati.ui.preview.customGameState
 
 data class SidebarGameState(
     val gameState: GameState,

@@ -94,7 +94,10 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, settingsViewModel: SettingsViewModel = viewModel()) {
+fun MainScreen(
+    navController: NavController,
+    settingsViewModel: SettingsViewModel = viewModel()
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -102,6 +105,7 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
     val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val viewModel: MainViewModel = viewModel()
+    val debug = viewModel.isDebug
 
     val vmIsEditing by viewModel.isEditing.collectAsState()
     val vmEditColor by viewModel.editColor.collectAsState()
@@ -146,7 +150,7 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
     fun applyMove(from: String, to: String) {
         stopAI = false
 
-        println("Applying move: $from -> $to")
+        if (debug) println("Applying move: $from -> $to")
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
 
@@ -177,7 +181,7 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
 
     LaunchedEffect(effectLaunchers) {
         if (!vmAIEnabled || stopAI || vmIsEditing) {
-            println("DEBUG: AI blocked - AIEnabled: $vmAIEnabled, stopAI: $stopAI, isEditing: $vmIsEditing")
+            if (debug) println("DEBUG: AI blocked - AIEnabled: $vmAIEnabled, stopAI: $stopAI, isEditing: $vmIsEditing")
             return@LaunchedEffect
         }
 
@@ -188,21 +192,25 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
         val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide &&
                 !isGameOver(vmGameState)
 
-        println("DEBUG: AI Check - currentTurn: ${vmGameState.currentTurn}, playerSide: $vmPlayerSide, shouldPlay: $shouldAIPlay")
+        if (debug) println("DEBUG: AI Check - currentTurn: ${vmGameState.currentTurn}, playerSide: $vmPlayerSide, shouldPlay: $shouldAIPlay")
 
         if (shouldAIPlay) {
-            println("DEBUG: AI starting to think...")
+            if (debug) println("DEBUG: AI starting to think...")
 
             val result = try {
                 withContext(Dispatchers.Default) {
-                    getNextBestMove(vmGameState, depth = vmDifficulty.aiDepth)
+                    getNextBestMove(
+                        gameState = vmGameState,
+                        depth = vmDifficulty.aiDepth,
+                        debug = debug
+                    )
                 }
             } catch (t: Throwable) {
                 t.printStackTrace()
                 null
             }
 
-            println("AI calculated move: ${result?.move}")
+            if (debug) println("AI calculated move: ${result?.move}")
 
             result?.move?.let { move ->
                 applyMove(move.from, move.to)
@@ -228,7 +236,7 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
             drawerState.close()
         }
 
-        println("New game started: playerSide=$playerSide")
+        if (debug) println("New game started: playerSide=$playerSide")
         resetBoard = true
     }
 
@@ -284,7 +292,7 @@ fun MainScreen(navController: NavController, settingsViewModel: SettingsViewMode
 
     val onResetBoardCompleted = {
         resetBoard = false
-        println("Board reset completed")
+        if (debug) println("Board reset completed")
     }
 
     // Función para manejar edición de piezas
@@ -1088,6 +1096,7 @@ private fun MainScreenPreviewContent(
     landScape: Boolean = false,
     isEditing: Boolean = false,
     labelsVisible: Boolean = true,
+    debug: Boolean = false,
 ) {
     TaratiTheme(darkTheme = darkTheme) {
         val drawerState = rememberDrawerState(initialValue = drawerStateValue)
@@ -1118,31 +1127,31 @@ private fun MainScreenPreviewContent(
             override fun onUndo() {}
             override fun onRedo() {}
             override fun onDifficultyChange(difficulty: Difficulty) {
-                println("Difficulty changed to: $difficulty")
+                if (debug) println("Difficulty changed to: $difficulty")
             }
 
             override fun onToggleAI() {
-                println("AI toggled")
+                if (debug) println("AI toggled")
             }
 
             override fun onSettings() {
-                println("Settings clicked")
+                if (debug) println("Settings clicked")
             }
 
             override fun onNewGame(color: Color) {
                 currentPlayerSide = color
                 previewGameState = initialGameState()
-                println("New game with side: $color")
+                if (debug) println("New game with side: $color")
             }
 
             override fun onEditBoard() {
                 scope.launch { drawerState.close() }
                 currentIsEditing = !currentIsEditing
-                println("Edit board: $currentIsEditing")
+                if (debug) println("Edit board: $currentIsEditing")
             }
 
             override fun onAboutClick() {
-                println("About clicked")
+                if (debug) println("About clicked")
             }
         }
 
@@ -1170,15 +1179,15 @@ private fun MainScreenPreviewContent(
 
         val createBoardEvents = object : CreateBoardEvents {
             override fun onApplyMove(from: String, to: String) {
-                println("Move from $from to $to")
+                if (debug) println("Move from $from to $to")
             }
 
             override fun handleEditPiece(vertexId: String) {
-                println("Edit piece at $vertexId")
+                if (debug) println("Edit piece at $vertexId")
             }
 
             override fun onResetBoardCompleted() {
-                println("Board reset completed")
+                if (debug) println("Board reset completed")
             }
         }
 

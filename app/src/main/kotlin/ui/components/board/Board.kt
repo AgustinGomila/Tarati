@@ -36,9 +36,9 @@ import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.createGameState
-import com.agustin.tarati.ui.preview.endGameState
-import com.agustin.tarati.ui.preview.initialGameStateWithUpgrades
-import com.agustin.tarati.ui.preview.midGameState
+import com.agustin.tarati.ui.helpers.endGameState
+import com.agustin.tarati.ui.helpers.initialGameStateWithUpgrades
+import com.agustin.tarati.ui.helpers.midGameState
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
@@ -97,7 +97,11 @@ fun Board(
                             events.onEditPiece(logicalVertexId)
                         } else {
                             handleTap(
-                                logicalVertexId, state.gameState, vmSelectedPiece, events::onMove, viewModel
+                                tappedVertex = logicalVertexId,
+                                gameState = state.gameState,
+                                selectedPiece = vmSelectedPiece,
+                                onMove = events::onMove,
+                                viewModel = viewModel
                             )
                         }
                     }
@@ -125,7 +129,9 @@ fun handleTap(
     onMove: (String, String) -> Unit,
     viewModel: BoardViewModel
 ) {
-    println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$selectedPiece")
+    val debug = viewModel.isDebug
+
+    if (debug) println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$selectedPiece")
 
     if (selectedPiece == null) {
         // Seleccionar pieza
@@ -138,7 +144,7 @@ fun handleTap(
             })
     } else {
         // Mover pieza
-        println("Attempting move from $selectedPiece to $tappedVertex")
+        if (debug) println("Attempting move from $selectedPiece to $tappedVertex")
 
         if (tappedVertex != selectedPiece) {
             movePiece(
@@ -157,7 +163,7 @@ fun handleTap(
             )
         } else {
             // Tocar la misma pieza: deseleccionar
-            println("Deselecting piece")
+            if (debug) println("Deselecting piece")
             viewModel.resetSelection()
         }
     }
@@ -169,17 +175,18 @@ private fun movePiece(
     tappedVertex: String,
     onMove: (from: String, to: String) -> Unit,
     onInvalid: (from: String, valid: List<String>) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    debug: Boolean = false
 ) {
     if (tappedVertex != selectedPiece) {
         val isValid = isValidMove(gameState, selectedPiece, tappedVertex)
-        println("Move validation: $selectedPiece -> $tappedVertex = $isValid")
+        if (debug) println("Move validation: $selectedPiece -> $tappedVertex = $isValid")
 
         if (isValid) {
-            println("Calling onMove with: $selectedPiece, $tappedVertex")
+            if (debug) println("Calling onMove with: $selectedPiece, $tappedVertex")
             onMove(selectedPiece, tappedVertex)
         } else {
-            println("Move is invalid")
+            if (debug) println("Move is invalid")
             // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
             val checker = gameState.checkers[tappedVertex]
             if (checker != null && checker.color == gameState.currentTurn) {
@@ -197,7 +204,7 @@ private fun movePiece(
         }
     } else {
         // Tocar la misma pieza: deseleccionar
-        println("Deselecting piece")
+        if (debug) println("Deselecting piece")
         onCancel()
     }
 }
@@ -205,14 +212,15 @@ private fun movePiece(
 private fun selectPiece(
     gameState: GameState,
     tappedVertex: String,
-    onSelected: (String, List<String>) -> Unit
+    onSelected: (String, List<String>) -> Unit,
+    debug: Boolean = false
 ) {
     val checker = gameState.checkers[tappedVertex]
-    println("Checking piece: $checker at $tappedVertex, currentTurn: ${gameState.currentTurn}")
+    if (debug) println("Checking piece: $checker at $tappedVertex, currentTurn: ${gameState.currentTurn}")
 
     if (checker != null && checker.color == gameState.currentTurn) {
 
-        println("Piece selected: $tappedVertex")
+        if (debug) println("Piece selected: $tappedVertex")
 
         // Calcular movimientos válidos
         val validMoves = adjacencyMap[tappedVertex]?.filter { to ->
@@ -221,13 +229,13 @@ private fun selectPiece(
                 tappedVertex,
                 to
             ))
-            println("Move $tappedVertex -> $to: valid=$isValid")
+            if (debug) println("Move $tappedVertex -> $to: valid=$isValid")
             isValid
         } ?: emptyList()
         onSelected(tappedVertex, validMoves)
-        println("Highlighted moves: $validMoves")
+        if (debug) println("Highlighted moves: $validMoves")
     } else {
-        println("Cannot select: checker=$checker, currentTurn=${gameState.currentTurn}")
+        if (debug) println("Cannot select: checker=$checker, currentTurn=${gameState.currentTurn}")
     }
 }
 
@@ -257,10 +265,25 @@ private fun DrawScope.drawBoardContent(
     )
 
     // Aristas
-    drawEdges(this, canvasSize, orientation, colors)
+    drawEdges(
+        drawScope = this,
+        canvasSize = canvasSize,
+        orientation = orientation,
+        colors = colors
+    )
 
     // Vértices
-    drawVertices(this, labelsVisibles, canvasSize, vWidth, gameState, orientation, selectedPiece, validMoves, colors)
+    drawVertices(
+        drawScope = this,
+        labelsVisibles = labelsVisibles,
+        canvasSize = canvasSize,
+        vWidth = vWidth,
+        gameState = gameState,
+        orientation = orientation,
+        selectedPiece = selectedPiece,
+        highlightedMoves = validMoves,
+        colors = colors
+    )
 
     // Piezas
     gameState.checkers.forEach { (vertexId, checker) ->
@@ -273,7 +296,17 @@ private fun DrawScope.drawBoardContent(
         }
 
         // Dibujar pieza base
-        drawPiece(this, pos, vertexId, selectedPiece, checker, baseRadius, pieceColor, borderColor, colors)
+        drawPiece(
+            drawScope = this,
+            pos = pos,
+            vertexId = vertexId,
+            selectedPiece = selectedPiece,
+            checker = checker,
+            baseRadius = baseRadius,
+            pieceColor = pieceColor,
+            borderColor = borderColor,
+            colors = colors
+        )
     }
 }
 
@@ -377,9 +410,10 @@ fun drawEdges(drawScope: DrawScope, canvasSize: Size, orientation: BoardOrientat
 fun BoardPreview(
     orientation: BoardOrientation,
     gameState: GameState,
-    viewModel: BoardViewModel = viewModel(),
     labelsVisible: Boolean = true,
     isEditing: Boolean = false,
+    viewModel: BoardViewModel = viewModel(),
+    debug: Boolean = false
 ) {
     TaratiTheme {
         Board(
@@ -391,15 +425,15 @@ fun BoardPreview(
             ),
             events = object : BoardEvents {
                 override fun onMove(from: String, to: String) {
-                    println("Move from $from to $to")
+                    if (debug) println("Move from $from to $to")
                 }
 
                 override fun onEditPiece(vertexId: String) {
-                    println("Edit piece at $vertexId")
+                    if (debug) println("Edit piece at $vertexId")
                 }
 
                 override fun onResetCompleted() {
-                    println("Reset completed")
+                    if (debug) println("Reset completed")
                 }
             },
             viewModel = viewModel
@@ -459,8 +493,8 @@ fun BoardPreview_BlackPlayer() {
         BoardPreview(
             orientation = BoardOrientation.PORTRAIT_BLACK,
             gameState = exampleGameState,
-            viewModel = vm,
-            labelsVisible = false
+            labelsVisible = false,
+            viewModel = vm
         )
     }
 }
@@ -477,8 +511,8 @@ fun BoardPreview_Landscape_BlackPlayer() {
         BoardPreview(
             orientation = BoardOrientation.LANDSCAPE_BLACK,
             gameState = exampleGameState,
-            viewModel = vm,
-            labelsVisible = false
+            labelsVisible = false,
+            viewModel = vm
         )
     }
 }
@@ -508,8 +542,8 @@ fun BoardPreview_Landscape_Editing() {
         BoardPreview(
             orientation = BoardOrientation.LANDSCAPE_WHITE,
             gameState = exampleGameState,
-            viewModel = vm,
-            isEditing = true
+            isEditing = true,
+            viewModel = vm
         )
     }
 }

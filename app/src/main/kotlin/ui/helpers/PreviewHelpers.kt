@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.preview
+package com.agustin.tarati.ui.helpers
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

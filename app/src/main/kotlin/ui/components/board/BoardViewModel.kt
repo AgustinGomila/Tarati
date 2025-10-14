@@ -1,11 +1,15 @@
 package com.agustin.tarati.ui.components.board
 
 import androidx.lifecycle.ViewModel
+import com.agustin.tarati.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class BoardViewModel : ViewModel() {
+
+    val isDebug: Boolean = BuildConfig.DEBUG
+
     private val _selectedPiece = MutableStateFlow(null as String?)
     private val _validMoves = MutableStateFlow(listOf<String>())
 

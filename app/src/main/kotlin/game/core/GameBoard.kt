@@ -15,14 +15,17 @@ object GameBoard {
     private const val BOARD_MARGIN_PERCENT = 0.8f
     private const val FORWARD_MOVE_THRESHOLD = 10f
 
-    val vertices: List<String> = listOf(
+    val centerVertices: List<String> = listOf(
         "A1", // Absolute Middle
         "B1", "B2", "B3", "B4", "B5", "B6", // Boundary
+    )
+
+    val exteriorVertices: List<String> = listOf(
         "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", // Circumference
         "D1", "D2", "D3", "D4" // Domestic
     )
 
-    val centerVertices: List<String> = listOf("A1", "B1", "B2", "B3", "B4", "B5", "B6")
+    val vertices: List<String> = centerVertices.plus(exteriorVertices)
 
     val edges: List<Pair<String, String>> = listOf(
         // Home base White

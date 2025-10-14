@@ -1,6 +1,7 @@
 package com.agustin.tarati.ui.screens.main
 
 import androidx.lifecycle.ViewModel
+import com.agustin.tarati.BuildConfig
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
@@ -18,6 +19,8 @@ import org.koin.core.context.GlobalContext.get
 class MainViewModel() : ViewModel() {
 
     var sr: SettingsRepository = get().get()
+
+    val isDebug: Boolean = BuildConfig.DEBUG
 
     private val _gameState = MutableStateFlow(initialGameState())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()

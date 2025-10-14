@@ -70,6 +70,11 @@ android {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
+    android {
+        buildFeatures {
+            buildConfig = true
+        }
+    }
     buildFeatures {
         compose = true
     }
