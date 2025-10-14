@@ -43,23 +43,31 @@ import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
 
+data class BoardState(
+    val gameState: GameState,
+    val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
+    val labelsVisible: Boolean = true,
+    val newGame: Boolean = false,
+    val isEditing: Boolean = false
+)
+
+interface BoardEvents {
+    fun onMove(from: String, to: String)
+    fun onEditPiece(vertexId: String)
+    fun onResetCompleted()
+}
+
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    gameState: GameState,
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
-    labelsVisible: Boolean = true,
-    newGame: Boolean = false,
-    onResetCompleted: () -> Unit = {},
-    onMove: (from: String, to: String) -> Unit,
-    isEditing: Boolean = false,
-    onEditPiece: (String) -> Unit = { },
+    state: BoardState,
+    events: BoardEvents,
     viewModel: BoardViewModel = viewModel(),
 ) {
-    LaunchedEffect(newGame) {
-        if (newGame) {
+    LaunchedEffect(state.newGame) {
+        if (state.newGame) {
             viewModel.resetSelection()
-            onResetCompleted()
+            events.onResetCompleted()
         }
     }
 
@@ -68,30 +76,28 @@ fun Board(
 
     // Calcular tamaño visual basado en el contexto
     val density = LocalDensity.current
-    val vWidth = with(density) { 60.dp.toPx() } // Tamaño base adaptable
+    val vWidth = with(density) { 60.dp.toPx() }
     val boardColors = getBoardColors()
 
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
-            .pointerInput(gameState, vmSelectedPiece, boardOrientation, isEditing) {
+            .pointerInput(state.gameState, vmSelectedPiece, state.boardOrientation, state.isEditing) {
                 detectTapGestures { offset ->
                     val closestVertex = findClosestVertex(
                         tapOffset = offset,
                         canvasWidth = size.width.toFloat(),
                         canvasHeight = size.height.toFloat(),
                         maxTapDistance = vWidth / 3,
-                        orientation = boardOrientation
+                        orientation = state.boardOrientation
                     )
 
                     closestVertex?.let { logicalVertexId ->
-                        if (isEditing) {
-                            // Modo edición: manejar colocación/mejora/eliminación de piezas
-                            onEditPiece(logicalVertexId)
+                        if (state.isEditing) {
+                            events.onEditPiece(logicalVertexId)
                         } else {
-                            // Modo juego normal
                             handleTap(
-                                logicalVertexId, gameState, vmSelectedPiece, onMove, viewModel
+                                logicalVertexId, state.gameState, vmSelectedPiece, events::onMove, viewModel
                             )
                         }
                     }
@@ -99,9 +105,9 @@ fun Board(
             }) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawBoardContent(
-                gameState = gameState,
-                orientation = boardOrientation,
-                labelsVisibles = labelsVisible,
+                gameState = state.gameState,
+                orientation = state.boardOrientation,
+                labelsVisibles = state.labelsVisible,
                 vWidth = vWidth,
                 selectedPiece = vmSelectedPiece,
                 validMoves = vmValidMoves,
@@ -366,58 +372,79 @@ fun drawEdges(drawScope: DrawScope, canvasSize: Size, orientation: BoardOrientat
     }
 }
 
+
+@Composable
+fun BoardPreview(
+    orientation: BoardOrientation,
+    gameState: GameState,
+    viewModel: BoardViewModel = viewModel(),
+    labelsVisible: Boolean = true,
+    isEditing: Boolean = false,
+) {
+    TaratiTheme {
+        Board(
+            state = BoardState(
+                gameState = gameState,
+                boardOrientation = orientation,
+                labelsVisible = labelsVisible,
+                isEditing = isEditing,
+            ),
+            events = object : BoardEvents {
+                override fun onMove(from: String, to: String) {
+                    println("Move from $from to $to")
+                }
+
+                override fun onEditPiece(vertexId: String) {
+                    println("Edit piece at $vertexId")
+                }
+
+                override fun onResetCompleted() {
+                    println("Reset completed")
+                }
+            },
+            viewModel = viewModel
+        )
+    }
+}
+
+
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitWhite() {
-    TaratiTheme {
-        Board(
-            gameState = initialGameStateWithUpgrades(),
-            onMove = { from, to -> println("Move from $from to $to") },
-        )
-    }
+    BoardPreview(BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades())
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 500)
+@Composable
+fun BoardPreview_PortraitBlack() {
+    BoardPreview(BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades())
 }
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_LandscapeBlack() {
-    TaratiTheme {
-        Board(
-            gameState = midGameState(),
-            boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
-            onMove = { from, to -> println("Move from $from to $to") },
-        )
-    }
+    BoardPreview(BoardOrientation.LANDSCAPE_BLACK, midGameState())
 }
 
-@Preview(showBackground = true, widthDp = 400, heightDp = 500)
+@Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_Custom() {
-    TaratiTheme {
-        val exampleGameState = createGameState {
-            setTurn(WHITE)
-            setChecker("C2", WHITE, true)
-            setChecker("C8", BLACK, true)
-            setChecker("B1", WHITE, false)
-            setChecker("B4", BLACK, false)
+    val exampleGameState = createGameState {
+        setTurn(WHITE)
+        setChecker("C2", WHITE, true)
+        setChecker("C8", BLACK, true)
+        setChecker("B1", WHITE, false)
+        setChecker("B4", BLACK, false)
 
-            // Agregar piezas extra para testing
-            setChecker("C5", WHITE, true)
-            setChecker("C11", BLACK, true)
-        }
-
-        val vm = viewModel<BoardViewModel>().apply {
-            updateSelectedPiece("B1")
-            updateValidMoves(listOf("B2", "A1", "B6"))
-        }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                onMove = { from, to -> println("Move from $from to $to") },
-                viewModel = vm,
-            )
-        }
+        // Agregar piezas extra para testing
+        setChecker("C5", WHITE, true)
+        setChecker("C11", BLACK, true)
     }
+    val vm = viewModel<BoardViewModel>().apply {
+        updateSelectedPiece("B1")
+        updateValidMoves(listOf("B2", "A1", "B6"))
+    }
+    BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
@@ -429,16 +456,12 @@ fun BoardPreview_BlackPlayer() {
             updateSelectedPiece("A1")
             updateValidMoves(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
         }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                boardOrientation = BoardOrientation.PORTRAIT_BLACK,
-                labelsVisible = false,
-                onMove = { from, to -> println("Move from $from to $to") },
-                viewModel = vm,
-            )
-        }
+        BoardPreview(
+            orientation = BoardOrientation.PORTRAIT_BLACK,
+            gameState = exampleGameState,
+            viewModel = vm,
+            labelsVisible = false
+        )
     }
 }
 
@@ -451,16 +474,12 @@ fun BoardPreview_Landscape_BlackPlayer() {
             updateSelectedPiece("C2")
             updateValidMoves(listOf("C9", "B4", "B5"))
         }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                boardOrientation = BoardOrientation.LANDSCAPE_BLACK,
-                labelsVisible = false,
-                onMove = { from, to -> println("Move from $from to $to") },
-                viewModel = vm,
-            )
-        }
+        BoardPreview(
+            orientation = BoardOrientation.LANDSCAPE_BLACK,
+            gameState = exampleGameState,
+            viewModel = vm,
+            labelsVisible = false
+        )
     }
 }
 
@@ -473,15 +492,7 @@ fun BoardPreview_Landscape() {
             updateSelectedPiece("C2")
             updateValidMoves(listOf("C3", "B2", "B1"))
         }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
-                onMove = { from, to -> println("Move from $from to $to") },
-                viewModel = vm,
-            )
-        }
+        BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
     }
 }
 
@@ -494,15 +505,11 @@ fun BoardPreview_Landscape_Editing() {
             updateSelectedPiece("C2")
             updateValidMoves(listOf("C3", "B2", "B1"))
         }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                gameState = exampleGameState,
-                boardOrientation = BoardOrientation.LANDSCAPE_WHITE,
-                onMove = { from, to -> println("Move from $from to $to") },
-                isEditing = true,
-                viewModel = vm,
-            )
-        }
+        BoardPreview(
+            orientation = BoardOrientation.LANDSCAPE_WHITE,
+            gameState = exampleGameState,
+            viewModel = vm,
+            isEditing = true
+        )
     }
 }

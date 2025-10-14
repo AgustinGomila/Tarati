@@ -58,28 +58,52 @@ import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.preview.customGameState
 
+data class SidebarGameState(
+    val gameState: GameState,
+    val playerSide: Color,
+    val currentMoveIndex: Int,
+    val moveHistory: List<Move>,
+    val difficulty: Difficulty,
+    val isAIEnabled: Boolean
+)
+
+data class SidebarUIState(
+    val isDifficultyExpanded: Boolean = false
+)
+
+class DefaultSidebarEvents : SidebarEvents {
+    override fun onMoveToCurrent() {}
+    override fun onUndo() {}
+    override fun onRedo() {}
+    override fun onDifficultyChange(difficulty: Difficulty) {}
+    override fun onToggleAI() {}
+    override fun onSettings() {}
+    override fun onNewGame(color: Color) {}
+    override fun onEditBoard() {}
+    override fun onAboutClick() {}
+}
+
+interface SidebarEvents {
+    fun onMoveToCurrent()
+    fun onUndo()
+    fun onRedo()
+    fun onDifficultyChange(difficulty: Difficulty)
+    fun onToggleAI()
+    fun onSettings()
+    fun onNewGame(color: Color)
+    fun onEditBoard()
+    fun onAboutClick()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sidebar(
     modifier: Modifier = Modifier,
-    gameState: GameState,
-    playerSide: Color,
-    currentMoveIndex: Int,
-    moveHistory: List<Move>,
-    onMoveToCurrent: () -> Unit,
-    onUndo: () -> Unit,
-    onRedo: () -> Unit,
-    difficulty: Difficulty,
-    onDifficultyChange: (Difficulty) -> Unit,
-    isAIEnabled: Boolean,
-    onToggleAI: () -> Unit,
-    onSettings: () -> Unit,
-    onNewGame: (Color) -> Unit,
-    onEditBoard: () -> Unit,
-    onAboutClick: () -> Unit,
+    gameState: SidebarGameState,
+    uiState: SidebarUIState = SidebarUIState(),
+    events: SidebarEvents,
+    onUIStateChange: (SidebarUIState) -> Unit = {}
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     Column(
         modifier = modifier
             .width(280.dp)
@@ -96,37 +120,45 @@ fun Sidebar(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        SettingsButton(onSettings)
+        SettingsButton(events::onSettings)
 
         // Controles para iniciar una nueva partida
         GameSettingsControls(
-            playerSide = playerSide,
-            onNewGame = { onNewGame(it) },
-            onEditBoard = onEditBoard
+            playerSide = gameState.playerSide,
+            onNewGame = events::onNewGame,
+            onEditBoard = events::onEditBoard
         )
 
         // Sección de IA y Dificultad en una fila
         AIDifficultyControls(
-            playerSide = playerSide,
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            difficulty = difficulty,
-            onDifficultyChange = onDifficultyChange,
-            isAIEnabled = isAIEnabled,
-            onToggleAI = onToggleAI,
+            playerSide = gameState.playerSide,
+            expanded = uiState.isDifficultyExpanded,
+            onExpandedChange = { expanded ->
+                onUIStateChange(uiState.copy(isDifficultyExpanded = expanded))
+            },
+            difficulty = gameState.difficulty,
+            onDifficultyChange = events::onDifficultyChange,
+            isAIEnabled = gameState.isAIEnabled,
+            onToggleAI = events::onToggleAI,
         )
 
         // Indicador de turno con información del jugador
-        GameStateIndicator(gameState, playerSide)
+        GameStateIndicator(gameState.gameState, gameState.playerSide)
 
         // Controles del historial de la partida
-        HistorialControls(currentMoveIndex, moveHistory, onUndo, onRedo, onMoveToCurrent)
+        HistorialControls(
+            currentMoveIndex = gameState.currentMoveIndex,
+            moveHistory = gameState.moveHistory,
+            onUndo = events::onUndo,
+            onRedo = events::onRedo,
+            onMoveToCurrent = events::onMoveToCurrent
+        )
 
         // Espacio flexible para empujar el About hacia abajo
         Spacer(modifier = Modifier.weight(1f))
 
         // Botón About en la parte inferior
-        AboutButton(onAboutClick)
+        AboutButton(events::onAboutClick)
     }
 }
 
@@ -501,22 +533,18 @@ fun SidebarPreview() {
             Move("B4", "A1")
         )
 
-        Sidebar(
+        val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = WHITE,
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
-            onMoveToCurrent = { },
-            onUndo = { },
-            onRedo = { },
             difficulty = Difficulty.DEFAULT,
-            onDifficultyChange = { },
-            isAIEnabled = true,
-            onToggleAI = { },
-            onSettings = { },
-            onNewGame = { },
-            onEditBoard = { },
-            onAboutClick = { },
+            isAIEnabled = true
+        )
+
+        Sidebar(
+            gameState = sidebarGameState,
+            events = DefaultSidebarEvents()
         )
     }
 }
@@ -533,26 +561,21 @@ fun SidebarPreview_Dark() {
             Move("C7", "B4")
         )
 
-        Sidebar(
+        val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = BLACK,
             currentMoveIndex = 1,
             moveHistory = exampleMoveHistory,
-            onMoveToCurrent = { },
-            onUndo = { },
-            onRedo = { },
             difficulty = Difficulty.HARD,
-            onDifficultyChange = { },
-            isAIEnabled = false,
-            onToggleAI = { },
-            onSettings = { },
-            onNewGame = { },
-            onEditBoard = { },
-            onAboutClick = { },
+            isAIEnabled = false
+        )
+
+        Sidebar(
+            gameState = sidebarGameState,
+            events = DefaultSidebarEvents()
         )
     }
 }
-
 
 @Preview(showBackground = true, widthDp = 280, heightDp = 800)
 @Composable
@@ -566,22 +589,48 @@ fun SidebarPreview_CustomState() {
             Move("B4", "A1")
         )
 
-        Sidebar(
+        val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = WHITE,
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
-            onMoveToCurrent = { },
-            onUndo = { },
-            onRedo = { },
             difficulty = Difficulty.MEDIUM,
-            onDifficultyChange = { },
-            isAIEnabled = true,
-            onToggleAI = { },
-            onSettings = { },
-            onNewGame = { },
-            onEditBoard = { },
-            onAboutClick = { },
+            isAIEnabled = true
+        )
+
+        Sidebar(
+            gameState = sidebarGameState,
+            events = DefaultSidebarEvents()
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 280, heightDp = 800)
+@Composable
+fun SidebarPreview_ExpandedDropdown() {
+    MaterialTheme {
+        val exampleGameState = customGameState()
+        val exampleMoveHistory = listOf(
+            Move("C1", "B1"),
+            Move("C7", "B4")
+        )
+
+        val sidebarGameState = SidebarGameState(
+            gameState = exampleGameState,
+            playerSide = WHITE,
+            currentMoveIndex = 1,
+            moveHistory = exampleMoveHistory,
+            difficulty = Difficulty.MEDIUM,
+            isAIEnabled = true
+        )
+
+        var uiState by remember { mutableStateOf(SidebarUIState(isDifficultyExpanded = true)) }
+
+        Sidebar(
+            gameState = sidebarGameState,
+            uiState = uiState,
+            events = DefaultSidebarEvents(),
+            onUIStateChange = { uiState = it }
         )
     }
 }
