@@ -207,8 +207,8 @@ The Tarati board represents a deep symbolic structure:
 ### 💡 Contributions
 
 - **Original Concept**: George Spencer Brown - *Laws of Form*
-- **React Implementation
-  **: [Adam Blvck](https://github.com/adamblvck) - [tarati-react](https://github.com/adamblvck/tarati-react)
+- **React Implementation**:
+  [Adam Blvck](https://github.com/adamblvck) - [tarati-react](https://github.com/adamblvck/tarati-react)
 - **Android Port**: Agustín Gomila - Complete adaptation to Kotlin/Jetpack Compose
 
 ### 💭 Philosophical Inspiration

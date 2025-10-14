@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -146,16 +147,18 @@ fun Sidebar(
         GameStateIndicator(gameState.gameState, gameState.playerSide)
 
         // Controles del historial de la partida
-        HistorialControls(
-            currentMoveIndex = gameState.currentMoveIndex,
-            moveHistory = gameState.moveHistory,
-            onUndo = events::onUndo,
-            onRedo = events::onRedo,
-            onMoveToCurrent = events::onMoveToCurrent
-        )
-
-        // Espacio flexible para empujar el About hacia abajo
-        Spacer(modifier = Modifier.weight(1f))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            HistorialControls(
+                currentMoveIndex = gameState.currentMoveIndex,
+                moveHistory = gameState.moveHistory,
+                onUndo = events::onUndo,
+                onRedo = events::onRedo,
+                onMoveToCurrent = events::onMoveToCurrent
+            )
+        }
 
         // Botón About en la parte inferior
         AboutButton(events::onAboutClick)
@@ -265,96 +268,100 @@ fun HistorialControls(
     onRedo: () -> Unit,
     onMoveToCurrent: () -> Unit
 ) {
-    LocalizedText(
-        id = R.string.move_history,
-        style = MaterialTheme.typography.headlineSmall,
-        color = MaterialTheme.colorScheme.onSurface
-    )
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Button(
-            onClick = onUndo,
-            enabled = currentMoveIndex > 0,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-        ) {
-            LocalizedText(R.string.back)
-        }
+        LocalizedText(
+            id = R.string.move_history,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
 
-        Button(
-            onClick = onRedo,
-            enabled = currentMoveIndex < moveHistory.size - 1,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-        ) {
-            LocalizedText(R.string.forward)
-        }
-    }
-
-    if (currentMoveIndex != moveHistory.size - 1) {
-        Button(
-            onClick = onMoveToCurrent,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LocalizedText(R.string.move_to_current)
+            Button(
+                onClick = onUndo,
+                enabled = currentMoveIndex > 0,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                LocalizedText(R.string.back)
+            }
+
+            Button(
+                onClick = onRedo,
+                enabled = currentMoveIndex < moveHistory.size - 1,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                LocalizedText(R.string.forward)
+            }
         }
-    }
 
-    // Historial de movimientos
-    Box(
-        modifier = Modifier
-            .height(200.dp) // Altura fija para el historial
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        val scrollState = rememberScrollState()
+        if (currentMoveIndex != moveHistory.size - 1) {
+            Button(
+                onClick = onMoveToCurrent,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                )
+            ) {
+                LocalizedText(R.string.move_to_current)
+            }
+        }
 
-        Column(
+        // Historial de movimientos
+        Box(
             modifier = Modifier
-                .verticalScroll(scrollState)
-                .padding(12.dp)
+                .weight(1f) // Ocupar el espacio restante
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            moveHistory.reversed().forEachIndexed { index, move ->
-                val actualIndex = moveHistory.size - 1 - index
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                if (actualIndex == currentMoveIndex)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${actualIndex + 1} · ${move.from} → ${move.to}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+            val scrollState = rememberScrollState()
+
+            Column(
+                modifier = Modifier
+                    .verticalScroll(scrollState)
+                    .padding(12.dp)
+            ) {
+                moveHistory.reversed().forEachIndexed { index, move ->
+                    val actualIndex = moveHistory.size - 1 - index
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(
+                                    if (actualIndex == currentMoveIndex)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${actualIndex + 1} · ${move.from} → ${move.to}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
