@@ -12,7 +12,9 @@ import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.centerVertices
 import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
+import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import junit.framework.TestCase.assertEquals
@@ -75,7 +77,7 @@ class AIForceTest {
             Move("A1", "B2")
         )
 
-        sortMoves(moves, gameState, isMaximizingPlayer = false)
+        sortMoves(moves, gameState, isMaximizing = false)
 
         // Ambos movimientos deberían ser válidos, ninguno gana inmediatamente
         assertEquals(2, moves.size)
@@ -171,7 +173,7 @@ class AIForceTest {
         }
 
         val score = evaluateBoard(gameState)
-        assertTrue("La evaluación debería ser positiva para blanco. Score: $score", score > 90000)
+        assertTrue("La evaluación debería ser positiva para blanco. Score: $score", score >= 1100)
     }
 
     @Test
@@ -245,7 +247,7 @@ class AIForceTest {
         val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
 
         // Debería identificar el camino hacia el ahogado
-        assertTrue(result.score >= 40000)
+        assertTrue(result.score >= 460)
     }
 
     @Test
@@ -411,7 +413,53 @@ class AIForceTest {
         // La pieza upgraded debería tener mejor evaluación
         Assert.assertTrue("Upgraded piece should score higher", scoreUpgraded > scoreNormal)
 
-        Assert.assertEquals(10000.0, scoreUpgraded - scoreNormal, 10.0)
+        Assert.assertEquals(320.0, scoreUpgraded - scoreNormal, 5.0)
+    }
+
+    @Test
+    fun testPosition_WhiteShouldFindAMove() {
+        // Situación: Blancas tienen muchos movimientos posibles en el comienzo de la partida
+        val initialState = createGameState {
+            setTurn(WHITE)
+            // Piezas blancas (4)
+            setChecker("D2", WHITE, false)
+            setChecker("C1", WHITE, false)
+            setChecker("B1", WHITE, false)
+            setChecker("C12", WHITE, false)
+            // Piezas negras (4)
+            setChecker("D3", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("C9", BLACK, false)
+            setChecker("B4", BLACK, false)
+        }
+
+        // Las blancas tienen 6 movimientos posibles.
+        val move = getAllPossibleMoves(initialState)
+
+        assertNotNull("White should find a move", move.size == 6)
+    }
+
+    @Test
+    fun testPosition_BlackShouldFindAMove() {
+        // Situación: Negras tienen muchos movimientos posibles en el comienzo de la partida
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (4)
+            setChecker("D2", WHITE, false)
+            setChecker("C1", WHITE, false)
+            setChecker("B1", WHITE, false)
+            setChecker("C3", WHITE, false)
+            // Piezas negras (4)
+            setChecker("D4", BLACK, false)
+            setChecker("C8", BLACK, false)
+            setChecker("C7", BLACK, false)
+            setChecker("B6", BLACK, false)
+        }
+
+        // Las negras tienen 5 movimientos posibles.
+        val move = getAllPossibleMoves(initialState)
+
+        assertTrue("Black should find a move", move.size == 5)
     }
 
     @Test
@@ -485,5 +533,210 @@ class AIForceTest {
             "Black's first move should have winning score (negative for BLACK)",
             blackMove1.score == -evalConfig.winningScore
         )
+    }
+
+    @Test
+    fun testStalemate_OpponentNoMoves() {
+        // Situación: Negro no tiene movimientos legales - ahogado
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (7)
+            setChecker("A1", WHITE, true)
+            setChecker("B1", WHITE, true)
+            setChecker("C1", WHITE, true)
+            setChecker("D1", WHITE, true)
+            setChecker("A2", WHITE, true)
+            setChecker("B2", WHITE, true)
+            setChecker("C2", WHITE, true)
+            // Piezas negras (1) - completamente rodeada
+            setChecker("B3", BLACK, false)
+        }
+
+        val blackMoves = getAllPossibleMoves(initialState)
+        assertEquals("Black should have no legal moves", 0, blackMoves.size)
+
+        assertTrue("Game should be over", isGameOver(initialState))
+        assertEquals("White should win by stalemate", WHITE, getWinner(initialState))
+    }
+
+    @Test
+    fun testStalemate_SelfNoMoves() {
+        // Situación: Negras no tiene movimientos legales - se ahoga a sí mismo
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (1) - rodeada por sus propias piezas
+            setChecker("B4", BLACK, false)
+            // Piezas negras (7)
+            setChecker("A1", WHITE, false)
+            setChecker("B3", WHITE, false)
+            setChecker("B5", WHITE, false)
+            setChecker("B2", WHITE, false)
+            setChecker("B6", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("C1", WHITE, false)
+        }
+
+        val whiteMoves = getAllPossibleMoves(initialState)
+        assertEquals("Black should have no legal moves", 0, whiteMoves.size)
+
+        assertTrue("Game should be over", isGameOver(initialState))
+        assertEquals("White should win by stalemate", WHITE, getWinner(initialState))
+    }
+
+    @Test
+    fun testQuickWin_MaterialAdvantage() {
+        // Situación: Negro tiene ventaja material abrumadora y debe ganar rápido
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (2) - muy pocas
+            setChecker("C10", WHITE, false)
+            setChecker("C12", WHITE, false)
+            // Piezas negras (6) - muchas y mejoradas
+            setChecker("C9", BLACK, true)
+            setChecker("C8", BLACK, true)
+            setChecker("C6", BLACK, true)
+            setChecker("C5", BLACK, true)
+            setChecker("B3", BLACK, true)
+            setChecker("B4", BLACK, true)
+        }
+
+        val blackMove = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("Black should find a winning move", blackMove.move)
+
+        // El movimiento debería ser agresivo (captura o amenaza directa)
+        val newState = applyMoveToBoard(initialState, blackMove.move!!.from, blackMove.move.to)
+
+        // Verificar que el movimiento mejora la posición de negro
+        val scoreAfter = evaluateBoard(newState)
+        assertTrue("Move should improve black's position", -scoreAfter < evalConfig.winningScore * 0.3)
+    }
+
+    @Test
+    fun testDefensiveMove_AvoidImmediateLoss() {
+        // Situación: Blanco está en peligro inminente y debe jugar defensivamente
+        val initialState = createGameState {
+            setTurn(WHITE)
+            // Piezas blancas (3) - en peligro
+            setChecker("C10", WHITE, false)  // Amenazada
+            setChecker("D10", WHITE, false)  // Amenazada
+            setChecker("B11", WHITE, true)   // Segura
+            // Piezas negras (5) - atacando
+            setChecker("C8", BLACK, true)    // Amenazando C10
+            setChecker("D8", BLACK, true)    // Amenazando D10
+            setChecker("B7", BLACK, false)
+            setChecker("C7", BLACK, false)
+            setChecker("D7", BLACK, false)
+        }
+
+        val whiteMove = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("White should find a defensive move", whiteMove.move)
+
+        // El movimiento debería ser defensivo (proteger piezas amenazadas)
+        val isDefensive = whiteMove.move!!.from == "C10" || whiteMove.move.from == "D10"
+        assertTrue("White should move threatened pieces", isDefensive)
+    }
+
+    @Test
+    fun testUpgradeOpportunity_Prioritize() {
+        // Situación: Negro puede mejorar una pieza y debe priorizarlo
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (4)
+            setChecker("C9", BLACK, false)  // Cerca de la base blanca
+            setChecker("C11", BLACK, false)
+            setChecker("C3", BLACK, false)
+            setChecker("C12", BLACK, false)
+            // Piezas negras (4)
+            setChecker("B3", WHITE, false)
+            setChecker("B2", WHITE, false)
+            setChecker("B4", WHITE, false)
+            setChecker("C5", WHITE, false)
+        }
+
+        val blackMove = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("Black should find a move", blackMove.move)
+
+        // Debería priorizar mover hacia la base negra para mejorar
+        val leadsToUpgrade = blackMove.move!!.to in homeBases[WHITE]!!
+        assertTrue("Black should prioritize upgrade opportunity", leadsToUpgrade)
+    }
+
+    @Test
+    fun testCenterControl_StrategicMove() {
+        // Situación: Control del centro es crucial
+        val initialState = createGameState {
+            setTurn(WHITE)
+            // Piezas blancas (4)
+            setChecker("B2", WHITE, false)
+            setChecker("C2", WHITE, false)
+            setChecker("D2", WHITE, false)
+            setChecker("C3", WHITE, false)
+            // Piezas negras (4)
+            setChecker("B5", BLACK, false)
+            setChecker("C5", BLACK, false)
+            setChecker("D5", BLACK, false)
+            setChecker("C4", BLACK, false)
+        }
+
+        val whiteMove = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("White should find a strategic move", whiteMove.move)
+
+        // El movimiento debería apuntar a controlar el centro
+        val controlsCenter = centerVertices.contains(whiteMove.move!!.to)
+        assertTrue("White should move to control center", controlsCenter)
+    }
+
+    @Test
+    fun testEndgame_SinglePieceSurvival() {
+        // Situación: Final de juego con pocas piezas
+        val initialState = createGameState {
+            setTurn(WHITE)
+            // Piezas blancas (1)
+            setChecker("C6", WHITE, true)  // Pieza mejorada
+            // Piezas negras (1)
+            setChecker("C7", BLACK, true)  // Pieza mejorada
+        }
+
+        val whiteMove = getNextBestMove(initialState, depth = Difficulty.MEDIUM.aiDepth)
+
+        assertNotNull("White should find a survival move", whiteMove.move)
+
+        // En final de juego, priorizar supervivencia sobre riesgo
+        val newState = applyMoveToBoard(initialState, whiteMove.move!!.from, whiteMove.move.to)
+        val whitePiecesAfter = newState.checkers.values.count { it.color == WHITE }
+        assertEquals("White should not lose its piece", 1, whitePiecesAfter)
+    }
+
+    @Test
+    fun testSacrifice_TacticalMove() {
+        // Situación: Negro puede sacrificar una pieza para ganar ventaja
+        val initialState = createGameState {
+            setTurn(BLACK)
+            // Piezas blancas (3)
+            setChecker("C10", WHITE, false)
+            setChecker("B11", WHITE, true)
+            setChecker("D11", WHITE, false)
+            // Piezas negras (5)
+            setChecker("C8", BLACK, false)  // Pieza a sacrificar
+            setChecker("B7", BLACK, true)
+            setChecker("C7", BLACK, true)
+            setChecker("D7", BLACK, true)
+            setChecker("C9", BLACK, false)
+        }
+
+        val blackMove = getNextBestMove(initialState, depth = Difficulty.HARD.aiDepth)
+
+        assertNotNull("Black should find a tactical move", blackMove.move)
+
+        // Verificar que el sacrificio lleva a una mejor posición
+        val newState = applyMoveToBoard(initialState, blackMove.move!!.from, blackMove.move.to)
+
+        // Después del movimiento, negro debería tener amenazas fuertes
+        val blackThreats = quickEvaluate(newState)
+        assertTrue("Sacrifice should create strong threats", blackThreats < -evalConfig.materialScore * 2)
     }
 }

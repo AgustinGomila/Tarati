@@ -62,8 +62,10 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
+import com.agustin.tarati.game.ai.TaratiAI.clearPositionHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
+import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -169,6 +171,18 @@ fun MainScreen(
         viewModel.updateHistory(newMoveHistory)
         viewModel.updateGameState(nextState)
 
+        val repetitionLoser = recordRealMove(nextState, vmGameState.currentTurn)
+        if (repetitionLoser != null) {
+            // Triple repetición detectada - el jugador que hizo el movimiento pierde
+            gameOverMessage = String.format(
+                context.getString(R.string.game_over_triple_repetition),
+                context.getString(repetitionLoser.getColorStringResource())
+            )
+            showGameOverDialog = true
+            stopAI = true
+            return
+        }
+
         if (isGameOver(nextState)) {
             gameOverMessage = String.format(
                 context.getString(R.string.game_over_wins),
@@ -219,6 +233,8 @@ fun MainScreen(
     }
 
     fun startNewGame(playerSide: Color) {
+        clearPositionHistory()
+
         viewModel.endEditing()
         viewModel.updatePlayerSide(playerSide)
         viewModel.updateHistory(emptyList())

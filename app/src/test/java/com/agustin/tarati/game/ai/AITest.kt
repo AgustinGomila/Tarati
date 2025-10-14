@@ -553,27 +553,27 @@ class AITest {
         val positionWhite = createGameState {
             setTurn(WHITE)
             // Distribución con mejoras simétricas
-            setChecker("C1", WHITE, true)   // Mejorada
+            setChecker("C1", WHITE, true)
             setChecker("C2", WHITE, false)
             setChecker("D1", WHITE, false)
-            setChecker("D2", WHITE, true)   // Mejorada
-            setChecker("C7", BLACK, true)   // Mejorada
+            setChecker("D2", WHITE, true)
+            setChecker("C7", BLACK, true)
             setChecker("C8", BLACK, false)
             setChecker("D3", BLACK, false)
-            setChecker("D4", BLACK, true)   // Mejorada
+            setChecker("D4", BLACK, true)
         }
 
         val positionBlack = createGameState {
             setTurn(BLACK)
             // Posición invertida
-            setChecker("C1", BLACK, true)   // Mejorada
+            setChecker("C1", BLACK, true)
             setChecker("C2", BLACK, false)
             setChecker("D1", BLACK, false)
-            setChecker("D2", BLACK, true)   // Mejorada
-            setChecker("C7", WHITE, true)   // Mejorada
+            setChecker("D2", BLACK, true)
+            setChecker("C7", WHITE, true)
             setChecker("C8", WHITE, false)
             setChecker("D3", WHITE, false)
-            setChecker("D4", WHITE, true)   // Mejorada
+            setChecker("D4", WHITE, true)
         }
 
         val scoreWhite = evaluateBoard(positionWhite)
@@ -594,18 +594,26 @@ class AITest {
             // Posición 1: Distribución 4-4 equilibrada
             createGameState {
                 setTurn(WHITE)
-                setChecker("C1", WHITE, false); setChecker("C2", WHITE, false)
-                setChecker("D1", WHITE, false); setChecker("D2", WHITE, false)
-                setChecker("C7", BLACK, false); setChecker("C8", BLACK, false)
-                setChecker("D3", BLACK, false); setChecker("D4", BLACK, false)
+                setChecker("C1", WHITE, false)
+                setChecker("C2", WHITE, false)
+                setChecker("D1", WHITE, false)
+                setChecker("D2", WHITE, false)
+                setChecker("C7", BLACK, false)
+                setChecker("C8", BLACK, false)
+                setChecker("D3", BLACK, false)
+                setChecker("D4", BLACK, false)
             },
             // Posición 2: Distribución 3-5 con mejoras
             createGameState {
                 setTurn(WHITE)
-                setChecker("C1", WHITE, true); setChecker("C2", WHITE, false)
-                setChecker("D1", WHITE, true); setChecker("C7", BLACK, true)
-                setChecker("C8", BLACK, false); setChecker("D3", BLACK, false)
-                setChecker("D4", BLACK, true); setChecker("B1", BLACK, false)
+                setChecker("C1", WHITE, true)
+                setChecker("C2", WHITE, false)
+                setChecker("D1", WHITE, true)
+                setChecker("C7", BLACK, true)
+                setChecker("C8", BLACK, false)
+                setChecker("D3", BLACK, false)
+                setChecker("D4", BLACK, true)
+                setChecker("B1", BLACK, false)
             }
         )
 
@@ -774,7 +782,6 @@ class AITest {
         val state = GameState(
             mapOf(
                 "C12" to Checker(WHITE, false), // WHITE casi perdido
-
                 "C11" to Checker(BLACK, false),
                 "B6" to Checker(BLACK, false),
                 "C2" to Checker(BLACK, true),
@@ -801,7 +808,6 @@ class AITest {
         val state = GameState(
             mapOf(
                 "C12" to Checker(WHITE, false), // WHITE casi perdido
-
                 "C11" to Checker(BLACK, false),
                 "B6" to Checker(BLACK, false),
                 "C2" to Checker(BLACK, true),
