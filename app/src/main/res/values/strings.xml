@@ -70,4 +70,5 @@
     <string name="human_turn">Human turn</string>
     <string name="you_won">You won with %1$s</string>
     <string name="you_lost">You lost with %1$s</string>
+    <string name="game_over_triple_repetition">Game over: Triple repetition!</string>
 </resources>

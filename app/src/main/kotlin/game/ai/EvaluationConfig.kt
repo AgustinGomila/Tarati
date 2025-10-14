@@ -17,6 +17,12 @@ data class EvaluationConfig(
     val homeBaseControlScore: Int = 25,
     val mobilityScore: Int = 5,
 
-    // Parámetros auxiliares
-    val quickThreatWeight: Int = 15
+    val quickThreatWeight: Int = 15,
+    val winningThreshold: Float = 0.9f,
+    val winningPositionThreshold: Float = 0.5f,
+
+    val repetitionPenaltyMultiplier: Float = 10.0f,
+    val immediateWinBonusMultiplier: Float = 2.0f,
+
+    val name: String = "Default"
 )
