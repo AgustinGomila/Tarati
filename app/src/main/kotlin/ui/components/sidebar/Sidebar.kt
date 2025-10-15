@@ -601,7 +601,7 @@ fun SidebarPreview_CustomState() {
             playerSide = WHITE,
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
-            difficulty = Difficulty.MEDIUM,
+            difficulty = Difficulty.DEFAULT,
             isAIEnabled = true
         )
 
@@ -627,7 +627,7 @@ fun SidebarPreview_ExpandedDropdown() {
             playerSide = WHITE,
             currentMoveIndex = 1,
             moveHistory = exampleMoveHistory,
-            difficulty = Difficulty.MEDIUM,
+            difficulty = Difficulty.DEFAULT,
             isAIEnabled = true
         )
 

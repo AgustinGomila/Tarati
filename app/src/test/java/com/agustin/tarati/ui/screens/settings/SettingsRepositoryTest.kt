@@ -164,7 +164,7 @@ class SettingsRepositoryTest {
         coEvery { mockDataStore.updateData(any()) } returns mockk()
 
         val repository = SettingsRepositoryImpl(mockDataStore)
-        repository.setDifficulty(Difficulty.MEDIUM)
+        repository.setDifficulty(Difficulty.DEFAULT)
 
         coVerify {
             mockDataStore.updateData(any())

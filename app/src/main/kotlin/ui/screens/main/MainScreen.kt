@@ -62,7 +62,7 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
-import com.agustin.tarati.game.ai.TaratiAI.clearPositionHistory
+import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
@@ -172,22 +172,14 @@ fun MainScreen(
         viewModel.updateGameState(nextState)
 
         val repetitionLoser = recordRealMove(nextState, vmGameState.currentTurn)
-        if (repetitionLoser != null) {
-            // Triple repetición detectada - el jugador que hizo el movimiento pierde
-            gameOverMessage = String.format(
-                context.getString(R.string.game_over_triple_repetition),
-                context.getString(repetitionLoser.getColorStringResource())
-            )
-            showGameOverDialog = true
-            stopAI = true
-            return
-        }
-
         if (isGameOver(nextState)) {
-            gameOverMessage = String.format(
-                context.getString(R.string.game_over_wins),
-                context.getString(nextState.currentTurn.opponent().getColorStringResource())
-            )
+            val gameOverMsg = when {
+                repetitionLoser != null -> context.getString(R.string.game_over_triple_repetition)
+                else -> context.getString(R.string.game_over_wins)
+            }
+
+            gameOverMessage =
+                String.format(gameOverMsg, context.getString(nextState.currentTurn.opponent().getColorStringResource()))
             showGameOverDialog = true
             stopAI = true
         }
@@ -233,7 +225,7 @@ fun MainScreen(
     }
 
     fun startNewGame(playerSide: Color) {
-        clearPositionHistory()
+        clearAIHistory()
 
         viewModel.endEditing()
         viewModel.updatePlayerSide(playerSide)
@@ -1177,7 +1169,7 @@ private fun MainScreenPreviewContent(
             playerSide = currentPlayerSide,
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
-            difficulty = Difficulty.MEDIUM,
+            difficulty = Difficulty.DEFAULT,
             isAIEnabled = true
         )
 

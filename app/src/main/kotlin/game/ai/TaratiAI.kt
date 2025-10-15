@@ -36,6 +36,10 @@ object TaratiAI {
             }
         }
 
+    private fun clearTranspositionTable() {
+        transpositionTable.clear()
+    }
+
     private data class TranspositionEntry(val depth: Int, val result: Result)
 
     // ==================== API Pública ====================
@@ -45,7 +49,12 @@ object TaratiAI {
         globalConfigRef.set(config)
     }
 
-    fun clearPositionHistory() {
+    fun clearAIHistory() {
+        clearTranspositionTable()
+        clearPositionHistory()
+    }
+
+    private fun clearPositionHistory() {
         realGameHistory.clear()
     }
 
@@ -63,7 +72,7 @@ object TaratiAI {
 
     fun getNextBestMove(
         gameState: GameState,
-        depth: Int = Difficulty.MEDIUM.aiDepth,
+        depth: Int = Difficulty.DEFAULT.aiDepth,
         debug: Boolean = false
     ): Result {
         return minimax(
@@ -79,7 +88,7 @@ object TaratiAI {
     @Suppress("unused")
     fun getNextBestMoveWithTimeLimit(
         gameState: GameState,
-        maxDepth: Int = Difficulty.MEDIUM.aiDepth,
+        maxDepth: Int = Difficulty.DEFAULT.aiDepth,
         timeLimitMs: Long = DEFAULT_TIME_LIMIT_MS,
         debug: Boolean = false
     ): Result {
@@ -323,7 +332,7 @@ object TaratiAI {
         val quickScore = quickEvaluate(newState)
 
         val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
-        val upgradeBonus = if (leadsToUpgrade) evalConfig.upgradeOpportunityScore.toDouble() else 0.0
+        val upgradeBonus = if (leadsToUpgrade) evalConfig.upgradeScore.toDouble() else 0.0
 
         val isImmediateWin = isGameOver(newState) && getWinner(newState) == gameState.currentTurn
         val isWinningMove = !isImmediateWin && leadsToWinningPosition(newState, gameState.currentTurn)
@@ -367,7 +376,7 @@ object TaratiAI {
                     (metrics.whiteMobility - metrics.blackMobility) * mobilityScore +
                     (metrics.whiteHomeControl - metrics.blackHomeControl) * homeBaseControlScore +
                     (metrics.whiteOpponentPressure - metrics.blackOpponentPressure) * opponentBasePressureScore +
-                    (metrics.whiteUpgradeOpportunities - metrics.blackUpgradeOpportunities) * upgradeOpportunityScore
+                    (metrics.whiteUpgradeOpportunities - metrics.blackUpgradeOpportunities) * upgradeScore
         }
     }
 
@@ -555,7 +564,7 @@ object TaratiAI {
         }
     }
 
-    private fun hasTripleRepetition(gameState: GameState): Boolean {
+    fun hasTripleRepetition(gameState: GameState): Boolean {
         val hash = gameState.hashBoard()
         return (realGameHistory[hash] ?: 0) >= 3
     }

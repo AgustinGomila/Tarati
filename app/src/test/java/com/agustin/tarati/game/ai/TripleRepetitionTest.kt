@@ -2,7 +2,7 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.checkIfWouldCauseRepetition
-import com.agustin.tarati.game.ai.TaratiAI.clearPositionHistory
+import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
 import com.agustin.tarati.game.ai.TaratiAI.getWinner
@@ -22,7 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TripleRepetitionTests {
+class TripleRepetitionTest {
 
     @Test
     fun testTripleRepetition_WhiteLoses() {
@@ -33,7 +33,7 @@ class TripleRepetitionTests {
             setChecker("C7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Simular triple repetición causada por las blancas
         repeat(3) {
@@ -54,7 +54,7 @@ class TripleRepetitionTests {
             setChecker("C7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Simular triple repetición causada por las negras
         repeat(3) {
@@ -69,7 +69,7 @@ class TripleRepetitionTests {
 
     @Test
     fun testTripleRepetition_BasicDetection() {
-        clearPositionHistory()
+        clearAIHistory()
 
         val gameState = createGameState {
             setTurn(WHITE)
@@ -96,7 +96,7 @@ class TripleRepetitionTests {
 
     @Test
     fun testTripleRepetition_DifferentStates() {
-        clearPositionHistory()
+        clearAIHistory()
 
         val state1 = createGameState {
             setTurn(WHITE)
@@ -123,7 +123,7 @@ class TripleRepetitionTests {
 
     @Test
     fun testTripleRepetition_CheckIfWouldCauseRepetition() {
-        clearPositionHistory()
+        clearAIHistory()
 
         val gameState = createGameState {
             setTurn(WHITE)
@@ -155,7 +155,7 @@ class TripleRepetitionTests {
         recordRealMove(gameState, WHITE)
 
         // Limpiar historial
-        clearPositionHistory()
+        clearAIHistory()
 
         // Verificar que después de limpiar, no causa repetición
         assertFalse("Should not cause repetition after clear", checkIfWouldCauseRepetition(gameState))
@@ -197,7 +197,7 @@ class TripleRepetitionTests {
 
     @Test
     fun testTripleRepetition_GameplaySimulation() {
-        clearPositionHistory()
+        clearAIHistory()
 
         // Estado inicial
         var gameState = createGameState {
@@ -252,14 +252,14 @@ class TripleRepetitionTests {
             setChecker("C7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Registrar la posición 2 veces (una más causaría triple repetición)
         recordRealMove(gameState, BLACK)
         recordRealMove(gameState, BLACK)
 
         // La IA blanca debería evitar movimientos que lleven a esta posición
-        val result = getNextBestMove(gameState, depth = Difficulty.MEDIUM.aiDepth)
+        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
 
         assertNotNull("AI should find a move", result.move)
 
@@ -285,7 +285,7 @@ class TripleRepetitionTests {
             setChecker("C7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Registrar posiciones diferentes
         recordRealMove(state1, WHITE)
@@ -310,7 +310,7 @@ class TripleRepetitionTests {
         recordRealMove(gameState, WHITE)
 
         // Limpiar historial
-        clearPositionHistory()
+        clearAIHistory()
 
         // Registrar de nuevo - debería empezar desde 1
         val loser = recordRealMove(gameState, WHITE)
@@ -323,7 +323,7 @@ class TripleRepetitionTests {
     fun testTripleRepetition_InActualGameplay() {
         // Test más realista con gameplay actual
         var gameState = initialGameState()
-        clearPositionHistory()
+        clearAIHistory()
 
         var repetitionDetected = false
         var moves = 0
@@ -370,7 +370,7 @@ class TripleRepetitionTests {
             setChecker("C7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Verificar que inicialmente está vacío
         assertTrue("History should be empty after clear", realGameHistory.isEmpty())
@@ -421,7 +421,7 @@ class TripleRepetitionTests {
 
         assertEquals("Same game states should have same hash", hash1, hash2)
 
-        clearPositionHistory()
+        clearAIHistory()
 
         // Registrar state1 dos veces
         recordRealMove(state1, WHITE)
@@ -441,7 +441,7 @@ class TripleRepetitionTests {
             setChecker("B7", BLACK, false)
         }
 
-        clearPositionHistory()
+        clearAIHistory()
 
         var gameState = initialState
         var moves = 0

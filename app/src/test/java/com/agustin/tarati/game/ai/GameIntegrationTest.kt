@@ -2,6 +2,7 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
+import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.isValidMove
@@ -43,7 +44,7 @@ class GameIntegrationTest {
         // Game should not be over yet
         assertFalse(
             "Game should not be over after first moves",
-            TaratiAI.isGameOver(state)
+            isGameOver(state)
         )
     }
 
