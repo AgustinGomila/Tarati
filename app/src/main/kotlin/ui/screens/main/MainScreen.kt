@@ -132,16 +132,6 @@ fun MainScreen(
     var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
 
-    // Disparadores de Efectos
-    val effectLaunchers = listOf(
-        vmGameState.currentTurn,
-        vmAIEnabled,
-        stopAI,
-        vmDifficulty,
-        vmPlayerSide,
-        vmIsEditing
-    )
-
     fun isAIThinking(): Boolean {
         return vmAIEnabled &&
                 vmGameState.currentTurn != vmPlayerSide &&
@@ -173,17 +163,35 @@ fun MainScreen(
 
         val repetitionLoser = recordRealMove(nextState, vmGameState.currentTurn)
         if (isGameOver(nextState)) {
-            val gameOverMsg = when {
-                repetitionLoser != null -> context.getString(R.string.game_over_triple_repetition)
-                else -> context.getString(R.string.game_over_wins)
-            }
+            gameOverMessage = when {
+                repetitionLoser == null -> {
+                    String.format(
+                        context.getString(R.string.game_over_wins),
+                        context.getString(nextState.currentTurn.opponent().getColorStringResource())
+                    )
+                }
 
-            gameOverMessage =
-                String.format(gameOverMsg, context.getString(nextState.currentTurn.opponent().getColorStringResource()))
+                else -> {
+                    String.format(
+                        context.getString(R.string.game_over_triple_repetition),
+                        context.getString(repetitionLoser.getColorStringResource())
+                    )
+                }
+            }
             showGameOverDialog = true
             stopAI = true
         }
     }
+
+    // Disparadores de Efectos
+    val effectLaunchers = listOf(
+        vmGameState.currentTurn,
+        vmAIEnabled,
+        stopAI,
+        vmDifficulty,
+        vmPlayerSide,
+        vmIsEditing
+    )
 
     LaunchedEffect(effectLaunchers) {
         if (!vmAIEnabled || stopAI || vmIsEditing) {
@@ -492,7 +500,7 @@ fun MainScreen(
                         ),
                         events = object : CreateBoardEvents {
                             override fun onApplyMove(from: String, to: String) = applyMove(from, to)
-                            override fun handleEditPiece(vertexId: String) = handleEditPiece(vertexId)
+                            override fun handleEditPiece(from: String) = handleEditPiece(from)
                             override fun onResetBoardCompleted() = onResetBoardCompleted()
                         },
                         content = { EditControls(isLandscapeScreen) }
@@ -548,7 +556,7 @@ data class CreateBoardState(
 
 interface CreateBoardEvents {
     fun onApplyMove(from: String, to: String)
-    fun handleEditPiece(vertexId: String)
+    fun handleEditPiece(from: String)
     fun onResetBoardCompleted()
 }
 
@@ -580,8 +588,8 @@ fun CreateBoard(
             }
         }
 
-        override fun onEditPiece(vertexId: String) {
-            events.handleEditPiece(vertexId)
+        override fun onEditPiece(from: String) {
+            events.handleEditPiece(from)
         }
 
         override fun onResetCompleted() {
@@ -1190,8 +1198,8 @@ private fun MainScreenPreviewContent(
                 if (debug) println("Move from $from to $to")
             }
 
-            override fun handleEditPiece(vertexId: String) {
-                if (debug) println("Edit piece at $vertexId")
+            override fun handleEditPiece(from: String) {
+                if (debug) println("Edit piece at $from")
             }
 
             override fun onResetBoardCompleted() {
@@ -1402,7 +1410,7 @@ fun EditingModePreviewContent(
         // Crear eventos para Board
         val boardEvents = object : BoardEvents {
             override fun onMove(from: String, to: String) {}
-            override fun onEditPiece(vertexId: String) {}
+            override fun onEditPiece(from: String) {}
             override fun onResetCompleted() {}
         }
 
