@@ -125,7 +125,6 @@ fun MainScreen(
     val vmLabelsVisible = settingsState.labelsVisibility
 
     var stopAI by remember { mutableStateOf(false) }
-    var resetBoard by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
 
     var showGameOverDialog by remember { mutableStateOf(false) }
@@ -237,22 +236,20 @@ fun MainScreen(
 
     fun startNewGame(playerSide: Color) {
         clearAIHistory()
-
-        viewModel.startGame(playerSide)
+        lastMove = null
 
         showNewGameDialog = false
         showGameOverDialog = false
         showAboutDialog = false
 
-        // Reiniciar estado de IA
-        stopAI = false
-
         scope.launch {
             drawerState.close()
         }
 
+        viewModel.startGame(playerSide)
+        stopAI = false
+
         if (debug) println("New game started: playerSide=$playerSide")
-        resetBoard = true
     }
 
     fun undoMove() {
@@ -303,11 +300,6 @@ fun MainScreen(
             onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = { showNewGameDialog = false },
         )
-    }
-
-    val resetBoardCompleted = {
-        resetBoard = false
-        if (debug) println("Board reset completed")
     }
 
     // Función para manejar edición de piezas
@@ -373,10 +365,7 @@ fun MainScreen(
                     isValidDistribution = isValidDistribution,
                     isCompletedDistribution = isCompletedDistribution,
                     onRotate = { viewModel.rotateEditBoard() },
-                    onStartGame = {
-                        viewModel.startGameFromEditedState()
-                        resetBoard = true
-                    }
+                    onStartGame = { viewModel.startGameFromEditedState() }
                 ) { viewModel.clearBoard() }
             }
         } else {
@@ -399,10 +388,7 @@ fun MainScreen(
                     isValidDistribution = isValidDistribution,
                     isCompletedDistribution = isCompletedDistribution,
                     onRotate = { viewModel.rotateEditBoard() },
-                    onStartGame = {
-                        viewModel.startGameFromEditedState()
-                        resetBoard = true
-                    }
+                    onStartGame = { viewModel.startGameFromEditedState() }
                 ) { viewModel.clearBoard() }
             }
         }
@@ -495,13 +481,12 @@ fun MainScreen(
                             isEditing = vmIsEditing,
                             isAIThinking = isAIThinking(),
                             editBoardOrientation = vmEditBoardOrientation,
-                            resetBoard = resetBoard,
                             labelsVisible = vmLabelsVisible
                         ),
                         events = object : BoardEvents {
                             override fun onMove(from: String, to: String) = applyMove(from, to)
                             override fun onEditPiece(from: String) = editPiece(from)
-                            override fun onResetCompleted() = resetBoardCompleted()
+                            override fun onResetCompleted() = Unit
                         },
                         content = { EditControls(isLandscapeScreen) },
                         debug = debug
@@ -552,7 +537,6 @@ data class CreateBoardState(
     val isEditing: Boolean,
     val isAIThinking: Boolean,
     val editBoardOrientation: BoardOrientation,
-    val resetBoard: Boolean,
     val labelsVisible: Boolean
 )
 
@@ -574,7 +558,6 @@ fun CreateBoard(
             toBoardOrientation(state.isLandscapeScreen, state.playerSide)
         },
         labelsVisible = state.labelsVisible,
-        newGame = state.resetBoard,
         isEditing = state.isEditing
     )
 
@@ -1189,7 +1172,6 @@ private fun MainScreenPreviewContent(
             isEditing = currentIsEditing,
             isAIThinking = false,
             editBoardOrientation = toBoardOrientation(landScape, currentPlayerSide),
-            resetBoard = false,
             labelsVisible = currentLabelsVisible
         )
 

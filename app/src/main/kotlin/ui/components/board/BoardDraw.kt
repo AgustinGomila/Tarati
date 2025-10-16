@@ -125,3 +125,89 @@ fun drawEdges(drawScope: DrawScope, canvasSize: Size, orientation: BoardOrientat
         drawScope.drawLine(color = colors.edgeColor, start = fromPos, end = toPos, strokeWidth = 6f)
     }
 }
+
+fun DrawScope.drawAnimatedPiece(
+    selectedVertexId: String?,
+    vertexId: String,
+    animatedPiece: AnimatedPiece,
+    colors: BoardColors,
+    sizeFactor: Float = 1.2f,
+) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val baseRadius = minOf(size.width, size.height) / 2f * sizeFactor
+
+    // Determinar colores actuales considerando animaciones
+    val currentChecker = animatedPiece.checker
+    val (pieceColor, borderColor) = when (currentChecker.color) {
+        WHITE -> colors.whitePieceColor to colors.whitePieceBorderColor
+        BLACK -> colors.blackPieceColor to colors.blackPieceBorderColor
+    }
+
+    val invertedColor = when (currentChecker.color) {
+        WHITE -> colors.blackPieceColor
+        BLACK -> colors.whitePieceColor
+    }
+
+    // Dibujar pieza base (siempre visible)
+    drawCircle(color = borderColor, center = center, radius = baseRadius, style = Stroke(width = 3f))
+    drawCircle(color = pieceColor, center = center, radius = baseRadius * 0.8f)
+
+    // Animación de upgrade - círculo interno
+    if (currentChecker.isUpgraded) {
+        val upgradeAlpha = animatedPiece.upgradeProgress
+        if (upgradeAlpha > 0f) {
+            val upgradeColor = invertedColor.copy(alpha = upgradeAlpha)
+
+            // Círculo exterior de upgrade
+            drawCircle(
+                color = upgradeColor,
+                center = center,
+                radius = baseRadius * 0.6f,
+                style = Stroke(width = 2f * upgradeAlpha)
+            )
+
+            // Punto central de upgrade
+            drawCircle(
+                color = upgradeColor,
+                center = center,
+                radius = baseRadius * 0.2f * upgradeAlpha
+            )
+        }
+    }
+
+    // Animación de conversión - efecto de inversión
+    if (animatedPiece.isConverting) {
+        val conversionAlpha = animatedPiece.conversionProgress
+
+        // Efecto de aura durante la conversión
+        if (conversionAlpha < 0.8f) {
+            val auraAlpha = (1f - conversionAlpha) * 0.4f
+            drawCircle(
+                color = colors.selectionIndicatorColor.copy(alpha = auraAlpha),
+                center = center,
+                radius = baseRadius * 1.3f
+            )
+        }
+
+        // Efecto de parpadeo
+        if (conversionAlpha % 0.3f < 0.15f) {
+            val flashAlpha = (1f - conversionAlpha) * 0.6f
+            drawCircle(
+                color = invertedColor.copy(alpha = flashAlpha),
+                center = center,
+                radius = baseRadius * 1.1f,
+                style = Stroke(width = 2f)
+            )
+        }
+    }
+
+    // Resaltado de selección
+    if (vertexId == selectedVertexId) {
+        drawCircle(
+            color = colors.selectionIndicatorColor,
+            center = center,
+            radius = baseRadius * 1.2f,
+            style = Stroke(width = 3f)
+        )
+    }
+}

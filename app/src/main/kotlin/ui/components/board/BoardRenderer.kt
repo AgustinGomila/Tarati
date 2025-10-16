@@ -1,18 +1,15 @@
 package com.agustin.tarati.ui.components.board
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -23,16 +20,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.game.core.Checker
-import com.agustin.tarati.game.core.GameBoard.findClosestVertex
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
+import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.roundToInt
-
-data class VisualPiece(
-    val vertexId: String,
-    val checker: Checker,
-    val pos: Offset,
-)
 
 /**
  * BoardRenderer: fondo + vertices/edges (Canvas) + piezas overlay animadas
@@ -48,43 +40,21 @@ fun BoardRenderer(
     selectedPiece: String?,
     validMoves: List<String>,
     boardState: BoardState,
+    animatedPieces: Map<String, AnimatedPiece> = emptyMap(),
     tapEvents: TapEvents,
     debug: Boolean = false
 ) {
     val colors = getBoardColors()
     val density = LocalDensity.current
-    val visualWidth by lazy { (with(density) { 60.dp.toPx() }) }
+    val visualWidth by remember { mutableStateOf(with(density) { 60.dp.toPx() }) }
 
-    // Tamaño del área del tablero en px (onGloballyPositioned)
     var containerWidthPx by remember { mutableIntStateOf(0) }
     var containerHeightPx by remember { mutableIntStateOf(0) }
 
+    // Usar el estado visual proporcionado (puede estar en medio de una animación)
     val gameState = boardState.gameState
     val orientation = boardState.boardOrientation
     val editorMode = boardState.isEditing
-    val lastMove = boardState.lastMove
-
-    if (debug) println("Last movement: $lastMove")
-
-    // Derivar lista de entidades visuales (posiciones absolutas en px)
-    val visualPieces by remember(gameState, orientation, containerWidthPx, containerHeightPx) {
-        derivedStateOf {
-            if (containerWidthPx == 0 || containerHeightPx == 0) return@derivedStateOf emptyList()
-            val w = containerWidthPx.toFloat()
-            val h = containerHeightPx.toFloat()
-            gameState.checkers.mapNotNull { (vertexId, checker) ->
-                val offset = getVisualPosition(vertexId, w, h, orientation)
-                VisualPiece(
-                    vertexId = vertexId,
-                    checker = Checker(
-                        color = checker.color,
-                        isUpgraded = checker.isUpgraded
-                    ),
-                    pos = offset
-                )
-            }
-        }
-    }
 
     Box(
         modifier = modifier
@@ -93,42 +63,25 @@ fun BoardRenderer(
                 containerWidthPx = coords.size.width
                 containerHeightPx = coords.size.height
             }
-            .pointerInput(gameState, selectedPiece, orientation, editorMode) {
-                detectTapGestures { offset ->
-                    val closestVertex = findClosestVertex(
-                        tapOffset = offset,
-                        canvasWidth = size.width.toFloat(),
-                        canvasHeight = size.height.toFloat(),
-                        maxTapDistance = visualWidth / 3,
-                        orientation = orientation
-                    )
-
-                    closestVertex?.let { logicalVertexId ->
-                        if (editorMode) {
-                            tapEvents.onEditPieceRequested(logicalVertexId)
-                        } else {
-                            handleTap(
-                                tappedVertex = logicalVertexId,
-                                gameState = gameState,
-                                selectedPiece = selectedPiece,
-                                tapEvents = tapEvents,
-                                debug = debug
-                            )
-                        }
-                    }
-                }
+            .pointerInput(visualWidth, gameState, selectedPiece, orientation, editorMode, tapEvents, debug) {
+                tapGestures(
+                    visualWidth = visualWidth,
+                    gameState = gameState,
+                    selectedPiece = selectedPiece,
+                    orientation = orientation,
+                    editorMode = editorMode,
+                    tapEvents = tapEvents,
+                    debug = debug
+                )
             }
     ) {
-        // Dibujar fondo/edges/vertices con Canvas
         Canvas(modifier = Modifier.matchParentSize()) {
-
-            // Fondo
             drawRect(color = colors.backgroundColor)
             val canvasSize = size
 
-            // Círculo del tablero
             drawCircle(
-                color = colors.boardBackgroundColor, radius = minOf(size.width, size.height) * 0.8f / 2,
+                color = colors.boardBackgroundColor,
+                radius = minOf(size.width, size.height) * 0.8f / 2,
                 center = Offset(size.width / 2, size.height / 2)
             )
 
@@ -150,40 +103,132 @@ fun BoardRenderer(
             )
         }
 
-        // Overlay: piezas como composables independientes posicionadas
-        visualPieces.forEach { visualPiece ->
-            key(visualPiece.vertexId) {
-                // animar x,y objetivo
-                val animX by animateFloatAsState(
-                    targetValue = visualPiece.pos.x,
-                    animationSpec = tween(durationMillis = 260)
-                )
-                val animY by animateFloatAsState(
-                    targetValue = visualPiece.pos.y,
-                    animationSpec = tween(durationMillis = 260)
-                )
-
-                // Tamaño visual de la pieza
-                val piecePx = with(LocalDensity.current) { (60.dp.toPx() / 5f) }
-                val pieceDp = with(LocalDensity.current) { piecePx.toDp() }
-
-                // Posicionar centrando la pieza
-                val offset = IntOffset(
-                    (animX - piecePx).roundToInt(),
-                    (animY - piecePx).roundToInt()
-                )
-
-                // Un Canvas pequeño para la pieza. Esto permite escalar/alfa.
-                Box(
-                    modifier = Modifier
-                        .offset { offset }
-                        .size(pieceDp * 2f) // tamaño razonable para el "slot" de la pieza
-                ) {
-                    Canvas(modifier = Modifier.matchParentSize()) {
-                        drawPiece(selectedPiece, visualPiece.vertexId, visualPiece.checker, colors)
-                    }
+        // Dibujar piezas estáticas (excluyendo las que están siendo animadas)
+        gameState.checkers.forEach { (vertexId, checker) ->
+            if (!animatedPieces.containsKey(vertexId)) {
+                key(vertexId) {
+                    StaticPieceComposable(
+                        vertexId = vertexId,
+                        checker = checker,
+                        containerWidth = containerWidthPx,
+                        containerHeight = containerHeightPx,
+                        orientation = orientation,
+                        selectedPiece = selectedPiece,
+                        colors = colors
+                    )
                 }
             }
+        }
+
+        // Dibujar piezas animadas
+        animatedPieces.values.forEach { animatedPiece ->
+            key(
+                animatedPiece.vertexId + animatedPiece.animationProgress +
+                        animatedPiece.upgradeProgress + animatedPiece.conversionProgress
+            ) {
+
+                AnimatedPieceComposable(
+                    animatedPiece = animatedPiece,
+                    containerWidth = containerWidthPx,
+                    containerHeight = containerHeightPx,
+                    orientation = orientation,
+                    selectedPiece = selectedPiece,
+                    colors = colors
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AnimatedPieceComposable(
+    animatedPiece: AnimatedPiece,
+    containerWidth: Int,
+    containerHeight: Int,
+    orientation: BoardOrientation,
+    selectedPiece: String?,
+    colors: BoardColors
+) {
+    val density = LocalDensity.current
+    val piecePx = with(density) { (60.dp.toPx() / 5f) }
+    val pieceDp = with(density) { piecePx.toDp() }
+
+    // Usar animación inmediata para mejor rendimiento
+    val currentPos = getVisualPosition(
+        animatedPiece.currentPos,
+        containerWidth.toFloat(),
+        containerHeight.toFloat(),
+        orientation
+    )
+    val targetPos = getVisualPosition(
+        animatedPiece.targetPos,
+        containerWidth.toFloat(),
+        containerHeight.toFloat(),
+        orientation
+    )
+
+    val currentX = currentPos.x + (targetPos.x - currentPos.x) * animatedPiece.animationProgress
+    val currentY = currentPos.y + (targetPos.y - currentPos.y) * animatedPiece.animationProgress
+
+    val offset = IntOffset(
+        (currentX - piecePx).roundToInt(),
+        (currentY - piecePx).roundToInt()
+    )
+
+    Box(
+        modifier = Modifier
+            .offset { offset }
+            .size(pieceDp * 2f)
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawAnimatedPiece(
+                selectedVertexId = selectedPiece,
+                vertexId = animatedPiece.vertexId,
+                animatedPiece = animatedPiece,
+                colors = colors
+            )
+        }
+    }
+}
+
+@Composable
+fun StaticPieceComposable(
+    vertexId: String,
+    checker: Checker,
+    containerWidth: Int,
+    containerHeight: Int,
+    orientation: BoardOrientation,
+    selectedPiece: String?,
+    colors: BoardColors
+) {
+    val density = LocalDensity.current
+    val piecePx = with(density) { (60.dp.toPx() / 5f) }
+    val pieceDp = with(density) { piecePx.toDp() }
+
+    val pos = getVisualPosition(
+        vertexId,
+        containerWidth.toFloat(),
+        containerHeight.toFloat(),
+        orientation
+    )
+
+    val offset = IntOffset(
+        (pos.x - piecePx).roundToInt(),
+        (pos.y - piecePx).roundToInt()
+    )
+
+    Box(
+        modifier = Modifier
+            .offset { offset }
+            .size(pieceDp * 2f)
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawPiece(
+                selectedVertexId = selectedPiece,
+                vertexId = vertexId,
+                checker = checker,
+                colors = colors
+            )
         }
     }
 }
