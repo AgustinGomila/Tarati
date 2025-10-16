@@ -10,8 +10,8 @@ import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
-import com.agustin.tarati.game.core.hashBoard
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.hashBoard
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
 import kotlin.math.max
@@ -44,7 +44,6 @@ object TaratiAI {
 
     // ==================== API Pública ====================
 
-    @Suppress("unused")
     fun setEvaluationConfig(config: EvaluationConfig) {
         globalConfigRef.set(config)
     }
@@ -449,10 +448,18 @@ object TaratiAI {
         }
 
         return BoardMetrics(
-            whiteMaterial, blackMaterial, whiteCenterControl, blackCenterControl,
-            whiteMobility, blackMobility, whiteHomeControl, blackHomeControl,
-            whiteOpponentPressure, blackOpponentPressure,
-            whiteUpgradeOpportunities, blackUpgradeOpportunities
+            whiteMaterial = whiteMaterial,
+            blackMaterial = blackMaterial,
+            whiteCenterControl = whiteCenterControl,
+            blackCenterControl = blackCenterControl,
+            whiteMobility = whiteMobility,
+            blackMobility = blackMobility,
+            whiteHomeControl = whiteHomeControl,
+            blackHomeControl = blackHomeControl,
+            whiteOpponentPressure = whiteOpponentPressure,
+            blackOpponentPressure = blackOpponentPressure,
+            whiteUpgradeOpportunities = whiteUpgradeOpportunities,
+            blackUpgradeOpportunities = blackUpgradeOpportunities
         )
     }
 

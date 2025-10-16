@@ -3,8 +3,8 @@ package  com.agustin.tarati.game.ai
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.logic.GameStateBuilder
-import com.agustin.tarati.game.logic.createGameState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue

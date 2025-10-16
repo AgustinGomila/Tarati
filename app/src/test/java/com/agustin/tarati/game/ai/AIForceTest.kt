@@ -228,7 +228,7 @@ class AIForceTest {
     @Test
     fun testStalemateInTwo() {
         // Situación: Ahogado forzado en 2 movimientos
-        val gameState = com.agustin.tarati.game.logic.createGameState {
+        val gameState = createGameState {
             setTurn(WHITE)
             // Distribución 3-5
             // Negras

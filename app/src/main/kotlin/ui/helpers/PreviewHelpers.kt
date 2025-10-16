@@ -1,14 +1,15 @@
 package com.agustin.tarati.ui.helpers
 
+import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.game.logic.modifyChecker
 import com.agustin.tarati.game.logic.withTurn
 import com.agustin.tarati.ui.components.board.BoardState
@@ -97,3 +98,13 @@ fun rememberPreviewBoardState(
         )
     }
 }
+
+data class PreviewConfig(
+    val darkTheme: Boolean = false,
+    val drawerStateValue: DrawerValue = DrawerValue.Closed,
+    val playerSide: Color = WHITE,
+    val landScape: Boolean = false,
+    val isEditing: Boolean = false,
+    val labelsVisible: Boolean = true,
+    val debug: Boolean = false
+)

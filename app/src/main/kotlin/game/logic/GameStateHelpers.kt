@@ -38,7 +38,15 @@ fun GameState.withTurn(newTurn: Color): GameState {
     return this.copy(currentTurn = newTurn)
 }
 
-// Función helper para usar el builder
-fun createGameState(block: GameStateBuilder.() -> Unit): GameState {
-    return GameStateBuilder().apply(block).build()
+fun GameState.hashBoard(): String {
+    return buildString {
+        // Incluir información del turno actual
+        append("turn:${currentTurn},")
+
+        // Ordenar las posiciones para consistencia
+        val sortedEntries = checkers.entries.sortedBy { it.key }
+        sortedEntries.forEach { (pos, checker) ->
+            append("$pos:${checker.color}:${checker.isUpgraded},")
+        }
+    }
 }

@@ -77,6 +77,7 @@ import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.ui.components.board.Board
+import com.agustin.tarati.ui.components.board.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.BoardEvents
 import com.agustin.tarati.ui.components.board.BoardState
 import com.agustin.tarati.ui.components.board.TurnIndicator
@@ -84,6 +85,7 @@ import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.components.sidebar.SidebarEvents
 import com.agustin.tarati.ui.components.sidebar.SidebarGameState
 import com.agustin.tarati.ui.components.sidebar.SidebarUIState
+import com.agustin.tarati.ui.helpers.PreviewConfig
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
@@ -91,6 +93,7 @@ import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.TaratiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -109,6 +112,9 @@ fun MainScreen(
     val viewModel: MainViewModel = viewModel()
     val debug = viewModel.isDebug
 
+    val animationViewModel: BoardAnimationViewModel = viewModel()
+    val isAnimating by animationViewModel.isAnimating.collectAsState()
+
     val vmIsEditing by viewModel.isEditing.collectAsState()
     val vmEditColor by viewModel.editColor.collectAsState()
     val vmEditTurn by viewModel.editTurn.collectAsState()
@@ -125,8 +131,8 @@ fun MainScreen(
     val vmLabelsVisible = settingsState.labelsVisibility
 
     var stopAI by remember { mutableStateOf(false) }
-    var resetBoard by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
+    var gameStatus by remember { mutableStateOf(GameStateStatus.PLAYING) }
 
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
@@ -137,18 +143,19 @@ fun MainScreen(
         return vmAIEnabled &&
                 vmGameState.currentTurn != vmPlayerSide &&
                 !isGameOver(vmGameState) &&
-                !vmIsEditing
+                !vmIsEditing &&
+                gameStatus == GameStateStatus.PLAYING
     }
 
     fun applyMove(from: String, to: String) {
         stopAI = false
+        gameStatus = GameStateStatus.ANIMATING_MOVE
 
         if (debug) println("Applying move: $from -> $to")
         val move = Move(from, to)
         lastMove = move
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
-
         val nextTurn = vmGameState.currentTurn.opponent()
         val nextState = newBoardState.copy(currentTurn = nextTurn)
 
@@ -181,8 +188,43 @@ fun MainScreen(
                     )
                 }
             }
-            showGameOverDialog = true
             stopAI = true
+        }
+    }
+
+    // Manejar transiciones de estado
+    LaunchedEffect(gameStatus, isAnimating) {
+        if (vmIsEditing) return@LaunchedEffect
+        when (gameStatus) {
+            GameStateStatus.ANIMATING_MOVE -> {
+                if (!isAnimating) {
+                    // Las animaciones terminaron, verificar si el juego terminó
+                    gameStatus = if (isGameOver(vmGameState)) {
+                        GameStateStatus.PENDING_GAME_OVER
+                    } else {
+                        GameStateStatus.PLAYING
+                    }
+                }
+            }
+
+            GameStateStatus.PENDING_GAME_OVER -> {
+                if (!isAnimating) {
+                    // Esperar 500 ms después de que terminen las animaciones
+                    delay(500)
+                    gameStatus = GameStateStatus.SHOWING_GAME_OVER
+                    showGameOverDialog = true
+                }
+            }
+
+            else -> {}
+        }
+    }
+
+    // Detectar game over después de movimientos de IA
+    LaunchedEffect(vmGameState) {
+        if (vmIsEditing) return@LaunchedEffect
+        if (gameStatus == GameStateStatus.PLAYING && isGameOver(vmGameState)) {
+            gameStatus = GameStateStatus.PENDING_GAME_OVER
         }
     }
 
@@ -197,8 +239,8 @@ fun MainScreen(
     )
 
     LaunchedEffect(effectLaunchers) {
-        if (!vmAIEnabled || stopAI || vmIsEditing) {
-            if (debug) println("DEBUG: AI blocked - AIEnabled: $vmAIEnabled, stopAI: $stopAI, isEditing: $vmIsEditing")
+        if (!vmAIEnabled || stopAI || vmIsEditing || isAnimating || gameStatus != GameStateStatus.PLAYING) {
+            if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus")
             return@LaunchedEffect
         }
 
@@ -206,53 +248,51 @@ fun MainScreen(
         // 1. Está habilitada
         // 2. No es el turno del jugador humano
         // 3. El juego no está terminado
+        // 4. Estamos en estado PLAYING
         val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide &&
                 !isGameOver(vmGameState)
 
-        if (debug) println("DEBUG: AI Check - currentTurn: ${vmGameState.currentTurn}, playerSide: $vmPlayerSide, shouldPlay: $shouldAIPlay")
+        if (!shouldAIPlay) return@LaunchedEffect
 
-        if (shouldAIPlay) {
-            if (debug) println("DEBUG: AI starting to think...")
+        if (debug) println("DEBUG: AI starting to think...")
 
-            val result = try {
-                withContext(Dispatchers.Default) {
-                    getNextBestMove(
-                        gameState = vmGameState,
-                        depth = vmDifficulty.aiDepth,
-                        debug = debug
-                    )
-                }
-            } catch (t: Throwable) {
-                t.printStackTrace()
-                null
+        val result = try {
+            withContext(Dispatchers.Default) {
+                getNextBestMove(
+                    gameState = vmGameState,
+                    depth = vmDifficulty.aiDepth,
+                    debug = debug
+                )
             }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            null
+        }
 
-            if (debug) println("AI calculated move: ${result?.move}")
+        if (debug) println("AI calculated move: ${result?.move}")
 
-            result?.move?.let { move ->
-                applyMove(move.from, move.to)
-            }
+        result?.move?.let { move ->
+            applyMove(move.from, move.to)
         }
     }
 
     fun startNewGame(playerSide: Color) {
         clearAIHistory()
-
-        viewModel.startGame(playerSide)
+        lastMove = null
 
         showNewGameDialog = false
         showGameOverDialog = false
         showAboutDialog = false
-
-        // Reiniciar estado de IA
-        stopAI = false
+        gameStatus = GameStateStatus.PLAYING
 
         scope.launch {
             drawerState.close()
         }
 
+        viewModel.startGame(playerSide)
+        stopAI = false
+
         if (debug) println("New game started: playerSide=$playerSide")
-        resetBoard = true
     }
 
     fun undoMove() {
@@ -283,31 +323,29 @@ fun MainScreen(
         }
     }
 
-    // Diálogo About
-    if (showAboutDialog) {
-        AboutDialog(onDismiss = { showAboutDialog = false })
-    }
-
     // Diálogo de fin de juego
-    if (showGameOverDialog) {
+    if (showGameOverDialog && gameStatus == GameStateStatus.SHOWING_GAME_OVER && !isAnimating) {
         GameOverDialog(
             gameOverMessage = gameOverMessage,
             onConfirmed = { startNewGame(vmPlayerSide) },
-            onDismissed = { showGameOverDialog = false }
+            onDismissed = {
+                showGameOverDialog = false
+                gameStatus = GameStateStatus.PLAYING
+            }
         )
     }
 
     // Diálogo de confirmación de nueva partida
-    if (showNewGameDialog) {
+    if (showNewGameDialog && !isAnimating) {
         NewGameDialog(
             onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = { showNewGameDialog = false },
         )
     }
 
-    val resetBoardCompleted = {
-        resetBoard = false
-        if (debug) println("Board reset completed")
+    // Diálogo About
+    if (showAboutDialog && !isAnimating) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
     }
 
     // Función para manejar edición de piezas
@@ -359,25 +397,32 @@ fun MainScreen(
                 // Controles a la izquierda: Color, Lado, Turno
                 LeftControls(
                     modifier = Modifier.align(CenterStart),
-                    vmPlayerSide = vmPlayerSide,
-                    onPlayerSideToggle = { viewModel.togglePlayerSide() },
-                    editColor = vmEditColor,
-                    onColorToggle = { viewModel.toggleEditColor() },
-                    editTurn = vmEditTurn
-                ) { viewModel.toggleEditTurn() }
+                    state = ColorControlsState(
+                        playerSide = vmPlayerSide,
+                        editColor = vmEditColor,
+                        editTurn = vmEditTurn,
+                    ),
+                    events = ColorControlsEvents(
+                        onPlayerSideToggle = { viewModel.togglePlayerSide() },
+                        onColorToggle = { viewModel.toggleEditColor() },
+                        onTurnToggle = { viewModel.toggleEditTurn() },
+                    )
+                )
 
                 // Controles a la derecha: Rotar, Limpiar, Contador y Comenzar
                 RightControls(
                     modifier = Modifier.align(CenterEnd),
-                    pieceCounts = pieceCounts,
-                    isValidDistribution = isValidDistribution,
-                    isCompletedDistribution = isCompletedDistribution,
-                    onRotate = { viewModel.rotateEditBoard() },
-                    onStartGame = {
-                        viewModel.startGameFromEditedState()
-                        resetBoard = true
-                    }
-                ) { viewModel.clearBoard() }
+                    state = ActionControlsState(
+                        pieceCounts = pieceCounts,
+                        isValidDistribution = isValidDistribution,
+                        isCompletedDistribution = isCompletedDistribution,
+                    ),
+                    events = ActionControlsEvents(
+                        onRotate = { viewModel.rotateEditBoard() },
+                        onStartGame = { viewModel.startGameFromEditedState() },
+                        onClearBoard = { viewModel.clearBoard() }
+                    )
+                )
             }
         } else {
             // Portrait: controles en superior e inferior
@@ -385,25 +430,32 @@ fun MainScreen(
                 // Controles superiores: Color, Lado, Turno
                 TopControls(
                     modifier = Modifier.align(TopCenter),
-                    playerSide = vmPlayerSide,
-                    onPlayerSideToggle = { viewModel.togglePlayerSide() },
-                    editColor = vmEditColor,
-                    onColorToggle = { viewModel.toggleEditColor() },
-                    editTurn = vmEditTurn
-                ) { viewModel.toggleEditTurn() }
+                    state = ColorControlsState(
+                        playerSide = vmPlayerSide,
+                        editColor = vmEditColor,
+                        editTurn = vmEditTurn,
+                    ),
+                    events = ColorControlsEvents(
+                        onPlayerSideToggle = { viewModel.togglePlayerSide() },
+                        onColorToggle = { viewModel.toggleEditColor() },
+                        onTurnToggle = { viewModel.toggleEditTurn() },
+                    )
+                )
 
                 // Controles inferiores: Rotar, Limpiar, Contador y Comenzar
                 BottomControls(
                     modifier = Modifier.align(BottomCenter),
-                    pieceCounts = pieceCounts,
-                    isValidDistribution = isValidDistribution,
-                    isCompletedDistribution = isCompletedDistribution,
-                    onRotate = { viewModel.rotateEditBoard() },
-                    onStartGame = {
-                        viewModel.startGameFromEditedState()
-                        resetBoard = true
-                    }
-                ) { viewModel.clearBoard() }
+                    state = ActionControlsState(
+                        pieceCounts = pieceCounts,
+                        isValidDistribution = isValidDistribution,
+                        isCompletedDistribution = isCompletedDistribution,
+                    ),
+                    events = ActionControlsEvents(
+                        onRotate = { viewModel.rotateEditBoard() },
+                        onStartGame = { viewModel.startGameFromEditedState() },
+                        onClearBoard = { viewModel.clearBoard() }
+                    )
+                )
             }
         }
     }
@@ -495,13 +547,12 @@ fun MainScreen(
                             isEditing = vmIsEditing,
                             isAIThinking = isAIThinking(),
                             editBoardOrientation = vmEditBoardOrientation,
-                            resetBoard = resetBoard,
                             labelsVisible = vmLabelsVisible
                         ),
                         events = object : BoardEvents {
                             override fun onMove(from: String, to: String) = applyMove(from, to)
                             override fun onEditPiece(from: String) = editPiece(from)
-                            override fun onResetCompleted() = resetBoardCompleted()
+                            override fun onResetCompleted() = Unit
                         },
                         content = { EditControls(isLandscapeScreen) },
                         debug = debug
@@ -552,7 +603,6 @@ data class CreateBoardState(
     val isEditing: Boolean,
     val isAIThinking: Boolean,
     val editBoardOrientation: BoardOrientation,
-    val resetBoard: Boolean,
     val labelsVisible: Boolean
 )
 
@@ -563,6 +613,7 @@ fun CreateBoard(
     events: BoardEvents,
     content: @Composable () -> Unit,
     debug: Boolean = false,
+    animationViewModel: BoardAnimationViewModel = viewModel(),
 ) {
     // Construir el estado para Board
     val boardState = BoardState(
@@ -574,7 +625,6 @@ fun CreateBoard(
             toBoardOrientation(state.isLandscapeScreen, state.playerSide)
         },
         labelsVisible = state.labelsVisible,
-        newGame = state.resetBoard,
         isEditing = state.isEditing
     )
 
@@ -604,7 +654,8 @@ fun CreateBoard(
             modifier = Modifier.fillMaxSize(),
             state = boardState,
             events = boardEvents,
-            debug = debug
+            debug = debug,
+            animationViewModel = animationViewModel,
         )
 
         if (state.isEditing) {
@@ -613,21 +664,169 @@ fun CreateBoard(
             TurnIndicator(
                 modifier = Modifier.align(Alignment.TopEnd),
                 currentTurn = state.gameState.currentTurn,
-                isAIThinking = state.isAIThinking
+                isAIThinking = state.isAIThinking && !animationViewModel.isAnimating.value
+            )
+        }
+    }
+}
+
+// region Previews
+
+@Preview(showBackground = true)
+@Composable
+fun EditingModePreviewContent(
+    darkTheme: Boolean = false,
+    isLandscape: Boolean = false,
+    boardOrientation: BoardOrientation = if (isLandscape) BoardOrientation.LANDSCAPE_BLACK else BoardOrientation.PORTRAIT_WHITE
+) {
+    TaratiTheme(darkTheme = darkTheme) {
+        val exampleGameState = initialGameState()
+
+        var isEditing by remember { mutableStateOf(true) }
+        var editColor by remember { mutableStateOf(WHITE) }
+        var editTurn by remember { mutableStateOf(WHITE) }
+        var playerSide by remember { mutableStateOf(WHITE) }
+
+        val pieceCounts = PieceCounts(4, 4)
+        val isValidDistribution = true
+        val isCompletedDistribution = true
+
+        // Crear estado para Board
+        val boardState = BoardState(
+            gameState = exampleGameState,
+            lastMove = null,
+            boardOrientation = boardOrientation,
+            labelsVisible = false,
+            isEditing = isEditing,
+        )
+
+        // Crear eventos para Board
+        val boardEvents = object : BoardEvents {
+            override fun onMove(from: String, to: String) {}
+            override fun onEditPiece(from: String) {}
+            override fun onResetCompleted() {}
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                modifier = Modifier.fillMaxSize(),
+                state = boardState,
+                events = boardEvents
+            )
+
+            EditControlsPreview(
+                isLandscapeScreen = isLandscape,
+                colorState = ColorControlsState(
+                    playerSide = playerSide,
+                    editColor = editColor,
+                    editTurn = editTurn
+                ),
+                colorEvents = ColorControlsEvents(
+                    onColorToggle = { editColor = editColor.opponent() },
+                    onPlayerSideToggle = { playerSide = playerSide.opponent() },
+                    onTurnToggle = { editTurn = editTurn.opponent() }
+                ),
+                actionState = ActionControlsState(
+                    pieceCounts = pieceCounts,
+                    isValidDistribution = isValidDistribution,
+                    isCompletedDistribution = isCompletedDistribution
+                ),
+                actionEvents = ActionControlsEvents(
+                    onClearBoard = { /* No-op en preview */ }
+                )
             )
         }
     }
 }
 
 @Composable
+fun LeftControls(
+    modifier: Modifier = Modifier,
+    state: ColorControlsState = ColorControlsState(),
+    events: ColorControlsEvents = ColorControlsEvents()
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        ColorToggleButton(
+            currentColor = state.editColor,
+            onColorToggle = events.onColorToggle
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        PlayerSideToggleButton(
+            playerSide = state.playerSide,
+            onPlayerSideToggle = events.onPlayerSideToggle
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TurnToggleButton(
+            currentTurn = state.editTurn,
+            onTurnToggle = events.onTurnToggle
+        )
+    }
+}
+
+@Composable
+fun TopControls(
+    modifier: Modifier = Modifier,
+    state: ColorControlsState = ColorControlsState(),
+    events: ColorControlsEvents = ColorControlsEvents()
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        ColorToggleButton(
+            currentColor = state.editColor,
+            onColorToggle = events.onColorToggle
+        )
+        PlayerSideToggleButton(
+            playerSide = state.playerSide,
+            onPlayerSideToggle = events.onPlayerSideToggle
+        )
+        TurnToggleButton(
+            currentTurn = state.editTurn,
+            onTurnToggle = events.onTurnToggle
+        )
+    }
+}
+
+@Composable
+fun RightControls(
+    modifier: Modifier = Modifier,
+    state: ActionControlsState = ActionControlsState(),
+    events: ActionControlsEvents = ActionControlsEvents()
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        RotateBoardButton(onClick = events.onRotate)
+        Spacer(modifier = Modifier.height(16.dp))
+        ClearBoardButton(onClick = events.onClearBoard)
+        Spacer(modifier = Modifier.height(16.dp))
+        PieceCounter(
+            whiteCount = state.pieceCounts.white,
+            blackCount = state.pieceCounts.black,
+            isValid = state.isValidDistribution
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        StartGameButton(
+            isCompletedDistribution = state.isCompletedDistribution,
+            onClick = events.onStartGame,
+        )
+    }
+}
+
+@Composable
 fun BottomControls(
     modifier: Modifier = Modifier,
-    pieceCounts: PieceCounts,
-    isValidDistribution: Boolean,
-    isCompletedDistribution: Boolean,
-    onRotate: () -> Unit,
-    onStartGame: () -> Unit,
-    onClearBoard: () -> Unit,
+    state: ActionControlsState = ActionControlsState(),
+    events: ActionControlsEvents = ActionControlsEvents()
 ) {
     Row(
         modifier = modifier
@@ -636,97 +835,14 @@ fun BottomControls(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RotateButton(onRotate)
+        RotateButton(onRotate = events.onRotate)
         StartButtonAndPieceCounter(
-            pieceCounts,
-            isValidDistribution,
-            isCompletedDistribution,
-            onStartGame
+            pieceCounts = state.pieceCounts,
+            isValidDistribution = state.isValidDistribution,
+            isCompletedDistribution = state.isCompletedDistribution,
+            onClick = events.onStartGame
         )
-        ClearBoardButton(onClearBoard)
-    }
-}
-
-@Composable
-fun RightControls(
-    modifier: Modifier, pieceCounts: PieceCounts,
-    isValidDistribution:
-    Boolean,
-    isCompletedDistribution: Boolean,
-    onRotate: () -> Unit,
-    onStartGame: () -> Unit,
-    onClearBoard: () -> Unit,
-) {
-    Column(
-        modifier = modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        RotateBoardButton(onClick = onRotate)
-        Spacer(modifier = Modifier.height(16.dp))
-        ClearBoardButton(onClick = onClearBoard)
-        Spacer(modifier = Modifier.height(16.dp))
-        PieceCounter(
-            whiteCount = pieceCounts.white,
-            blackCount = pieceCounts.black,
-            isValid = isValidDistribution
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        StartGameButton(
-            isCompletedDistribution = isCompletedDistribution,
-            onClick = onStartGame,
-        )
-    }
-}
-
-@Composable
-fun LeftControls(
-    modifier: Modifier, vmPlayerSide: Color,
-    onPlayerSideToggle: () -> Unit,
-    editColor: Color,
-    onColorToggle: () -> Unit,
-    editTurn: Color,
-    onTurnToggle: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        ColorToggleButton(currentColor = editColor, onColorToggle = onColorToggle)
-        Spacer(modifier = Modifier.height(16.dp))
-        PlayerSideToggleButton(
-            playerSide = vmPlayerSide,
-            onPlayerSideToggle = onPlayerSideToggle
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        TurnToggleButton(currentTurn = editTurn, onTurnToggle = onTurnToggle)
-    }
-}
-
-@Composable
-fun TopControls(
-    modifier: Modifier = Modifier,
-    playerSide: Color,
-    onPlayerSideToggle: () -> Unit,
-    editColor: Color,
-    onColorToggle: () -> Unit,
-    editTurn: Color,
-    onTurnToggle: () -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        ColorToggleButton(currentColor = editColor, onColorToggle = onColorToggle)
-        PlayerSideToggleButton(
-            playerSide = playerSide,
-            onPlayerSideToggle = onPlayerSideToggle
-        )
-        TurnToggleButton(currentTurn = editTurn, onTurnToggle = onTurnToggle)
+        ClearBoardButton(onClick = events.onClearBoard)
     }
 }
 
@@ -1105,16 +1221,10 @@ fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainScreenPreviewContent(
-    darkTheme: Boolean = false,
-    drawerStateValue: DrawerValue = DrawerValue.Closed,
-    playerSide: Color = WHITE,
-    landScape: Boolean = false,
-    isEditing: Boolean = false,
-    labelsVisible: Boolean = true,
-    debug: Boolean = false,
+    config: PreviewConfig = PreviewConfig()
 ) {
-    TaratiTheme(darkTheme = darkTheme) {
-        val drawerState = rememberDrawerState(initialValue = drawerStateValue)
+    TaratiTheme(darkTheme = config.darkTheme) {
+        val drawerState = rememberDrawerState(initialValue = config.drawerStateValue)
         val scope = rememberCoroutineScope()
 
         val exampleMoveHistory = listOf(
@@ -1126,49 +1236,23 @@ private fun MainScreenPreviewContent(
 
         // Estado del juego para el preview
         var previewGameState by remember { mutableStateOf(initialGameState()) }
-        var currentPlayerSide by remember { mutableStateOf(playerSide) }
-        var currentIsEditing by remember { mutableStateOf(isEditing) }
-        var currentLabelsVisible by remember { mutableStateOf(labelsVisible) }
+        var currentPlayerSide by remember { mutableStateOf(config.playerSide) }
+        var currentIsEditing by remember { mutableStateOf(config.isEditing) }
+        var currentLabelsVisible by remember { mutableStateOf(config.labelsVisible) }
 
         // Estado UI para el Sidebar
         var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
 
         // Implementación de eventos para el preview
-        val sidebarEvents = object : SidebarEvents {
-            override fun onMoveToCurrent() {
-                previewGameState = initialGameState()
-            }
-
-            override fun onUndo() {}
-            override fun onRedo() {}
-            override fun onDifficultyChange(difficulty: Difficulty) {
-                if (debug) println("Difficulty changed to: $difficulty")
-            }
-
-            override fun onToggleAI() {
-                if (debug) println("AI toggled")
-            }
-
-            override fun onSettings() {
-                if (debug) println("Settings clicked")
-            }
-
-            override fun onNewGame(color: Color) {
-                currentPlayerSide = color
-                previewGameState = initialGameState()
-                if (debug) println("New game with side: $color")
-            }
-
-            override fun onEditBoard() {
-                scope.launch { drawerState.close() }
-                currentIsEditing = !currentIsEditing
-                if (debug) println("Edit board: $currentIsEditing")
-            }
-
-            override fun onAboutClick() {
-                if (debug) println("About clicked")
-            }
-        }
+        val sidebarEvents = createPreviewSidebarEvents(
+            debug = config.debug,
+            scope = scope,
+            drawerState = drawerState,
+            currentIsEditing = currentIsEditing,
+            onGameStateUpdate = { previewGameState = it },
+            onPlayerSideUpdate = { currentPlayerSide = it },
+            onEditingUpdate = { currentIsEditing = it }
+        )
 
         // Crear el estado del juego para el Sidebar
         val sidebarGameState = SidebarGameState(
@@ -1185,27 +1269,14 @@ private fun MainScreenPreviewContent(
             gameState = previewGameState,
             lastMove = null,
             playerSide = currentPlayerSide,
-            isLandscapeScreen = landScape,
+            isLandscapeScreen = config.landScape,
             isEditing = currentIsEditing,
             isAIThinking = false,
-            editBoardOrientation = toBoardOrientation(landScape, currentPlayerSide),
-            resetBoard = false,
+            editBoardOrientation = toBoardOrientation(config.landScape, currentPlayerSide),
             labelsVisible = currentLabelsVisible
         )
 
-        val createBoardEvents = object : BoardEvents {
-            override fun onMove(from: String, to: String) {
-                if (debug) println("Move from $from to $to")
-            }
-
-            override fun onEditPiece(from: String) {
-                if (debug) println("Edit piece at $from")
-            }
-
-            override fun onResetCompleted() {
-                if (debug) println("Board reset completed")
-            }
-        }
+        val createBoardEvents = createPreviewBoardEvents(config.debug)
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -1240,7 +1311,7 @@ private fun MainScreenPreviewContent(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        if (!landScape && !currentIsEditing) {
+                        if (!config.landScape && !currentIsEditing) {
                             LocalizedText(
                                 id = R.string.a_board_game_by_george_spencer_brown,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -1254,19 +1325,20 @@ private fun MainScreenPreviewContent(
                             events = createBoardEvents,
                             content = {
                                 EditControlsPreview(
-                                    isLandscapeScreen = landScape,
-                                    pieceCounts = PieceCounts(4, 4),
-                                    isValidDistribution = true,
-                                    isCompletedDistribution = true,
-                                    editColor = WHITE,
-                                    onEditColorToggle = { },
-                                    playerSide = currentPlayerSide,
-                                    onPlayerSideToggle = { },
-                                    editTurn = WHITE,
-                                    onEditTurnToggle = { },
-                                    onRotateBoard = { },
-                                    onClearBoard = { }
-                                ) { }
+                                    isLandscapeScreen = config.landScape,
+                                    colorState = ColorControlsState(
+                                        playerSide = currentPlayerSide,
+                                        editColor = WHITE,
+                                        editTurn = WHITE
+                                    ),
+                                    colorEvents = ColorControlsEvents(),
+                                    actionState = ActionControlsState(
+                                        pieceCounts = PieceCounts(4, 4),
+                                        isValidDistribution = true,
+                                        isCompletedDistribution = true
+                                    ),
+                                    actionEvents = ActionControlsEvents()
+                                )
                             }
                         )
                     }
@@ -1281,7 +1353,7 @@ private fun MainScreenPreviewContent(
 @Composable
 fun MainScreenPreview_WithDrawer_Portrait() {
     MainScreenPreviewContent(
-        drawerStateValue = DrawerValue.Open,
+        config = PreviewConfig(drawerStateValue = DrawerValue.Open)
     )
 }
 
@@ -1289,8 +1361,10 @@ fun MainScreenPreview_WithDrawer_Portrait() {
 @Composable
 fun MainScreenPreview_WithDrawer_Portrait_Dark() {
     MainScreenPreviewContent(
-        darkTheme = true,
-        drawerStateValue = DrawerValue.Open,
+        config = PreviewConfig(
+            darkTheme = true,
+            drawerStateValue = DrawerValue.Open
+        )
     )
 }
 
@@ -1299,8 +1373,10 @@ fun MainScreenPreview_WithDrawer_Portrait_Dark() {
 @Composable
 fun MainScreenPreview_WithDrawer_Landscape() {
     MainScreenPreviewContent(
-        drawerStateValue = DrawerValue.Open,
-        landScape = true,
+        config = PreviewConfig(
+            drawerStateValue = DrawerValue.Open,
+            landScape = true
+        )
     )
 }
 
@@ -1308,9 +1384,11 @@ fun MainScreenPreview_WithDrawer_Landscape() {
 @Composable
 fun MainScreenPreview_WithDrawer_Landscape_Dark() {
     MainScreenPreviewContent(
-        darkTheme = true,
-        drawerStateValue = DrawerValue.Open,
-        landScape = true,
+        config = PreviewConfig(
+            darkTheme = true,
+            drawerStateValue = DrawerValue.Open,
+            landScape = true
+        )
     )
 }
 
@@ -1319,7 +1397,18 @@ fun MainScreenPreview_WithDrawer_Landscape_Dark() {
 @Composable
 fun MainScreenPreview_DrawerClosed_Portrait() {
     MainScreenPreviewContent(
-        isEditing = true,
+        config = PreviewConfig(isEditing = true)
+    )
+}
+
+@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
+@Composable
+fun MainScreenPreview_DrawerClosed_Landscape() {
+    MainScreenPreviewContent(
+        config = PreviewConfig(
+            landScape = true,
+            isEditing = true
+        )
     )
 }
 
@@ -1328,119 +1417,11 @@ fun MainScreenPreview_DrawerClosed_Portrait() {
 @Composable
 fun MainScreenPreview_GameInProgress() {
     MainScreenPreviewContent(
-        drawerStateValue = DrawerValue.Open,
+        config = PreviewConfig(drawerStateValue = DrawerValue.Open)
     )
 }
 
-@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
-@Composable
-fun MainScreenPreview_DrawerClosed_Landscape() {
-    MainScreenPreviewContent(
-        landScape = true,
-        isEditing = true,
-    )
-}
-
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun MainScreenPreview_Editing_Portrait() {
-    EditingModePreviewContent(
-        darkTheme = false,
-        isLandscape = false,
-        boardOrientation = BoardOrientation.PORTRAIT_WHITE
-    )
-}
-
-@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
-@Composable
-fun MainScreenPreview_Editing_Landscape() {
-    EditingModePreviewContent(
-        darkTheme = false,
-        isLandscape = true,
-        boardOrientation = BoardOrientation.LANDSCAPE_BLACK
-    )
-}
-
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun MainScreenPreview_Editing_Portrait_Dark() {
-    EditingModePreviewContent(
-        darkTheme = true,
-        isLandscape = false,
-        boardOrientation = BoardOrientation.PORTRAIT_WHITE
-    )
-}
-
-@Preview(showBackground = true, device = "spec:width=891dp,height=411dp")
-@Composable
-fun MainScreenPreview_Editing_Landscape_Dark() {
-    EditingModePreviewContent(
-        darkTheme = true,
-        isLandscape = true,
-        boardOrientation = BoardOrientation.LANDSCAPE_BLACK
-    )
-}
-
-@Composable
-fun EditingModePreviewContent(
-    darkTheme: Boolean = false,
-    isLandscape: Boolean = false,
-    boardOrientation: BoardOrientation = if (isLandscape) BoardOrientation.LANDSCAPE_BLACK else BoardOrientation.PORTRAIT_WHITE
-) {
-    TaratiTheme(darkTheme = darkTheme) {
-        val exampleGameState = initialGameState()
-
-        var isEditing by remember { mutableStateOf(true) }
-        var editColor by remember { mutableStateOf(WHITE) }
-        var editTurn by remember { mutableStateOf(WHITE) }
-        var playerSide by remember { mutableStateOf(WHITE) }
-
-        val pieceCounts = PieceCounts(4, 4)
-        val isValidDistribution = true
-        val isCompletedDistribution = true
-
-        // Crear estado para Board
-        val boardState = BoardState(
-            gameState = exampleGameState,
-            lastMove = null,
-            boardOrientation = boardOrientation,
-            labelsVisible = false,
-            isEditing = isEditing,
-        )
-
-        // Crear eventos para Board
-        val boardEvents = object : BoardEvents {
-            override fun onMove(from: String, to: String) {}
-            override fun onEditPiece(from: String) {}
-            override fun onResetCompleted() {}
-        }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                modifier = Modifier.fillMaxSize(),
-                state = boardState,
-                events = boardEvents
-            )
-
-            EditControlsPreview(
-                isLandscapeScreen = isLandscape,
-                pieceCounts = pieceCounts,
-                isValidDistribution = isValidDistribution,
-                isCompletedDistribution = isCompletedDistribution,
-                editColor = editColor,
-                onEditColorToggle = { editColor = editColor.opponent() },
-                playerSide = playerSide,
-                onPlayerSideToggle = { playerSide = playerSide.opponent() },
-                editTurn = editTurn,
-                onEditTurnToggle = { editTurn = editTurn.opponent() },
-                onRotateBoard = { /* No-op en preview */ },
-                onClearBoard = { }
-            ) { isEditing = false }
-        }
-    }
-}
-
-// Preview básico de controles en portrait
+// Previews de EditControls actualizados
 @Preview(showBackground = true, widthDp = 400, heightDp = 200)
 @Composable
 fun EditControlsPreview_Portrait() {
@@ -1449,7 +1430,6 @@ fun EditControlsPreview_Portrait() {
     }
 }
 
-// Preview básico de controles en landscape
 @Preview(showBackground = true, widthDp = 800, heightDp = 200)
 @Composable
 fun EditControlsPreview_Landscape() {
@@ -1458,44 +1438,47 @@ fun EditControlsPreview_Landscape() {
     }
 }
 
-// Preview con distribución inválida
 @Preview(showBackground = true, widthDp = 400, heightDp = 200)
 @Composable
 fun EditControlsPreview_InvalidDistribution() {
     TaratiTheme {
         EditControlsPreview(
             isLandscapeScreen = false,
-            pieceCounts = PieceCounts(8, 0),
-            isValidDistribution = false,
-            isCompletedDistribution = false
+            actionState = ActionControlsState(
+                pieceCounts = PieceCounts(8, 0),
+                isValidDistribution = false,
+                isCompletedDistribution = false
+            )
         )
     }
 }
 
-// Preview con distribución completa
 @Preview(showBackground = true, widthDp = 400, heightDp = 200)
 @Composable
 fun EditControlsPreview_CompletedDistribution() {
     TaratiTheme {
         EditControlsPreview(
             isLandscapeScreen = false,
-            pieceCounts = PieceCounts(7, 1),
-            isValidDistribution = true,
-            isCompletedDistribution = true
+            actionState = ActionControlsState(
+                pieceCounts = PieceCounts(7, 1),
+                isValidDistribution = true,
+                isCompletedDistribution = true
+            )
         )
     }
 }
 
-// Preview con colores diferentes
 @Preview(showBackground = true, widthDp = 400, heightDp = 200)
 @Composable
 fun EditControlsPreview_BlackColor() {
     TaratiTheme {
         EditControlsPreview(
             isLandscapeScreen = false,
-            editColor = BLACK,
-            playerSide = BLACK,
-            editTurn = BLACK
+            colorState = ColorControlsState(
+                editColor = BLACK,
+                playerSide = BLACK,
+                editTurn = BLACK
+            )
         )
     }
 }
@@ -1503,42 +1486,24 @@ fun EditControlsPreview_BlackColor() {
 @Composable
 fun EditControlsPreview(
     isLandscapeScreen: Boolean,
-    pieceCounts: PieceCounts = PieceCounts(4, 4),
-    isValidDistribution: Boolean = true,
-    isCompletedDistribution: Boolean = true,
-    editColor: Color = WHITE,
-    onEditColorToggle: () -> Unit = { },
-    playerSide: Color = WHITE,
-    onPlayerSideToggle: () -> Unit = { },
-    editTurn: Color = WHITE,
-    onEditTurnToggle: () -> Unit = { },
-    onRotateBoard: () -> Unit = { },
-    onClearBoard: () -> Unit = { },
-    onStartGame: () -> Unit = { }
+    colorState: ColorControlsState = ColorControlsState(),
+    colorEvents: ColorControlsEvents = ColorControlsEvents(),
+    actionState: ActionControlsState = ActionControlsState(),
+    actionEvents: ActionControlsEvents = ActionControlsEvents()
 ) {
-    // TODO: Agrupar parámetros a 6 o menos.
-
     if (isLandscapeScreen) {
         // Landscape: controles a izquierda y derecha
         Box(modifier = Modifier.fillMaxSize()) {
             LeftControls(
                 modifier = Modifier.align(CenterStart),
-                vmPlayerSide = playerSide,
-                onPlayerSideToggle = onPlayerSideToggle,
-                editColor = editColor,
-                onColorToggle = onEditColorToggle,
-                editTurn = editTurn,
-                onTurnToggle = onEditTurnToggle
+                state = colorState,
+                events = colorEvents
             )
 
             RightControls(
                 modifier = Modifier.align(CenterEnd),
-                pieceCounts = pieceCounts,
-                isValidDistribution = isValidDistribution,
-                isCompletedDistribution = isCompletedDistribution,
-                onRotate = onRotateBoard,
-                onStartGame = onStartGame,
-                onClearBoard = onClearBoard
+                state = actionState,
+                events = actionEvents
             )
         }
     } else {
@@ -1546,23 +1511,141 @@ fun EditControlsPreview(
         Box(modifier = Modifier.fillMaxSize()) {
             TopControls(
                 modifier = Modifier.align(TopCenter),
-                playerSide = playerSide,
-                onPlayerSideToggle = onPlayerSideToggle,
-                editColor = editColor,
-                onColorToggle = onEditColorToggle,
-                editTurn = editTurn,
-                onTurnToggle = onEditTurnToggle
+                state = colorState,
+                events = colorEvents
             )
 
             BottomControls(
                 modifier = Modifier.align(BottomCenter),
-                pieceCounts = pieceCounts,
-                isValidDistribution = isValidDistribution,
-                isCompletedDistribution = isCompletedDistribution,
-                onRotate = onRotateBoard,
-                onStartGame = onStartGame,
-                onClearBoard = onClearBoard
+                state = actionState,
+                events = actionEvents
             )
         }
     }
 }
+
+// Previews para componentes individuales
+@Preview(showBackground = true, widthDp = 200, heightDp = 300)
+@Composable
+fun LeftControlsPreview() {
+    TaratiTheme {
+        LeftControls(
+            state = ColorControlsState(
+                playerSide = WHITE,
+                editColor = WHITE,
+                editTurn = WHITE
+            ),
+            events = ColorControlsEvents()
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 200, heightDp = 300)
+@Composable
+fun RightControlsPreview() {
+    TaratiTheme {
+        RightControls(
+            state = ActionControlsState(
+                pieceCounts = PieceCounts(4, 4),
+                isValidDistribution = true,
+                isCompletedDistribution = true
+            ),
+            events = ActionControlsEvents()
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 100)
+@Composable
+fun TopControlsPreview() {
+    TaratiTheme {
+        TopControls(
+            state = ColorControlsState(
+                playerSide = WHITE,
+                editColor = WHITE,
+                editTurn = WHITE
+            ),
+            events = ColorControlsEvents()
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 100)
+@Composable
+fun BottomControlsPreview() {
+    TaratiTheme {
+        BottomControls(
+            state = ActionControlsState(
+                pieceCounts = PieceCounts(4, 4),
+                isValidDistribution = true,
+                isCompletedDistribution = true
+            ),
+            events = ActionControlsEvents()
+        )
+    }
+}
+
+@Composable
+private fun createPreviewSidebarEvents(
+    debug: Boolean,
+    scope: CoroutineScope,
+    drawerState: DrawerState,
+    currentIsEditing: Boolean,
+    onGameStateUpdate: (GameState) -> Unit,
+    onPlayerSideUpdate: (Color) -> Unit,
+    onEditingUpdate: (Boolean) -> Unit
+): SidebarEvents {
+    return object : SidebarEvents {
+        override fun onMoveToCurrent() {
+            onGameStateUpdate(initialGameState())
+        }
+
+        override fun onUndo() {}
+        override fun onRedo() {}
+        override fun onDifficultyChange(difficulty: Difficulty) {
+            if (debug) println("Difficulty changed to: $difficulty")
+        }
+
+        override fun onToggleAI() {
+            if (debug) println("AI toggled")
+        }
+
+        override fun onSettings() {
+            if (debug) println("Settings clicked")
+        }
+
+        override fun onNewGame(color: Color) {
+            onPlayerSideUpdate(color)
+            onGameStateUpdate(initialGameState())
+            if (debug) println("New game with side: $color")
+        }
+
+        override fun onEditBoard() {
+            scope.launch { drawerState.close() }
+            onEditingUpdate(!currentIsEditing)
+            if (debug) println("Edit board: $currentIsEditing")
+        }
+
+        override fun onAboutClick() {
+            if (debug) println("About clicked")
+        }
+    }
+}
+
+private fun createPreviewBoardEvents(debug: Boolean): BoardEvents {
+    return object : BoardEvents {
+        override fun onMove(from: String, to: String) {
+            if (debug) println("Move from $from to $to")
+        }
+
+        override fun onEditPiece(from: String) {
+            if (debug) println("Edit piece at $from")
+        }
+
+        override fun onResetCompleted() {
+            if (debug) println("Board reset completed")
+        }
+    }
+}
+
+// endregion Previews

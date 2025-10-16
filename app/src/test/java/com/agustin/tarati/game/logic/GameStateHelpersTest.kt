@@ -3,6 +3,7 @@ package  com.agustin.tarati.game.logic
 import com.agustin.tarati.game.core.Checker
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.createGameState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

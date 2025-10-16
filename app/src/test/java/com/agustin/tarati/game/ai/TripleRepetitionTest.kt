@@ -11,10 +11,10 @@ import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.hashBoard
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
-import com.agustin.tarati.game.logic.createGameState
+import com.agustin.tarati.game.logic.hashBoard
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -350,7 +350,7 @@ class TripleRepetitionTest {
             moves++
         }
 
-        // En un juego real, puede que no ocurra triple repetición rápidamente
+        // En un juego real, puede que no ocurra triple repetición rápidamente,
         // pero al menos verificamos que el mecanismo funciona
         if (repetitionDetected) {
             assertTrue("Game should be over when repetition detected", isGameOver(gameState))
@@ -459,7 +459,7 @@ class TripleRepetitionTest {
         println("\nMove 1: WHITE $move1From -> $move1To")
         println("State after move 1 hash: ${stateAfterMove1WithTurn.hashBoard()}")
 
-        val loser1 = recordRealMove(stateAfterMove1WithTurn, WHITE)
+        recordRealMove(stateAfterMove1WithTurn, WHITE)
         println("realGameHistory after move 1: ${realGameHistory.size} entries")
         realGameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
@@ -477,7 +477,7 @@ class TripleRepetitionTest {
         println("\nMove 2: BLACK $move2From -> $move2To")
         println("State after move 2 hash: ${stateAfterMove2WithTurn.hashBoard()}")
 
-        val loser2 = recordRealMove(stateAfterMove2WithTurn, BLACK)
+        recordRealMove(stateAfterMove2WithTurn, BLACK)
         println("realGameHistory after move 2: ${realGameHistory.size} entries")
         realGameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
@@ -495,7 +495,7 @@ class TripleRepetitionTest {
         println("\nMove 3: WHITE $move3From -> $move3To")
         println("State after move 3 hash: ${stateAfterMove3WithTurn.hashBoard()}")
 
-        val loser3 = recordRealMove(stateAfterMove3WithTurn, WHITE)
+        recordRealMove(stateAfterMove3WithTurn, WHITE)
         println("realGameHistory after move 3: ${realGameHistory.size} entries")
         realGameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
@@ -533,6 +533,7 @@ class TripleRepetitionTest {
         // Verificar el estado del juego
         println("isGameOver: ${isGameOver(stateAfterMove4WithTurn)}")
         println("Winner: ${getWinner(stateAfterMove4WithTurn)}")
+        println("After moves: $moves")
 
         // No hacemos asserts aquí - solo queremos el output para debug
     }

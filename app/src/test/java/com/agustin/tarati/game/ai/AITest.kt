@@ -12,10 +12,10 @@ import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.GameStateBuilder
-import com.agustin.tarati.game.logic.createGameState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

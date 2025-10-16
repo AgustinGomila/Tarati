@@ -8,15 +8,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.ui.helpers.endGameState
 import com.agustin.tarati.ui.helpers.initialGameStateWithUpgrades
 import com.agustin.tarati.ui.helpers.midGameState
@@ -51,17 +55,62 @@ fun Board(
     state: BoardState,
     events: BoardEvents,
     viewModel: BoardViewModel = viewModel(),
+    animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
+    var previousGameState by remember { mutableStateOf<GameState?>(null) }
+    val isAnimating by animationViewModel.isAnimating.collectAsState()
+
+    // Efecto para sincronizar el estado inicial
+    LaunchedEffect(Unit) {
+        animationViewModel.syncState(state.gameState)
+        previousGameState = state.gameState
+    }
+
+    // Efecto para procesar movimientos
+    LaunchedEffect(state.lastMove, state.gameState, isAnimating) {
+        val lastMove = state.lastMove
+        if (lastMove != null && previousGameState != null && !isAnimating) {
+            val currentGameState = state.gameState
+
+            // Verificar que el movimiento es válido y diferente del estado anterior
+            if (isValidMoveTransition(previousGameState!!, currentGameState, lastMove)) {
+                val success = animationViewModel.processMove(
+                    move = lastMove,
+                    oldGameState = previousGameState!!,
+                    newGameState = currentGameState,
+                    debug = debug
+                )
+
+                if (success) {
+                    previousGameState = currentGameState
+                }
+            }
+        }
+    }
+
+    // Sincronizar estado cuando no hay animaciones y el estado cambió
+    LaunchedEffect(state.gameState, isAnimating) {
+        if (!isAnimating && state.gameState != previousGameState) {
+            animationViewModel.syncState(state.gameState)
+            previousGameState = state.gameState
+        }
+    }
+
+    // Efecto para reset
     LaunchedEffect(state.newGame) {
         if (state.newGame) {
             viewModel.resetSelection()
+            animationViewModel.reset()
+            previousGameState = null
             events.onResetCompleted()
         }
     }
 
     val vmSelectedPiece by viewModel.selectedPiece.collectAsState()
     val vmValidMoves by viewModel.validMoves.collectAsState()
+    val visualState by animationViewModel.visualState.collectAsState()
+    val animatedPieces by animationViewModel.animatedPieces.collectAsState()
 
     Box(
         modifier = modifier
@@ -71,35 +120,84 @@ fun Board(
             modifier = Modifier.fillMaxSize(),
             selectedPiece = vmSelectedPiece,
             validMoves = vmValidMoves,
-            boardState = state,
+            boardState = state.copy(
+                gameState = GameState(
+                    checkers = visualState.checkers,
+                    currentTurn = visualState.currentTurn ?: state.gameState.currentTurn
+                )
+            ),
+            animatedPieces = animatedPieces,
             tapEvents = object : TapEvents {
                 override fun onSelected(from: String, valid: List<String>) {
-                    viewModel.updateSelectedPiece(from)
-                    viewModel.updateValidMoves(valid)
+                    if (!isAnimating) {
+                        viewModel.updateSelectedPiece(from)
+                        viewModel.updateValidMoves(valid)
+                    }
                 }
 
                 override fun onMove(from: String, to: String) {
-                    events.onMove(from, to)
-                    viewModel.resetSelection()
+                    if (!isAnimating) {
+                        events.onMove(from, to)
+                        viewModel.resetSelection()
+                    }
                 }
 
                 override fun onInvalid(from: String, valid: List<String>) {
-                    viewModel.updateSelectedPiece(from)
-                    viewModel.updateValidMoves(valid)
+                    if (!isAnimating) {
+                        viewModel.updateSelectedPiece(from)
+                        viewModel.updateValidMoves(valid)
+                    }
                 }
 
                 override fun onEditPieceRequested(from: String) {
-                    events.onEditPiece(from)
+                    if (!isAnimating) {
+                        events.onEditPiece(from)
+                    }
                 }
 
                 override fun onCancel() {
-                    viewModel.resetSelection()
+                    if (!isAnimating) {
+                        viewModel.resetSelection()
+                    }
                 }
             },
             debug = debug
         )
+
+        // Bloquear interacciones durante animaciones
+        if (isAnimating) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                awaitPointerEvent()
+                            }
+                        }
+                    }
+            )
+        }
     }
 }
+
+private fun isValidMoveTransition(oldState: GameState, newState: GameState, move: Move): Boolean {
+    // Verificar que hay un cambio real en el estado
+    if (oldState.checkers == newState.checkers) return false
+
+    // Verificar que hay cambios consistentes
+    val movedPieceExistsOldState = oldState.checkers.containsKey(move.from)
+    val destinationFreeInOldState = !oldState.checkers.containsKey(move.to)
+    val movedPieceExistsInNewState = newState.checkers.containsKey(move.to)
+    val originFreeInNewState = !newState.checkers.containsKey(move.from)
+
+    return movedPieceExistsInNewState &&
+            originFreeInNewState &&
+            destinationFreeInOldState &&
+            movedPieceExistsOldState
+}
+
+// region Previews
 
 @Composable
 fun BoardPreview(
@@ -108,6 +206,7 @@ fun BoardPreview(
     labelsVisible: Boolean = true,
     isEditing: Boolean = false,
     viewModel: BoardViewModel = viewModel(),
+    animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
     TaratiTheme {
@@ -132,7 +231,8 @@ fun BoardPreview(
                     if (debug) println("Reset completed")
                 }
             },
-            viewModel = viewModel
+            viewModel = viewModel,
+            animationViewModel = animationViewModel,
         )
     }
 }
@@ -242,3 +342,5 @@ fun BoardPreview_Landscape_Editing() {
         )
     }
 }
+
+// endregion Previews

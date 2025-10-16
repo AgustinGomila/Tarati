@@ -414,7 +414,6 @@ fun GameStateIndicator(gameState: GameState, playerSide: Color) {
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AIDifficultyControls(
@@ -527,6 +526,8 @@ fun DifficultySelector(
         }
     }
 }
+
+// region Previews
 
 @Preview(showBackground = true, widthDp = 280, heightDp = 800)
 @Composable
@@ -641,3 +642,5 @@ fun SidebarPreview_ExpandedDropdown() {
         )
     }
 }
+
+// endregion Previews

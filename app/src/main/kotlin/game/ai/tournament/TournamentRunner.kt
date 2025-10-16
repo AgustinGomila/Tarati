@@ -11,12 +11,10 @@ import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.hashBoard
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.hashBoard
 import kotlin.math.roundToInt
-
-infix fun <A, B> A.pairOf(that: B): Pair<A, B> = Pair(this, that)
 
 // ==================== Configuración ====================
 

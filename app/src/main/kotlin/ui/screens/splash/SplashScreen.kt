@@ -28,12 +28,6 @@ import com.agustin.tarati.R
 import com.agustin.tarati.ui.navigation.ScreenDestinations
 import kotlinx.coroutines.delay
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewSplashScreen() {
-    SplashScreen()
-}
-
 @Composable
 fun SplashScreen(navController: NavController? = null) {
     val rotation: Animatable<Float, AnimationVector1D> = remember { Animatable(initialValue = 0f) }
@@ -114,4 +108,10 @@ fun DrawRotatedLogo(rotation: Animatable<Float, AnimationVector1D>) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewSplashScreen() {
+    SplashScreen()
 }
