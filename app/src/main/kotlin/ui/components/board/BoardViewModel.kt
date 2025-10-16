@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class BoardViewModel : ViewModel() {
-    
+
     private val _selectedPiece = MutableStateFlow(null as String?)
     private val _validMoves = MutableStateFlow(listOf<String>())
 
