@@ -13,10 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.GameBoard.adjacencyMap
-import com.agustin.tarati.game.core.GameBoard.isForwardMove
-import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.createGameState
 import com.agustin.tarati.ui.helpers.endGameState
@@ -26,6 +24,7 @@ import com.agustin.tarati.ui.theme.TaratiTheme
 
 data class BoardState(
     val gameState: GameState,
+    val lastMove: Move? = null,
     val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     val labelsVisible: Boolean = true,
     val newGame: Boolean = false,
@@ -52,6 +51,7 @@ fun Board(
     state: BoardState,
     events: BoardEvents,
     viewModel: BoardViewModel = viewModel(),
+    debug: Boolean = false
 ) {
     LaunchedEffect(state.newGame) {
         if (state.newGame) {
@@ -95,113 +95,9 @@ fun Board(
                 override fun onCancel() {
                     viewModel.resetSelection()
                 }
-            })
-    }
-}
-
-fun handleTap(
-    tappedVertex: String,
-    gameState: GameState,
-    selectedPiece: String?,
-    tapEvents: TapEvents,
-    debug: Boolean = false,
-) {
-    if (debug) println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$selectedPiece")
-
-    if (selectedPiece == null) {
-        // Seleccionar pieza
-        selectPiece(
-            gameState = gameState,
-            from = tappedVertex,
-            onSelected = { from, valid -> tapEvents.onSelected(from, valid) })
-    } else {
-        // Mover pieza
-        if (debug) println("Attempting move from $selectedPiece to $tappedVertex")
-
-        if (tappedVertex != selectedPiece) {
-            movePiece(
-                gameState = gameState,
-                selectedPiece = selectedPiece,
-                tappedVertex = tappedVertex,
-                onMove = { from, to -> tapEvents.onMove(from, to) },
-                onInvalid = { from, valid -> tapEvents.onInvalid(from, valid) },
-                onCancel = { tapEvents.onCancel() }
-            )
-        } else {
-            // Tocar la misma pieza: deseleccionar
-            if (debug) println("Deselecting piece")
-            tapEvents.onCancel()
-        }
-    }
-}
-
-private fun movePiece(
-    gameState: GameState,
-    selectedPiece: String,
-    tappedVertex: String,
-    onMove: (from: String, to: String) -> Unit,
-    onInvalid: (from: String, valid: List<String>) -> Unit,
-    onCancel: () -> Unit,
-    debug: Boolean = false
-) {
-    if (tappedVertex != selectedPiece) {
-        val isValid = isValidMove(gameState, selectedPiece, tappedVertex)
-        if (debug) println("Move validation: $selectedPiece -> $tappedVertex = $isValid")
-
-        if (isValid) {
-            if (debug) println("Calling onMove with: $selectedPiece, $tappedVertex")
-            onMove(selectedPiece, tappedVertex)
-        } else {
-            if (debug) println("Move is invalid")
-            // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
-            val checker = gameState.checkers[tappedVertex]
-            if (checker != null && checker.color == gameState.currentTurn) {
-                val validMoves = adjacencyMap[tappedVertex]?.filter { to ->
-                    !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
-                        checker.color,
-                        tappedVertex,
-                        to
-                    ))
-                } ?: emptyList()
-                onInvalid(tappedVertex, validMoves)
-            } else {
-                onCancel()
-            }
-        }
-    } else {
-        // Tocar la misma pieza: deseleccionar
-        if (debug) println("Deselecting piece")
-        onCancel()
-    }
-}
-
-private fun selectPiece(
-    gameState: GameState,
-    from: String,
-    onSelected: (from: String, valid: List<String>) -> Unit,
-    debug: Boolean = false
-) {
-    val checker = gameState.checkers[from]
-    if (debug) println("Checking piece: $checker at $from, currentTurn: ${gameState.currentTurn}")
-
-    if (checker != null && checker.color == gameState.currentTurn) {
-
-        if (debug) println("Piece selected: $from")
-
-        // Calcular movimientos válidos
-        val validMoves = adjacencyMap[from]?.filter { to ->
-            val isValid = !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
-                checker.color,
-                from,
-                to
-            ))
-            if (debug) println("Move $from -> $to: valid=$isValid")
-            isValid
-        } ?: emptyList()
-        onSelected(from, validMoves)
-        if (debug) println("Highlighted moves: $validMoves")
-    } else {
-        if (debug) println("Cannot select: checker=$checker, currentTurn=${gameState.currentTurn}")
+            },
+            debug = debug
+        )
     }
 }
 
@@ -218,6 +114,7 @@ fun BoardPreview(
         Board(
             state = BoardState(
                 gameState = gameState,
+                lastMove = null,
                 boardOrientation = orientation,
                 labelsVisible = labelsVisible,
                 isEditing = isEditing,
@@ -239,7 +136,6 @@ fun BoardPreview(
         )
     }
 }
-
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable

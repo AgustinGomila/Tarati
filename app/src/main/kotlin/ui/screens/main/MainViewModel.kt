@@ -183,6 +183,15 @@ class MainViewModel() : ViewModel() {
         }
     }
 
+    fun startGame(playerSide: Color) {
+        endEditing()
+
+        updatePlayerSide(playerSide)
+        updateHistory(emptyList())
+        updateMoveIndex(-1)
+        updateGameState(initialGameState())
+    }
+
     fun startGameFromEditedState() {
         val currentState = _gameState.value
         // Validar que la distribución final sea válida
@@ -192,9 +201,10 @@ class MainViewModel() : ViewModel() {
             return
         }
 
-        _gameState.value = currentState.copy(currentTurn = _editTurn.value)
-        _isEditing.value = false
-        _history.value = emptyList()
-        _moveIndex.value = -1
+        endEditing()
+
+        updateHistory(emptyList())
+        updateMoveIndex(-1)
+        updateGameState(currentState.copy(currentTurn = _editTurn.value))
     }
 }

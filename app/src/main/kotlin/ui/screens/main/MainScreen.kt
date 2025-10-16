@@ -126,6 +126,7 @@ fun MainScreen(
 
     var stopAI by remember { mutableStateOf(false) }
     var resetBoard by remember { mutableStateOf(false) }
+    var lastMove by remember { mutableStateOf<Move?>(null) }
 
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
@@ -143,6 +144,8 @@ fun MainScreen(
         stopAI = false
 
         if (debug) println("Applying move: $from -> $to")
+
+        lastMove = Move(from, to)
 
         val newBoardState = applyMoveToBoard(vmGameState, from, to)
 
@@ -235,11 +238,7 @@ fun MainScreen(
     fun startNewGame(playerSide: Color) {
         clearAIHistory()
 
-        viewModel.endEditing()
-        viewModel.updatePlayerSide(playerSide)
-        viewModel.updateHistory(emptyList())
-        viewModel.updateMoveIndex(-1)
-        viewModel.updateGameState(initialGameState())
+        viewModel.startGame(playerSide)
 
         showNewGameDialog = false
         showGameOverDialog = false
@@ -306,13 +305,13 @@ fun MainScreen(
         )
     }
 
-    val onResetBoardCompleted = {
+    val resetBoardCompleted = {
         resetBoard = false
         if (debug) println("Board reset completed")
     }
 
     // Función para manejar edición de piezas
-    fun handleEditPiece(vertexId: String) {
+    fun editPiece(vertexId: String) {
         if (vmIsEditing) {
             viewModel.editPiece(vertexId)
         }
@@ -490,6 +489,7 @@ fun MainScreen(
                         modifier = Modifier.weight(1f),
                         state = CreateBoardState(
                             gameState = vmGameState,
+                            lastMove = lastMove,
                             playerSide = vmPlayerSide,
                             isLandscapeScreen = isLandscapeScreen,
                             isEditing = vmIsEditing,
@@ -498,12 +498,13 @@ fun MainScreen(
                             resetBoard = resetBoard,
                             labelsVisible = vmLabelsVisible
                         ),
-                        events = object : CreateBoardEvents {
-                            override fun onApplyMove(from: String, to: String) = applyMove(from, to)
-                            override fun handleEditPiece(from: String) = handleEditPiece(from)
-                            override fun onResetBoardCompleted() = onResetBoardCompleted()
+                        events = object : BoardEvents {
+                            override fun onMove(from: String, to: String) = applyMove(from, to)
+                            override fun onEditPiece(from: String) = editPiece(from)
+                            override fun onResetCompleted() = resetBoardCompleted()
                         },
-                        content = { EditControls(isLandscapeScreen) }
+                        content = { EditControls(isLandscapeScreen) },
+                        debug = debug
                     )
                 }
             }
@@ -545,6 +546,7 @@ fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, isEditing: Boo
 
 data class CreateBoardState(
     val gameState: GameState,
+    val lastMove: Move?,
     val playerSide: Color,
     val isLandscapeScreen: Boolean,
     val isEditing: Boolean,
@@ -554,22 +556,18 @@ data class CreateBoardState(
     val labelsVisible: Boolean
 )
 
-interface CreateBoardEvents {
-    fun onApplyMove(from: String, to: String)
-    fun handleEditPiece(from: String)
-    fun onResetBoardCompleted()
-}
-
 @Composable
 fun CreateBoard(
     modifier: Modifier = Modifier,
     state: CreateBoardState,
-    events: CreateBoardEvents,
-    content: @Composable () -> Unit
+    events: BoardEvents,
+    content: @Composable () -> Unit,
+    debug: Boolean = false,
 ) {
     // Construir el estado para Board
     val boardState = BoardState(
         gameState = state.gameState,
+        lastMove = state.lastMove,
         boardOrientation = if (state.isEditing) {
             state.editBoardOrientation
         } else {
@@ -584,16 +582,16 @@ fun CreateBoard(
     val boardEvents = object : BoardEvents {
         override fun onMove(from: String, to: String) {
             if (!state.isEditing) {
-                events.onApplyMove(from, to)
+                events.onMove(from, to)
             }
         }
 
         override fun onEditPiece(from: String) {
-            events.handleEditPiece(from)
+            events.onEditPiece(from)
         }
 
         override fun onResetCompleted() {
-            events.onResetBoardCompleted()
+            events.onResetCompleted()
         }
     }
 
@@ -605,7 +603,8 @@ fun CreateBoard(
         Board(
             modifier = Modifier.fillMaxSize(),
             state = boardState,
-            events = boardEvents
+            events = boardEvents,
+            debug = debug
         )
 
         if (state.isEditing) {
@@ -1184,6 +1183,7 @@ private fun MainScreenPreviewContent(
         // Estado y eventos para CreateBoard
         val createBoardState = CreateBoardState(
             gameState = previewGameState,
+            lastMove = null,
             playerSide = currentPlayerSide,
             isLandscapeScreen = landScape,
             isEditing = currentIsEditing,
@@ -1193,16 +1193,16 @@ private fun MainScreenPreviewContent(
             labelsVisible = currentLabelsVisible
         )
 
-        val createBoardEvents = object : CreateBoardEvents {
-            override fun onApplyMove(from: String, to: String) {
+        val createBoardEvents = object : BoardEvents {
+            override fun onMove(from: String, to: String) {
                 if (debug) println("Move from $from to $to")
             }
 
-            override fun handleEditPiece(from: String) {
+            override fun onEditPiece(from: String) {
                 if (debug) println("Edit piece at $from")
             }
 
-            override fun onResetBoardCompleted() {
+            override fun onResetCompleted() {
                 if (debug) println("Board reset completed")
             }
         }
@@ -1402,9 +1402,10 @@ fun EditingModePreviewContent(
         // Crear estado para Board
         val boardState = BoardState(
             gameState = exampleGameState,
+            lastMove = null,
             boardOrientation = boardOrientation,
             labelsVisible = false,
-            isEditing = isEditing
+            isEditing = isEditing,
         )
 
         // Crear eventos para Board

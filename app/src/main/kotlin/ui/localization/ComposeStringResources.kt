@@ -41,7 +41,7 @@ fun localizedString(@StringRes id: Int, vararg args: Any): String {
     val locale = LocalAppLanguage.current
     val deviceConfig = LocalConfiguration.current
 
-    // Cache por locale + id + args
+    // Cache por locale + vertexId + args
     return remember(id, locale, args) {
         getLocalizedString(context, deviceConfig, locale, id, *args)
     }
