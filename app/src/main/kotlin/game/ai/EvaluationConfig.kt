@@ -8,17 +8,17 @@ data class EvaluationConfig(
     val difficulty: Difficulty = Difficulty.DEFAULT,
 
     // Material
-    val materialScore: Int = 144,
-    val upgradedPieceScore: Int = 300,
+    val cobScore: Int = 144,
+    val rocScore: Int = 300,
 
     // Capture
-    val captureNormalBonus: Int = 70,
-    val captureUpgradedBonus: Int = 200,
+    val flipCobBonus: Int = 70,
+    val flipRocBonus: Int = 200,
 
     // Strategic
-    val opponentBasePressureScore: Int = 40,
+    val opponentDomesticPressureScore: Int = 40,
     val controlCenterScore: Int = 42,
-    val homeBaseControlScore: Int = 30,
+    val domesticControlScore: Int = 30,
 
     // Tactic
     val mobilityScore: Int = 10,
@@ -50,9 +50,9 @@ data class EvaluationConfig(
         val MEDIUM = EvaluationConfig(
             name = Difficulty.MEDIUM.name,
             difficulty = Difficulty.MEDIUM,
-            materialScore = 180,
-            upgradedPieceScore = 345,
-            captureNormalBonus = 77,
+            cobScore = 180,
+            rocScore = 345,
+            flipCobBonus = 77,
             controlCenterScore = 33,
             mobilityScore = 9
         )
@@ -60,21 +60,21 @@ data class EvaluationConfig(
         val HARD = EvaluationConfig(
             name = Difficulty.HARD.name,
             difficulty = Difficulty.HARD,
-            materialScore = 180,
-            upgradedPieceScore = 379,
-            captureNormalBonus = 77,
-            captureUpgradedBonus = 220,
-            controlCenterScore = 39,
-            mobilityScore = 13
+            cobScore = 206,
+            rocScore = 414,
+            flipCobBonus = 77,
+            flipRocBonus = 220,
+            controlCenterScore = 36,
+            mobilityScore = 11
         )
 
         val CHAMPION = EvaluationConfig(
             name = Difficulty.CHAMPION.name,
             difficulty = Difficulty.CHAMPION,
-            materialScore = 216,
-            upgradedPieceScore = 454,
-            captureNormalBonus = 77,
-            captureUpgradedBonus = 220,
+            cobScore = 216,
+            rocScore = 454,
+            flipCobBonus = 77,
+            flipRocBonus = 220,
             controlCenterScore = 39,
             mobilityScore = 13
         )

@@ -3,22 +3,22 @@ package com.agustin.tarati.game.core
 import com.agustin.tarati.game.logic.GameStateBuilder
 
 data class GameState(
-    val checkers: Map<String, Checker>,
+    val cobs: Map<String, Cob>,
     val currentTurn: Color
 )
 
 fun initialGameState(currentTurn: Color = Color.WHITE): GameState {
     val map = mapOf(
-        "C1" to Checker(Color.WHITE, false),
-        "C2" to Checker(Color.WHITE, false),
-        "D1" to Checker(Color.WHITE, false),
-        "D2" to Checker(Color.WHITE, false),
-        "C7" to Checker(Color.BLACK, false),
-        "C8" to Checker(Color.BLACK, false),
-        "D3" to Checker(Color.BLACK, false),
-        "D4" to Checker(Color.BLACK, false)
+        "C1" to Cob(Color.WHITE, false),
+        "C2" to Cob(Color.WHITE, false),
+        "D1" to Cob(Color.WHITE, false),
+        "D2" to Cob(Color.WHITE, false),
+        "C7" to Cob(Color.BLACK, false),
+        "C8" to Cob(Color.BLACK, false),
+        "D3" to Cob(Color.BLACK, false),
+        "D4" to Cob(Color.BLACK, false)
     )
-    return GameState(checkers = map, currentTurn = currentTurn)
+    return GameState(cobs = map, currentTurn = currentTurn)
 }
 
 fun createGameState(block: GameStateBuilder.() -> Unit): GameState {
@@ -26,5 +26,5 @@ fun createGameState(block: GameStateBuilder.() -> Unit): GameState {
 }
 
 fun cleanGameState(currentTurn: Color = Color.WHITE): GameState {
-    return GameState(checkers = mapOf(), currentTurn = currentTurn)
+    return GameState(cobs = mapOf(), currentTurn = currentTurn)
 }

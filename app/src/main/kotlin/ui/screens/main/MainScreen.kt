@@ -62,12 +62,12 @@ import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.EvaluationConfig
-import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
+import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -82,11 +82,13 @@ import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.BoardEvents
 import com.agustin.tarati.ui.components.board.BoardState
-import com.agustin.tarati.ui.components.board.TurnIndicator
 import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.components.sidebar.SidebarEvents
 import com.agustin.tarati.ui.components.sidebar.SidebarGameState
 import com.agustin.tarati.ui.components.sidebar.SidebarUIState
+import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
+import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
+import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
 import com.agustin.tarati.ui.helpers.PreviewConfig
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
@@ -195,7 +197,7 @@ fun MainScreen(
     }
 
     LaunchedEffect(evalConfig) {
-        TaratiAI.setEvaluationConfig(evalConfig)
+        setEvaluationConfig(evalConfig)
     }
 
     // Manejar transiciones de estado
@@ -233,8 +235,8 @@ fun MainScreen(
         }
     }
 
-    // Disparadores de Efectos
-    val effectLaunchers = listOf(
+    // Lanzadores de pensamiento de IA
+    val aiThinkingLauncher = listOf(
         vmGameState.currentTurn,
         vmAIEnabled,
         stopAI,
@@ -242,7 +244,7 @@ fun MainScreen(
         vmIsEditing
     )
 
-    LaunchedEffect(effectLaunchers) {
+    LaunchedEffect(aiThinkingLauncher) {
         if (!vmAIEnabled || stopAI || vmIsEditing || isAnimating || gameStatus != GameStateStatus.PLAYING) {
             if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus")
             return@LaunchedEffect
@@ -363,8 +365,8 @@ fun MainScreen(
 
     // Calcular conteo de piezas
     val pieceCounts = remember(vmGameState) {
-        val white = vmGameState.checkers.values.count { it.color == WHITE }
-        val black = vmGameState.checkers.values.count { it.color == BLACK }
+        val white = vmGameState.cobs.values.count { it.color == WHITE }
+        val black = vmGameState.cobs.values.count { it.color == BLACK }
         PieceCounts(white, black)
     }
 
@@ -560,6 +562,11 @@ fun MainScreen(
                             override fun onEditPiece(from: String) = editPiece(from)
                             override fun onResetCompleted() = Unit
                         },
+                        indicatorEvents = object : IndicatorEvents {
+                            override fun onTouch() {
+                                showNewGameDialog = true
+                            }
+                        },
                         content = { EditControls(isLandscapeScreen) },
                         debug = debug
                     )
@@ -617,18 +624,18 @@ fun CreateBoard(
     modifier: Modifier = Modifier,
     state: CreateBoardState,
     events: BoardEvents,
+    indicatorEvents: IndicatorEvents,
     content: @Composable () -> Unit,
     debug: Boolean = false,
-    animationViewModel: BoardAnimationViewModel = viewModel(),
+    boardAnimationViewModel: BoardAnimationViewModel = viewModel(),
 ) {
     // Construir el estado para Board
     val boardState = BoardState(
         gameState = state.gameState,
         lastMove = state.lastMove,
-        boardOrientation = if (state.isEditing) {
-            state.editBoardOrientation
-        } else {
-            toBoardOrientation(state.isLandscapeScreen, state.playerSide)
+        boardOrientation = when {
+            state.isEditing -> state.editBoardOrientation
+            else -> toBoardOrientation(state.isLandscapeScreen, state.playerSide)
         },
         labelsVisible = state.labelsVisible,
         isEditing = state.isEditing
@@ -651,7 +658,20 @@ fun CreateBoard(
         }
     }
 
-    val isAnimating by animationViewModel.isAnimating.collectAsState()
+    val isAnimating by boardAnimationViewModel.isAnimating.collectAsState()
+    var turnState: TurnIndicatorState by remember { mutableStateOf(TurnIndicatorState.NEUTRAL) }
+    val gameState = state.gameState
+
+    LaunchedEffect(isAnimating, gameState) {
+        val aiThinking = state.isAIThinking
+
+        turnState = when {
+            state == initialGameState(gameState.currentTurn) && !aiThinking -> TurnIndicatorState.HUMAN_TURN
+            isGameOver(gameState) -> TurnIndicatorState.NEUTRAL
+            aiThinking && !isAnimating -> TurnIndicatorState.AI_THINKING
+            else -> TurnIndicatorState.HUMAN_TURN
+        }
+    }
 
     Box(
         modifier
@@ -660,10 +680,10 @@ fun CreateBoard(
     ) {
         Board(
             modifier = Modifier.fillMaxSize(),
-            state = boardState,
+            boardState = boardState,
             events = boardEvents,
             debug = debug,
-            animationViewModel = animationViewModel,
+            animationViewModel = boardAnimationViewModel,
         )
 
         if (state.isEditing) {
@@ -672,7 +692,8 @@ fun CreateBoard(
             TurnIndicator(
                 modifier = Modifier.align(Alignment.TopEnd),
                 currentTurn = state.gameState.currentTurn,
-                isAIThinking = state.isAIThinking && !isAnimating
+                state = turnState,
+                indicatorEvents = indicatorEvents,
             )
         }
     }
@@ -709,17 +730,13 @@ fun EditingModePreviewContent(
         )
 
         // Crear eventos para Board
-        val boardEvents = object : BoardEvents {
-            override fun onMove(from: String, to: String) {}
-            override fun onEditPiece(from: String) {}
-            override fun onResetCompleted() {}
-        }
+        val boardEvents = createPreviewBoardEvents(false)
 
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 modifier = Modifier.fillMaxSize(),
-                state = boardState,
-                events = boardEvents
+                boardState = boardState,
+                events = boardEvents,
             )
 
             EditControlsPreview(
@@ -1285,6 +1302,7 @@ private fun MainScreenPreviewContent(
         )
 
         val createBoardEvents = createPreviewBoardEvents(config.debug)
+        val indicatorEvents = createPreviewIndicatorEvents(config.debug)
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -1331,6 +1349,7 @@ private fun MainScreenPreviewContent(
                             modifier = Modifier.weight(1f),
                             state = createBoardState,
                             events = createBoardEvents,
+                            indicatorEvents = indicatorEvents,
                             content = {
                                 EditControlsPreview(
                                     isLandscapeScreen = config.landScape,
@@ -1652,6 +1671,14 @@ private fun createPreviewBoardEvents(debug: Boolean): BoardEvents {
 
         override fun onResetCompleted() {
             if (debug) println("Board reset completed")
+        }
+    }
+}
+
+private fun createPreviewIndicatorEvents(debug: Boolean): IndicatorEvents {
+    return object : IndicatorEvents {
+        override fun onTouch() {
+            if (debug) println("Indicator turn clicked")
         }
     }
 }

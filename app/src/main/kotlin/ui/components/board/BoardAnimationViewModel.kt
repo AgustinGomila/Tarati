@@ -2,7 +2,7 @@ package com.agustin.tarati.ui.components.board
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameState
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 data class AnimatedPiece(
     val vertexId: String,
-    val checker: Checker,
+    val cob: Cob,
     val currentPos: String,
     val targetPos: String,
     val animationProgress: Float = 1f,
@@ -26,7 +26,7 @@ data class AnimatedPiece(
 )
 
 data class VisualGameState(
-    val checkers: Map<String, Checker> = emptyMap(),
+    val cobs: Map<String, Cob> = emptyMap(),
     val currentTurn: Color? = null
 )
 
@@ -51,7 +51,7 @@ class BoardAnimationViewModel : ViewModel() {
     fun syncState(gameState: GameState) {
         if (!_isAnimating.value) {
             _visualState.value = VisualGameState(
-                checkers = gameState.checkers.toMap(),
+                cobs = gameState.cobs.toMap(),
                 currentTurn = gameState.currentTurn
             )
         }
@@ -68,15 +68,15 @@ class BoardAnimationViewModel : ViewModel() {
 
             // SINCRONIZAR: Asegurar que el estado visual coincide con el estado anterior del juego
             _visualState.value = VisualGameState(
-                checkers = oldGameState.checkers.toMap(),
+                cobs = oldGameState.cobs.toMap(),
                 currentTurn = oldGameState.currentTurn
             )
             previousVisualState = _visualState.value
 
             // Remover solo la pieza que se va a mover del estado visual inicial
-            val visualStateWithoutMovedPiece = oldGameState.checkers - move.from
+            val visualStateWithoutMovedPiece = oldGameState.cobs - move.from
             _visualState.value = VisualGameState(
-                checkers = visualStateWithoutMovedPiece,
+                cobs = visualStateWithoutMovedPiece,
                 currentTurn = oldGameState.currentTurn
             )
 
@@ -91,7 +91,7 @@ class BoardAnimationViewModel : ViewModel() {
 
             // 5. ACTUALIZAR ESTADO VISUAL FINAL
             _visualState.value = VisualGameState(
-                checkers = newGameState.checkers.toMap(),
+                cobs = newGameState.cobs.toMap(),
                 currentTurn = newGameState.currentTurn
             )
 
@@ -103,17 +103,17 @@ class BoardAnimationViewModel : ViewModel() {
 
     private suspend fun animateConversions(move: Move, oldGameState: GameState, newGameState: GameState) {
         val adjacentVertices = adjacencyMap[move.to] ?: emptyList()
-        val conversions = mutableListOf<Pair<String, Checker>>() // Guardar vertexId y nuevo checker
+        val conversions = mutableListOf<Pair<String, Cob>>() // Guardar vertexId y nuevo cob
 
         // Detectar vértices adyacentes que cambiaron de color
         adjacentVertices.forEach { vertexId ->
-            val oldChecker = oldGameState.checkers[vertexId]
-            val newChecker = newGameState.checkers[vertexId]
+            val oldCob = oldGameState.cobs[vertexId]
+            val newCob = newGameState.cobs[vertexId]
 
-            if (oldChecker != null && newChecker != null &&
-                oldChecker.color != newChecker.color
+            if (oldCob != null && newCob != null &&
+                oldCob.color != newCob.color
             ) {
-                conversions.add(vertexId to newChecker)
+                conversions.add(vertexId to newCob)
             }
         }
 
@@ -122,18 +122,18 @@ class BoardAnimationViewModel : ViewModel() {
         val duration = convertDuration
         val steps = animationSteps
 
-        conversions.forEach { (vertexId, newChecker) ->
+        conversions.forEach { (vertexId, newCob) ->
             // Crear animated piece para la conversión (pieza en su posición actual)
             val animatedPiece = AnimatedPiece(
                 vertexId = vertexId,
-                checker = newChecker,
+                cob = newCob,
                 currentPos = vertexId,
                 targetPos = vertexId,
                 animationProgress = 1f,
                 upgradeProgress = 1f,
                 conversionProgress = 0f,
                 isConverting = true,
-                targetColor = newChecker.color
+                targetColor = newCob.color
             )
 
             // Agregar a piezas animadas
@@ -151,9 +151,9 @@ class BoardAnimationViewModel : ViewModel() {
             }
 
             // Actualizar estado visual para esta pieza convertida
-            val currentVisualState = _visualState.value.checkers.toMutableMap()
-            currentVisualState[vertexId] = newChecker
-            _visualState.value = _visualState.value.copy(checkers = currentVisualState)
+            val currentVisualState = _visualState.value.cobs.toMutableMap()
+            currentVisualState[vertexId] = newCob
+            _visualState.value = _visualState.value.copy(cobs = currentVisualState)
 
             // Remover de piezas animadas
             _animatedPieces.value -= vertexId
@@ -161,22 +161,22 @@ class BoardAnimationViewModel : ViewModel() {
     }
 
     private suspend fun animateUpgrades(oldGameState: GameState, newGameState: GameState) {
-        val upgrades = mutableListOf<Pair<String, Checker>>() // Guardar vertexId y nuevo checker
+        val upgrades = mutableListOf<Pair<String, Cob>>() // Guardar vertexId y nuevo cob
 
         // Detectar piezas que se mejoraron (incluyendo la pieza movida)
-        newGameState.checkers.forEach { (vertexId, newChecker) ->
-            val oldChecker = oldGameState.checkers[vertexId]
+        newGameState.cobs.forEach { (vertexId, newCob) ->
+            val oldCob = oldGameState.cobs[vertexId]
 
             val wasUpgraded = when {
                 // Pieza existente que se mejoró
-                oldChecker != null && !oldChecker.isUpgraded && newChecker.isUpgraded -> true
+                oldCob != null && !oldCob.isUpgraded && newCob.isUpgraded -> true
                 // Pieza nueva que está mejorada (movida a base enemiga)
-                oldChecker == null && newChecker.isUpgraded -> true
+                oldCob == null && newCob.isUpgraded -> true
                 else -> false
             }
 
             if (wasUpgraded) {
-                upgrades.add(vertexId to newChecker)
+                upgrades.add(vertexId to newCob)
             }
         }
 
@@ -185,12 +185,12 @@ class BoardAnimationViewModel : ViewModel() {
         val duration = upgradeDuration
         val steps = animationSteps
 
-        upgrades.forEach { (vertexId, newChecker) ->
+        upgrades.forEach { (vertexId, newCob) ->
             // Solo animar si la pieza no está actualmente siendo animada por movimiento
             if (!_animatedPieces.value.containsKey(vertexId)) {
                 val animatedPiece = AnimatedPiece(
                     vertexId = vertexId,
-                    checker = newChecker,
+                    cob = newCob,
                     currentPos = vertexId,
                     targetPos = vertexId,
                     animationProgress = 1f,
@@ -213,27 +213,27 @@ class BoardAnimationViewModel : ViewModel() {
                 }
 
                 // Actualizar estado visual para esta pieza mejorada
-                val currentVisualState = _visualState.value.checkers.toMutableMap()
-                currentVisualState[vertexId] = newChecker
-                _visualState.value = _visualState.value.copy(checkers = currentVisualState)
+                val currentVisualState = _visualState.value.cobs.toMutableMap()
+                currentVisualState[vertexId] = newCob
+                _visualState.value = _visualState.value.copy(cobs = currentVisualState)
 
                 // Remover de piezas animadas
                 _animatedPieces.value -= vertexId
             } else {
                 // Si la pieza ya está siendo animada (por movimiento), solo actualizar el estado visual
-                val currentVisualState = _visualState.value.checkers.toMutableMap()
-                currentVisualState[vertexId] = newChecker
-                _visualState.value = _visualState.value.copy(checkers = currentVisualState)
+                val currentVisualState = _visualState.value.cobs.toMutableMap()
+                currentVisualState[vertexId] = newCob
+                _visualState.value = _visualState.value.copy(cobs = currentVisualState)
             }
         }
     }
 
     private suspend fun animateMovement(move: Move, newGameState: GameState) {
-        val checker = newGameState.checkers[move.to] ?: return
+        val cob = newGameState.cobs[move.to] ?: return
 
         val animatedPiece = AnimatedPiece(
             vertexId = move.to,
-            checker = checker,
+            cob = cob,
             currentPos = move.from,
             targetPos = move.to,
             animationProgress = 0f,

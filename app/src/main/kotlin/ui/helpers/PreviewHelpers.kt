@@ -10,7 +10,7 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.logic.modifyChecker
+import com.agustin.tarati.game.logic.modifyCob
 import com.agustin.tarati.game.logic.withTurn
 import com.agustin.tarati.ui.components.board.BoardState
 
@@ -19,22 +19,19 @@ import com.agustin.tarati.ui.components.board.BoardState
  */
 fun initialGameStateWithUpgrades(): GameState {
     return initialGameState()
-        .modifyChecker("C2", WHITE, true)
-        .modifyChecker("C8", BLACK, true)
+        .modifyCob("C2", WHITE, true)
+        .modifyCob("C8", BLACK, true)
 }
 
 fun midGameState(): GameState {
     return createGameState {
         setTurn(BLACK)
         // Mover algunas piezas
-        moveChecker("C1", "B1")
-        moveChecker("C7", "B4")
+        moveCob("C1", "B1")
+        moveCob("C7", "B4")
         // Crear piezas mejoradas
-        setChecker("C2", WHITE, true)
-        setChecker("C8", BLACK, true)
-        // Eliminar piezas capturadas
-        removeChecker("D1")
-        removeChecker("D3")
+        setCob("C2", WHITE, true)
+        setCob("C8", BLACK, true)
     }
 }
 
@@ -42,25 +39,17 @@ fun endGameState(turn: Color): GameState {
     return createGameState {
         setTurn(turn)
         // Pocas piezas restantes
-        setChecker("A1", WHITE, true)
-        setChecker("B3", WHITE, false)
-        setChecker("C10", BLACK, true)
-        removeChecker("C1")
-        removeChecker("C2")
-        removeChecker("C7")
-        removeChecker("C8")
-        removeChecker("D1")
-        removeChecker("D2")
-        removeChecker("D3")
-        removeChecker("D4")
+        setCob("A1", WHITE, true)
+        setCob("B3", WHITE, false)
+        setCob("C10", BLACK, true)
     }
 }
 
 fun customGameState(): GameState {
-    return initialGameState().modifyChecker("C2", WHITE, true)
-        .modifyChecker("C8", BLACK, true)
-        .modifyChecker("B1", WHITE, false)
-        .modifyChecker("B4", BLACK, false)
+    return initialGameState().modifyCob("C2", WHITE, true)
+        .modifyCob("C8", BLACK, true)
+        .modifyCob("B1", WHITE, false)
+        .modifyCob("B4", BLACK, false)
         .withTurn(BLACK)
 }
 

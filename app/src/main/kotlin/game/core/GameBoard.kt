@@ -3,6 +3,11 @@ package com.agustin.tarati.game.core
 import androidx.compose.ui.geometry.Offset
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
+import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
+import com.agustin.tarati.game.core.GameBoard.adjacencyMap
+import com.agustin.tarati.game.core.GameBoard.getCastlingMoves
+import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.logic.BoardOrientation
 import kotlin.math.cos
 import kotlin.math.pow
@@ -15,17 +20,28 @@ object GameBoard {
     private const val BOARD_MARGIN_PERCENT = 0.8f
     private const val FORWARD_MOVE_THRESHOLD = 10f
 
-    val centerVertices: List<String> = listOf(
-        "A1", // Absolute Middle
-        "B1", "B2", "B3", "B4", "B5", "B6", // Boundary
-    )
+    // A. Absolute Center
+    const val ABSOLUTE_CENTER: String = "A1"
 
-    val exteriorVertices: List<String> = listOf(
-        "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", // Circumference
-        "D1", "D2", "D3", "D4" // Domestic
-    )
+    // B. Bridge (Boundary)
+    const val BRIDGE = 'B'
+    val bridgeVertices: List<String> = listOf("B1", "B2", "B3", "B4", "B5", "B6")
 
-    val vertices: List<String> = centerVertices.plus(exteriorVertices)
+    // C. Circumference
+    const val CIRCUMFERENCE = 'C'
+    val circumferenceVertices: List<String> =
+        listOf("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12")
+
+    // D. Domestic
+    const val DOMESTIC = 'D'
+    val domesticVertices: List<String> = listOf("D1", "D2", "D3", "D4")
+
+    // Vertices that are captured during castling
+    const val WHITE_CASTLING_VERTEX = "B1"
+    const val BLACK_CASTLING_VERTEX = "B4"
+
+    val centerVertices: List<String> = listOf(ABSOLUTE_CENTER).union(bridgeVertices).toList()
+    val vertices: List<String> = centerVertices + circumferenceVertices + domesticVertices
 
     val edges: List<Pair<String, String>> = listOf(
         // Home base White
@@ -145,46 +161,41 @@ object GameBoard {
         val fromPos = getPosition(from, boardCenter, vWidth)
         val toPos = getPosition(to, boardCenter, vWidth)
 
-        return if (color == WHITE) {
-            fromPos.y - toPos.y > FORWARD_MOVE_THRESHOLD
-        } else {
-            toPos.y - fromPos.y > FORWARD_MOVE_THRESHOLD
+        return when (color) {
+            WHITE -> fromPos.y - toPos.y > FORWARD_MOVE_THRESHOLD
+            else -> toPos.y - fromPos.y > FORWARD_MOVE_THRESHOLD
         }
     }
 
     fun isValidMove(gs: GameState, from: String, to: String): Boolean {
+        val cob = gs.cobs[from] ?: return false
+        val move = Move(from, to)
+        if (move.isCastling(cob.color) && gs.getPosibleCastling(from, cob) != null)
+            return true
+
         val isAdjacent = adjacencyMap[from]?.contains(to) ?: false
         if (!isAdjacent) return false
 
-        val checker = gs.checkers[from] ?: return false
-        if (gs.checkers.containsKey(to)) return false
-
-        if (checker.color != gs.currentTurn) return false
-
-        if (!checker.isUpgraded) {
-            val boardCenter = VERTEX_WIDTH to VERTEX_WIDTH
-            val vWidth = VERTEX_WIDTH
-
-            val fromPos = getPosition(from, boardCenter, vWidth)
-            val toPos = getPosition(to, boardCenter, vWidth)
-
-            return if (checker.color == WHITE) {
-                fromPos.y - toPos.y > FORWARD_MOVE_THRESHOLD
-            } else {
-                toPos.y - fromPos.y > FORWARD_MOVE_THRESHOLD
-            }
+        return when {
+            gs.cobs.containsKey(to) -> false
+            cob.color != gs.currentTurn -> false
+            !cob.isUpgraded -> isForwardMove(cob.color, from, to)
+            else -> true
         }
-
-        return true
     }
 
     fun getAllPossibleMoves(gameState: GameState): MutableList<Move> {
         val possibleMoves = mutableListOf<Move>()
 
-        for ((from, checker) in gameState.checkers) {
-            if (checker.color != gameState.currentTurn) continue
+        for ((from, cob) in gameState.cobs) {
+            if (cob.color != gameState.currentTurn) continue
 
-            // Usar el mapa de adyacencia para obtener solo vértices conectados
+            // Obtener movimientos especiales de captura
+            val castlingMove = gameState.getPosibleCastling(from, cob)
+            if (castlingMove != null)
+                possibleMoves.add(castlingMove)
+
+            // Movimientos normales (adyacentes)
             val connectedVertices = adjacencyMap[from] ?: emptyList()
             for (to in connectedVertices) {
                 if (isValidMove(gameState, from, to)) {
@@ -201,7 +212,7 @@ object GameBoard {
         val centerX = width / 2
         val centerY = height / 2
 
-        if (vertexId == "A1") {
+        if (vertexId == ABSOLUTE_CENTER) {
             return Offset(centerX, centerY)
         }
 
@@ -209,7 +220,7 @@ object GameBoard {
         val position = vertexId.substring(1).toInt()
 
         return when (type) {
-            'B' -> {
+            BRIDGE -> {
                 val angle = (position - 1) * (Math.PI / 3)
                 Offset(
                     x = centerX + vWidth * cos(angle + Math.PI / 2).toFloat(),
@@ -217,7 +228,7 @@ object GameBoard {
                 )
             }
 
-            'C' -> {
+            CIRCUMFERENCE -> {
                 val angle = (position - 1) * (Math.PI / 6) - Math.PI / 12 + Math.PI / 2
                 val radius =
                     vWidth * (1 + sqrt(11.0 / 13)).toFloat() - (Math.PI / 12).toFloat() + (Math.PI / 2).toFloat()
@@ -227,7 +238,7 @@ object GameBoard {
                 )
             }
 
-            'D' -> {
+            DOMESTIC -> {
                 val down = if (position > 2) -1 else 1
                 val left = if (position == 1 || position == 4) 1 else -1
                 Offset(
@@ -238,6 +249,50 @@ object GameBoard {
 
             else -> Offset(centerX, centerY)
         }
+    }
+
+    fun getCastlingMoves(color: Color, from: String): Move? {
+        return if (color == WHITE) {
+            when (from) {
+                "C2" -> return Move("C2", "C1")
+                "C1" -> return Move("C1", "C2")
+                else -> null
+            }
+        } else {
+            when (from) {
+                "C7" -> return Move("C7", "C8")
+                "C8" -> return Move("C8", "C7")
+                else -> null
+            }
+        }
+    }
+}
+
+fun GameState.getValidVertex(from: String, cob: Cob): List<String> {
+    val validVertex = adjacencyMap[from]?.filter { to ->
+        val isValid = !this.cobs.containsKey(to) &&
+                (cob.isUpgraded || isForwardMove(cob.color, from, to))
+        isValid
+    } ?: emptyList()
+
+    return getPosibleCastling(from, cob)?.let { validVertex + it.to } ?: validVertex
+}
+
+fun GameState.getPosibleCastling(from: String, cob: Cob): Move? {
+    if (cob.isUpgraded) return null
+    val move = getCastlingMoves(cob.color, from) ?: return null
+
+    if (this.cobs[move.to] != null) return null
+    val flipVertex = if (cob.color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
+
+    return if (this.cobs[flipVertex]?.takeIf { it.color == cob.color.opponent() } == null) null
+    else move
+}
+
+fun Move.isCastling(cobColor: Color): Boolean {
+    return when (cobColor) {
+        WHITE -> from in listOf("C1", "C2") && to in listOf("C1", "C2")
+        BLACK -> from in listOf("C7", "C8") && to in listOf("C7", "C8")
     }
 }
 

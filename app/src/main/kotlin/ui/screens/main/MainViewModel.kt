@@ -2,7 +2,7 @@ package com.agustin.tarati.ui.screens.main
 
 import androidx.lifecycle.ViewModel
 import com.agustin.tarati.BuildConfig
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
@@ -10,13 +10,11 @@ import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.koin.core.context.GlobalContext.get
 
-class MainViewModel(val sr: SettingsRepository = get().get()) : ViewModel() {
+class MainViewModel() : ViewModel() {
 
     val isDebug: Boolean = BuildConfig.DEBUG
 
@@ -112,40 +110,40 @@ class MainViewModel(val sr: SettingsRepository = get().get()) : ViewModel() {
 
     fun editPiece(vertexId: String) {
         val currentState = _gameState.value
-        val currentChecker = currentState.checkers[vertexId]
-        val mutableCheckers = currentState.checkers.toMutableMap()
+        val currentCob = currentState.cobs[vertexId]
+        val mutableCobs = currentState.cobs.toMutableMap()
 
         val pieceCounts = getPieceCounts(currentState)
 
         when {
             // Caso 1: No hay pieza - colocar nueva (si no excedemos 8 piezas y la distribución es válida)
-            currentChecker == null -> {
+            currentCob == null -> {
                 if (canPlacePiece(_editColor.value, pieceCounts)) {
-                    mutableCheckers[vertexId] = Checker(_editColor.value, false)
+                    mutableCobs[vertexId] = Cob(_editColor.value, false)
                 }
             }
             // Caso 2: Pieza del color seleccionado - mejorar
-            currentChecker.color == _editColor.value && !currentChecker.isUpgraded -> {
-                mutableCheckers[vertexId] = currentChecker.copy(isUpgraded = true)
+            currentCob.color == _editColor.value && !currentCob.isUpgraded -> {
+                mutableCobs[vertexId] = currentCob.copy(isUpgraded = true)
             }
             // Caso 3: Pieza mejorada del color seleccionado - quitar
-            currentChecker.color == _editColor.value && currentChecker.isUpgraded -> {
-                mutableCheckers.remove(vertexId)
+            currentCob.color == _editColor.value && currentCob.isUpgraded -> {
+                mutableCobs.remove(vertexId)
             }
             // Caso 4: Pieza del color opuesto - reemplazar solo si la distribución lo permite
             else -> {
                 if (canReplacePiece(currentCounts = pieceCounts)) {
-                    mutableCheckers[vertexId] = Checker(_editColor.value, false)
+                    mutableCobs[vertexId] = Cob(_editColor.value, false)
                 }
             }
         }
 
-        _gameState.value = currentState.copy(checkers = mutableCheckers.toMap())
+        _gameState.value = currentState.copy(cobs = mutableCobs.toMap())
     }
 
     private fun getPieceCounts(state: GameState): PieceCounts {
-        val whiteCount = state.checkers.values.count { it.color == Color.WHITE }
-        val blackCount = state.checkers.values.count { it.color == Color.BLACK }
+        val whiteCount = state.cobs.values.count { it.color == Color.WHITE }
+        val blackCount = state.cobs.values.count { it.color == Color.BLACK }
         return PieceCounts(whiteCount, blackCount)
     }
 

@@ -17,10 +17,10 @@ class GameStateBuilderIntegrationTest {
         // Create a complex game state using builder
         val state = createGameState {
             setTurn(Color.WHITE)
-            setChecker("C1", Color.WHITE, false)
-            setChecker("C2", Color.WHITE, false)
-            setChecker("C7", Color.BLACK, true)
-            setChecker("C8", Color.BLACK, false)
+            setCob("C1", Color.WHITE, false)
+            setCob("C2", Color.WHITE, false)
+            setCob("C7", Color.BLACK, true)
+            setCob("C8", Color.BLACK, false)
         }
 
         // AI should be able to analyze this state
@@ -36,21 +36,21 @@ class GameStateBuilderIntegrationTest {
         val state = createGameState {
             setTurn(Color.WHITE)
             // Set up white pieces
-            setChecker("B1", Color.WHITE, true)
-            setChecker("C3", Color.WHITE, false)
-            setChecker("C4", Color.WHITE, false)
+            setCob("B1", Color.WHITE, true)
+            setCob("C3", Color.WHITE, false)
+            setCob("C4", Color.WHITE, false)
             // Set up black pieces
-            setChecker("B4", Color.BLACK, true)
-            setChecker("C9", Color.BLACK, false)
-            setChecker("C10", Color.BLACK, false)
+            setCob("B4", Color.BLACK, true)
+            setCob("C9", Color.BLACK, false)
+            setCob("C10", Color.BLACK, false)
         }
 
         // Verify the state
         assertEquals("Turn should be WHITE", Color.WHITE, state.currentTurn)
-        assertEquals("Should have 6 checkers total", 6, state.checkers.size)
-        assertEquals("Should have 3 white checkers", 3, state.checkers.values.count { it.color == Color.WHITE })
-        assertEquals("Should have 3 black checkers", 3, state.checkers.values.count { it.color == Color.BLACK })
-        assertEquals("Should have 2 upgraded checkers", 2, state.checkers.values.count { it.isUpgraded })
+        assertEquals("Should have 6 cobs total", 6, state.cobs.size)
+        assertEquals("Should have 3 white cobs", 3, state.cobs.values.count { it.color == Color.WHITE })
+        assertEquals("Should have 3 black cobs", 3, state.cobs.values.count { it.color == Color.BLACK })
+        assertEquals("Should have 2 upgraded cobs", 2, state.cobs.values.count { it.isUpgraded })
     }
 
     @Test
@@ -58,8 +58,8 @@ class GameStateBuilderIntegrationTest {
         // This demonstrates how the builder can be used in test setup
         val testState = GameStateBuilder()
             .setTurn(Color.BLACK)
-            .setChecker("A1", Color.WHITE, true) // White king in center
-            .setChecker("C7", Color.BLACK, false) // Black piece nearby
+            .setCob("A1", Color.WHITE, true) // White king in center
+            .setCob("C7", Color.BLACK, false) // Black piece nearby
             .build()
 
         // Now test specific functionality with this controlled state

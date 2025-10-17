@@ -154,9 +154,9 @@ class TournamentTest {
         println("\n========== TEST: Material Weight Variations ==========")
 
         val baseline = ConfigBuilder.baseline()
-        val material20plus = baseline.copy(name = "material +20%", upgradedPieceScore = 240, materialScore = 120)
-        val material20less = baseline.copy(name = "material -20%", upgradedPieceScore = 160, materialScore = 80)
-        val captures50plus = baseline.copy(name = "captures +50%", captureUpgradedBonus = 225, captureNormalBonus = 75)
+        val material20plus = baseline.copy(name = "material +20%", rocScore = 240, cobScore = 120)
+        val material20less = baseline.copy(name = "material -20%", rocScore = 160, cobScore = 80)
+        val captures50plus = baseline.copy(name = "captures +50%", flipRocBonus = 225, flipCobBonus = 75)
         val mobilityX2 = baseline.copy(name = "mobility x2", mobilityScore = 10)
 
         val configs = mapOf(
@@ -229,18 +229,18 @@ class TournamentTest {
         val baseline = ConfigBuilder.baseline()
         val low = baseline.copy(
             name = "Low",
-            captureUpgradedBonus = (baseline.captureUpgradedBonus * 0.9).toInt(),
-            captureNormalBonus = (baseline.captureNormalBonus * 0.9).toInt()
+            flipRocBonus = (baseline.flipRocBonus * 0.9).toInt(),
+            flipCobBonus = (baseline.flipCobBonus * 0.9).toInt()
         )
         val high = baseline.copy(
             name = "High",
-            captureUpgradedBonus = (baseline.captureUpgradedBonus * 1.1).toInt(),
-            captureNormalBonus = (baseline.captureNormalBonus * 1.1).toInt()
+            flipRocBonus = (baseline.flipRocBonus * 1.1).toInt(),
+            flipCobBonus = (baseline.flipCobBonus * 1.1).toInt()
         )
         val veryHigh = baseline.copy(
             name = "VeryHigh",
-            captureUpgradedBonus = (baseline.captureUpgradedBonus * 1.3).toInt(),
-            captureNormalBonus = (baseline.captureNormalBonus * 1.3).toInt()
+            flipRocBonus = (baseline.flipRocBonus * 1.3).toInt(),
+            flipCobBonus = (baseline.flipCobBonus * 1.3).toInt()
         )
 
         val variations = listOf(
@@ -347,8 +347,8 @@ class TournamentTest {
         println("This will take several minutes...")
 
         // Configurar la profundidad, alta profundidad alta duración del proceso.
-        val firstPhaseDepth = Difficulty.HARD
-        val secondPhaseDepth = Difficulty.HARD
+        val firstPhaseDepth = Difficulty.EASY
+        val secondPhaseDepth = Difficulty.MEDIUM
 
         val firstPhaseWithness = EvaluationConfig.getByDifficulty(Difficulty.MEDIUM)
         val secondPhaseWithness = EvaluationConfig.getByDifficulty(Difficulty.HARD)
@@ -365,11 +365,11 @@ class TournamentTest {
         // Fase 1: Probar configuraciones base
         val phase1Configs = mapOf(
             firstPhaseWithness.name to secondPhaseWithness.copy(difficulty = firstPhaseDepth),
-            //aggressive.name to aggressive,
-            //defensive.name to defensive,
+            aggressive.name to aggressive,
+            defensive.name to defensive,
             material.name to material,
             positional.name to positional,
-            //balanced.name to balanced,
+            balanced.name to balanced,
             swarming.name to swarming,
             strategist.name to strategist,
             gambit.name to gambit,
@@ -399,23 +399,23 @@ class TournamentTest {
 
         val moreMaterial = winnerConfig.copy(
             name = "MoreMaterial",
-            upgradedPieceScore = (winnerConfig.upgradedPieceScore * 1.2).toInt(),
-            materialScore = (winnerConfig.materialScore * 1.2).toInt()
+            rocScore = (winnerConfig.rocScore * 1.2).toInt(),
+            cobScore = (winnerConfig.cobScore * 1.2).toInt()
         )
         val moreCaptures = winnerConfig.copy(
             name = "MoreCaptures",
-            captureUpgradedBonus = (winnerConfig.captureUpgradedBonus * 1.3).toInt(),
-            captureNormalBonus = (winnerConfig.captureNormalBonus * 1.3).toInt()
+            flipRocBonus = (winnerConfig.flipRocBonus * 1.3).toInt(),
+            flipCobBonus = (winnerConfig.flipCobBonus * 1.3).toInt()
         )
         val morePosition = winnerConfig.copy(
             name = "MorePosition",
             controlCenterScore = (winnerConfig.controlCenterScore * 1.5).toInt(),
-            opponentBasePressureScore = (winnerConfig.opponentBasePressureScore * 1.3).toInt()
+            opponentDomesticPressureScore = (winnerConfig.opponentDomesticPressureScore * 1.3).toInt()
         )
         val newBalanced = winnerConfig.copy(
             name = "NewBalanced",
-            upgradedPieceScore = (winnerConfig.upgradedPieceScore * 1.1).toInt(),
-            captureUpgradedBonus = (winnerConfig.captureUpgradedBonus * 1.1).toInt(),
+            rocScore = (winnerConfig.rocScore * 1.1).toInt(),
+            flipRocBonus = (winnerConfig.flipRocBonus * 1.1).toInt(),
             controlCenterScore = (winnerConfig.controlCenterScore * 1.2).toInt(),
             mobilityScore = (winnerConfig.mobilityScore * 1.5).toInt()
         )

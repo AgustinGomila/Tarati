@@ -6,7 +6,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard.edges
@@ -18,7 +18,7 @@ import com.agustin.tarati.ui.theme.BoardColors
 fun DrawScope.drawPiece(
     selectedVertexId: String?,
     vertexId: String,
-    checker: Checker,
+    cob: Cob,
     colors: BoardColors,
     sizeFactor: Float = 1.2f,
 ) {
@@ -26,7 +26,7 @@ fun DrawScope.drawPiece(
     val center = Offset(size.width / 2f, size.height / 2f)
     val baseRadius = minOf(size.width, size.height) / 2f * sizeFactor
 
-    val (pieceColor, borderColor) = when (checker.color) {
+    val (pieceColor, borderColor) = when (cob.color) {
         WHITE -> colors.whitePieceColor to colors.whitePieceBorderColor
         BLACK -> colors.blackPieceColor to colors.blackPieceBorderColor
     }
@@ -34,8 +34,8 @@ fun DrawScope.drawPiece(
     drawCircle(color = borderColor, center = center, radius = baseRadius, style = Stroke(width = 3f))
     drawCircle(color = pieceColor, center = center, radius = baseRadius * 0.8f)
 
-    if (checker.isUpgraded) {
-        val upgradeColor = if (checker.color == WHITE)
+    if (cob.isUpgraded) {
+        val upgradeColor = if (cob.color == WHITE)
             colors.blackPieceColor else colors.whitePieceColor
 
         drawCircle(
@@ -76,12 +76,12 @@ fun DrawScope.drawVertices(
 
     vertices.forEach { vertexId ->
         val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
-        val checker = gameState.checkers[vertexId]
+        val cob = gameState.cobs[vertexId]
 
         val vertexColor = when {
             vertexId == selectedVertexId -> colors.vertexSelectedColor
             adjacentVertexes.contains(vertexId) -> colors.vertexHighlightColor
-            checker != null -> colors.vertexOccupiedColor
+            cob != null -> colors.vertexOccupiedColor
             else -> colors.vertexDefaultColor
         }
 
@@ -135,13 +135,13 @@ fun DrawScope.drawAnimatedPiece(
     val baseRadius = minOf(size.width, size.height) / 2f * sizeFactor
 
     // Determinar colores actuales considerando animaciones
-    val currentChecker = animatedPiece.checker
-    val (pieceColor, borderColor) = when (currentChecker.color) {
+    val currentCob = animatedPiece.cob
+    val (pieceColor, borderColor) = when (currentCob.color) {
         WHITE -> colors.whitePieceColor to colors.whitePieceBorderColor
         BLACK -> colors.blackPieceColor to colors.blackPieceBorderColor
     }
 
-    val invertedColor = when (currentChecker.color) {
+    val invertedColor = when (currentCob.color) {
         WHITE -> colors.blackPieceColor
         BLACK -> colors.whitePieceColor
     }
@@ -151,7 +151,7 @@ fun DrawScope.drawAnimatedPiece(
     drawCircle(color = pieceColor, center = center, radius = baseRadius * 0.8f)
 
     // Animación de upgrade - círculo interno
-    if (currentChecker.isUpgraded) {
+    if (currentCob.isUpgraded) {
         val upgradeAlpha = animatedPiece.upgradeProgress
         if (upgradeAlpha > 0f) {
             val upgradeColor = invertedColor.copy(alpha = upgradeAlpha)

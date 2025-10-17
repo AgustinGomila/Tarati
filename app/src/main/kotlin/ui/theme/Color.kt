@@ -36,3 +36,6 @@ val ErrorVariant = Color(0xFF9D62F0)
 val OnPrimaryLight = Color.White
 val OnSecondaryLight = Color.White
 val OnTertiaryLight = Color.White
+
+// Color especial de Tarati
+val Tarati = Color(0xFF57936B)

@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.turnIndicator
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,18 +33,52 @@ import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
 
+enum class TurnIndicatorState {
+    AI_THINKING,    // AI está pensando
+    HUMAN_TURN,     // Turno del jugador humano
+    NEUTRAL         // Estado neutral - listo para nueva partida
+}
+
+interface IndicatorEvents {
+    fun onTouch()
+}
+
 @Composable
 fun TurnIndicator(
     modifier: Modifier = Modifier,
+    state: TurnIndicatorState,
     currentTurn: Color,
     size: Dp = 60.dp,
-    isAIThinking: Boolean = false
+    indicatorEvents: IndicatorEvents = object : IndicatorEvents {
+        override fun onTouch() {}
+    },
 ) {
     val boardColors = getBoardColors()
 
-    val indicatorColor = when (currentTurn) {
+    // Determinar color, icono y comportamiento según el estado
+    val color = when (currentTurn) {
         Color.WHITE -> boardColors.whitePieceColor
         Color.BLACK -> boardColors.blackPieceColor
+    }
+
+    val (indicatorColor, isClickable, contentDescription) = when (state) {
+        TurnIndicatorState.AI_THINKING -> Triple(
+            first = color,
+            second = false,
+            third = localizedString(R.string.ai_thinking)
+        )
+
+        TurnIndicatorState.HUMAN_TURN -> Triple(
+            first = color,
+            second = false,
+            third = localizedString(R.string.human_turn)
+        )
+
+        TurnIndicatorState.NEUTRAL -> Triple(
+            first = boardColors.neutralColor,
+            second = true,
+            third = localizedString(R.string.new_game)
+        )
     }
 
     val infiniteTransition = rememberInfiniteTransition()
@@ -61,22 +96,34 @@ fun TurnIndicator(
             .padding(8.dp)
             .size(size)
             .clip(CircleShape)
-            .background(indicatorColor),
+            .background(indicatorColor)
+            .clickable(isClickable) {
+                if (isClickable) indicatorEvents.onTouch()
+            },
         contentAlignment = Alignment.Center
     ) {
-        if (isAIThinking) {
-            DrawLogo(
+        when (state) {
+            TurnIndicatorState.AI_THINKING -> DrawLogo(
                 size = size,
-                rotation = rotation
+                rotation = rotation,
+                contentDescription = contentDescription
             )
-        } else {
-            DrawLogoStatic(size = size)
+
+            TurnIndicatorState.HUMAN_TURN -> DrawLogoStatic(
+                size = size,
+                contentDescription = contentDescription
+            )
+
+            TurnIndicatorState.NEUTRAL -> DrawNewGameIcon(
+                size = size,
+                contentDescription = contentDescription
+            )
         }
     }
 }
 
 @Composable
-fun DrawLogo(size: Dp = 60.dp, rotation: Float) {
+fun DrawLogo(size: Dp = 60.dp, rotation: Float, contentDescription: String) {
     Box(
         modifier = Modifier
             .size(size * 0.6f)
@@ -86,21 +133,35 @@ fun DrawLogo(size: Dp = 60.dp, rotation: Float) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = localizedString(R.string.ai_thinking),
+            contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
         )
     }
 }
 
 @Composable
-fun DrawLogoStatic(size: Dp = 60.dp) {
+fun DrawLogoStatic(size: Dp = 60.dp, contentDescription: String) {
     Box(
         modifier = Modifier
             .size(size * 0.6f)
     ) {
         Image(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = localizedString(R.string.human_turn),
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Composable
+fun DrawNewGameIcon(size: Dp = 60.dp, contentDescription: String) {
+    Box(
+        modifier = Modifier
+            .size(size * 0.6f)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -108,7 +169,7 @@ fun DrawLogoStatic(size: Dp = 60.dp) {
 
 @Preview(showBackground = true)
 @Composable
-fun TurnIndicatorPreview_Thinking() {
+fun TurnIndicatorPreview_AllStates() {
     TaratiTheme {
         Column(
             modifier = Modifier
@@ -121,29 +182,33 @@ fun TurnIndicatorPreview_Thinking() {
             LocalizedText(R.string.ai_thinking, style = MaterialTheme.typography.titleMedium)
 
             TurnIndicator(
-                currentTurn = Color.WHITE,
-                size = 80.dp,
-                isAIThinking = true
-            )
-
-            TurnIndicator(
+                state = TurnIndicatorState.AI_THINKING,
                 currentTurn = Color.BLACK,
-                size = 80.dp,
-                isAIThinking = true
+                size = 80.dp
             )
 
             LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
 
             TurnIndicator(
+                state = TurnIndicatorState.HUMAN_TURN,
                 currentTurn = Color.WHITE,
-                size = 80.dp,
-                isAIThinking = false
+                size = 80.dp
             )
 
+            LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
+
             TurnIndicator(
+                state = TurnIndicatorState.HUMAN_TURN,
                 currentTurn = Color.BLACK,
-                size = 80.dp,
-                isAIThinking = false
+                size = 80.dp
+            )
+
+            LocalizedText(R.string.new_game, style = MaterialTheme.typography.titleMedium)
+
+            TurnIndicator(
+                state = TurnIndicatorState.NEUTRAL,
+                currentTurn = Color.BLACK,
+                size = 80.dp
             )
         }
     }

@@ -3,7 +3,7 @@ package com.agustin.tarati.game.ai
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
@@ -19,8 +19,8 @@ class GameIntegrationTest {
         // Start with initial state
         var state = GameState(
             mapOf(
-                "C1" to Checker(Color.WHITE, false),
-                "C7" to Checker(Color.BLACK, false)
+                "C1" to Cob(Color.WHITE, false),
+                "C7" to Cob(Color.BLACK, false)
             ),
             currentTurn = Color.WHITE
         )
@@ -52,10 +52,10 @@ class GameIntegrationTest {
     fun aiDepthPerformance() {
         val state = GameState(
             mapOf(
-                "C1" to Checker(Color.WHITE, false),
-                "C2" to Checker(Color.WHITE, false),
-                "C7" to Checker(Color.BLACK, false),
-                "C8" to Checker(Color.BLACK, false)
+                "C1" to Cob(Color.WHITE, false),
+                "C2" to Cob(Color.WHITE, false),
+                "C7" to Cob(Color.BLACK, false),
+                "C8" to Cob(Color.BLACK, false)
             ),
             currentTurn = Color.WHITE
         )

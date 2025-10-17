@@ -8,7 +8,7 @@ import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.sortMoves
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -29,11 +29,11 @@ class AIForceTest {
     @Test
     fun testQuickEvaluate_BasicPieceCount() {
         // Test básico de evaluación rápida
-        val checkers = mutableMapOf(
-            "B1" to Checker(BLACK, isUpgraded = false),
-            "B2" to Checker(WHITE, isUpgraded = false)
+        val cobs = mutableMapOf(
+            "B1" to Cob(BLACK, isUpgraded = false),
+            "B2" to Cob(WHITE, isUpgraded = false)
         )
-        val gameState = GameState(checkers, currentTurn = BLACK)
+        val gameState = GameState(cobs, currentTurn = BLACK)
 
         val score = quickEvaluate(gameState)
 
@@ -44,11 +44,11 @@ class AIForceTest {
     @Test
     fun testGameOverDetectionInSorting() {
         // Test específico para verificar que sortMoves detecta estados de game over
-        val checkers = mutableMapOf(
-            "C2" to Checker(BLACK, isUpgraded = true),
-            "D2" to Checker(WHITE, isUpgraded = false) // Última pieza blanca
+        val cobs = mutableMapOf(
+            "C2" to Cob(BLACK, isUpgraded = true),
+            "D2" to Cob(WHITE, isUpgraded = false) // Última pieza blanca
         )
-        val gameState = GameState(checkers, currentTurn = BLACK)
+        val gameState = GameState(cobs, currentTurn = BLACK)
 
         val moves = mutableListOf(
             Move("C2", "B2"),
@@ -68,10 +68,10 @@ class AIForceTest {
     @Test
     fun testEdgeCase_SinglePieceEndgame() {
         // Caso borde: una sola pieza en el tablero
-        val checkers = mutableMapOf(
-            "A1" to Checker(WHITE, isUpgraded = false)
+        val cobs = mutableMapOf(
+            "A1" to Cob(WHITE, isUpgraded = false)
         )
-        val gameState = GameState(checkers, currentTurn = WHITE)
+        val gameState = GameState(cobs, currentTurn = WHITE)
 
         val moves = mutableListOf(
             Move("A1", "B1"),
@@ -86,19 +86,19 @@ class AIForceTest {
 
     // Helper para crear estados de juego personalizados
     class GameStateBuilder {
-        private val checkers = mutableMapOf<String, Checker>()
+        private val cobs = mutableMapOf<String, Cob>()
         private var currentTurn: Color = WHITE
 
         fun setTurn(turn: Color) {
             currentTurn = turn
         }
 
-        fun setChecker(vertexId: String, color: Color, isUpgraded: Boolean) {
-            checkers[vertexId] = Checker(color, isUpgraded)
+        fun setCob(vertexId: String, color: Color, isUpgraded: Boolean) {
+            cobs[vertexId] = Cob(color, isUpgraded)
         }
 
         fun build(): GameState {
-            return GameState(checkers = checkers, currentTurn = currentTurn)
+            return GameState(cobs = cobs, currentTurn = currentTurn)
         }
     }
 
@@ -109,27 +109,27 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne_Blockade() {
+    fun testMitInOne_Blockade() {
         // Situación: Blanco puede mover para dejar a negro sin movimientos
         val gameState = createGameState {
             setTurn(WHITE)
             // Piezas negras (3)
-            setChecker("C1", BLACK, false)
-            setChecker("C7", BLACK, false)
-            setChecker("C8", BLACK, false)
+            setCob("C1", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("C8", BLACK, false)
             // Piezas blancas (5)
-            setChecker("B1", WHITE, false)
-            setChecker("C2", WHITE, false)
-            setChecker("D1", WHITE, false)
-            setChecker("B4", WHITE, false)
-            setChecker("C6", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C2", WHITE, false)
+            setCob("D1", WHITE, false)
+            setCob("B4", WHITE, false)
+            setCob("C6", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.MIN)
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos
-        assertTrue(getAllPossibleMoves(newState).none { gameState.checkers[it.from]?.color == BLACK })
+        assertTrue(getAllPossibleMoves(newState).none { gameState.cobs[it.from]?.color == BLACK })
     }
 
     @Test
@@ -138,22 +138,22 @@ class AIForceTest {
         val gameState = createGameState {
             setTurn(WHITE)
             // Negras (2 piezas casi bloqueadas)
-            setChecker("C1", BLACK, false)
-            setChecker("C2", BLACK, false)
+            setCob("C1", BLACK, false)
+            setCob("C2", BLACK, false)
             // Blancas (5 piezas)
-            setChecker("B1", WHITE, false)
-            setChecker("C3", WHITE, false)
-            setChecker("C12", WHITE, false)
-            setChecker("C6", WHITE, false)
-            setChecker("C7", WHITE, false)
-            setChecker("C8", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C3", WHITE, false)
+            setCob("C12", WHITE, false)
+            setCob("C6", WHITE, false)
+            setCob("C7", WHITE, false)
+            setCob("C8", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos legales
-        val blackMoves = getAllPossibleMoves(newState).filter { gameState.checkers[it.from]?.color == BLACK }
+        val blackMoves = getAllPossibleMoves(newState).filter { gameState.cobs[it.from]?.color == BLACK }
         assertTrue("Negro debería estar ahogado. Movimientos disponibles: $blackMoves", blackMoves.isEmpty())
     }
 
@@ -163,14 +163,14 @@ class AIForceTest {
         val gameState = createGameState {
             setTurn(WHITE)
             // Posición claramente ganadora para blanco
-            setChecker("A1", WHITE, true)
-            setChecker("B1", WHITE, true)
-            setChecker("B2", WHITE, true)
-            setChecker("B3", WHITE, false)
-            setChecker("B4", WHITE, false)
-            setChecker("B5", WHITE, false)
-            setChecker("B6", WHITE, false)
-            setChecker("C1", BLACK, false) // Única pieza negra
+            setCob("A1", WHITE, true)
+            setCob("B1", WHITE, true)
+            setCob("B2", WHITE, true)
+            setCob("B3", WHITE, false)
+            setCob("B4", WHITE, false)
+            setCob("B5", WHITE, false)
+            setCob("B6", WHITE, false)
+            setCob("C1", BLACK, false) // Única pieza negra
         }
 
         val score = evaluateBoard(gameState)
@@ -183,15 +183,15 @@ class AIForceTest {
         val gameState = createGameState {
             setTurn(WHITE)
             // Solo una pieza negra que puede ser capturada
-            setChecker("C1", BLACK, false)
+            setCob("C1", BLACK, false)
             // Múltiples piezas blancas
-            setChecker("B1", WHITE, false)
-            setChecker("C2", WHITE, false)
-            setChecker("D1", WHITE, false)
-            setChecker("A1", WHITE, false)
-            setChecker("B2", WHITE, false)
-            setChecker("B3", WHITE, false)
-            setChecker("B4", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C2", WHITE, false)
+            setCob("D1", WHITE, false)
+            setCob("A1", WHITE, false)
+            setCob("B2", WHITE, false)
+            setCob("B3", WHITE, false)
+            setCob("B4", WHITE, false)
         }
 
         // Aplicar movimiento ganador
@@ -207,16 +207,16 @@ class AIForceTest {
         val gameState = createGameState {
             setTurn(WHITE)
             // Negras en posición vulnerable
-            setChecker("C1", BLACK, false)
-            setChecker("C2", BLACK, false)
+            setCob("C1", BLACK, false)
+            setCob("C2", BLACK, false)
             // Blancas en posición de tenedor
-            setChecker("B1", WHITE, true) // Pieza mejorada
-            setChecker("C3", WHITE, false)
-            setChecker("D1", WHITE, false)
-            setChecker("D2", WHITE, false)
-            setChecker("A1", WHITE, false)
-            setChecker("B2", WHITE, false)
-            setChecker("B3", WHITE, false)
+            setCob("B1", WHITE, true) // Pieza mejorada
+            setCob("C3", WHITE, false)
+            setCob("D1", WHITE, false)
+            setCob("D2", WHITE, false)
+            setCob("A1", WHITE, false)
+            setCob("B2", WHITE, false)
+            setCob("B3", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -234,15 +234,15 @@ class AIForceTest {
             setTurn(WHITE)
             // Distribución 3-5
             // Negras
-            setChecker("C7", BLACK, false)
-            setChecker("C8", BLACK, false)
-            setChecker("D3", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("C8", BLACK, false)
+            setCob("D3", BLACK, false)
             // Blancas
-            setChecker("C1", WHITE, true)
-            setChecker("C2", WHITE, true)
-            setChecker("D1", WHITE, false)
-            setChecker("D2", WHITE, false)
-            setChecker("B1", WHITE, false)
+            setCob("C1", WHITE, true)
+            setCob("C2", WHITE, true)
+            setCob("D1", WHITE, false)
+            setCob("D2", WHITE, false)
+            setCob("B1", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -252,20 +252,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInTwo_ForcedSequence() {
+    fun testMitInTwo_ForcedSequence() {
         // Situación: Blanco puede forzar mate en 2 movimientos
         val gameState = createGameState {
             setTurn(WHITE)
             // Piezas negras (2)
-            setChecker("C1", BLACK, false)
-            setChecker("C8", BLACK, false)
+            setCob("C1", BLACK, false)
+            setCob("C8", BLACK, false)
             // Piezas blancas (6)
-            setChecker("B1", WHITE, false)
-            setChecker("C2", WHITE, true) // Mejorada para mayor movilidad
-            setChecker("D1", WHITE, false)
-            setChecker("B4", WHITE, false)
-            setChecker("C6", WHITE, false)
-            setChecker("A1", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C2", WHITE, true) // Mejorada para mayor movilidad
+            setCob("D1", WHITE, false)
+            setCob("B4", WHITE, false)
+            setCob("C6", WHITE, false)
+            setCob("A1", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -275,20 +275,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne_White() {
+    fun testMitInOne_White() {
         // Situación: Blanco puede forzar mate en 1 movimientos
         val gameState = createGameState {
             setTurn(WHITE)
             // Piezas negras (1)
-            setChecker("B4", BLACK, true)
+            setCob("B4", BLACK, true)
             // Piezas blancas (7)
-            setChecker("A1", WHITE, true)
-            setChecker("B2", WHITE, true)
-            setChecker("B1", WHITE, true)
-            setChecker("C2", WHITE, true)
-            setChecker("C12", WHITE, true)
-            setChecker("C4", WHITE, false)
-            setChecker("C5", WHITE, false)
+            setCob("A1", WHITE, true)
+            setCob("B2", WHITE, true)
+            setCob("B1", WHITE, true)
+            setCob("C2", WHITE, true)
+            setCob("C12", WHITE, true)
+            setCob("C4", WHITE, false)
+            setCob("C5", WHITE, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -304,20 +304,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne() {
+    fun testMitInOne() {
         // Situación: Negro puede forzar mate en 1 movimientos
         val gameState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (1)
-            setChecker("B4", WHITE, true)
+            setCob("B4", WHITE, true)
             // Piezas negras (7)
-            setChecker("A1", BLACK, true)
-            setChecker("B2", BLACK, true)
-            setChecker("B1", BLACK, true)
-            setChecker("C2", BLACK, true)
-            setChecker("C12", BLACK, true)
-            setChecker("C4", BLACK, false)
-            setChecker("C5", BLACK, false)
+            setCob("A1", BLACK, true)
+            setCob("B2", BLACK, true)
+            setCob("B1", BLACK, true)
+            setCob("C2", BLACK, true)
+            setCob("C12", BLACK, true)
+            setCob("C4", BLACK, false)
+            setCob("C5", BLACK, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -333,20 +333,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne_quickCheckmateShouldBePrioritized1() {
+    fun testMitInOne_quickMitShouldBePrioritized1() {
         // Situación: Negro puede forzar mate en 1 movimientos
         val gameState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (1)
-            setChecker("C10", WHITE, false)
+            setCob("C10", WHITE, false)
             // Piezas negras (7)
-            setChecker("C8", BLACK, true) // <-- Mejorada da posibilidad de mate en 2
-            setChecker("A1", BLACK, true)
-            setChecker("B4", BLACK, false)
-            setChecker("B3", BLACK, false)
-            setChecker("C7", BLACK, false)
-            setChecker("B2", BLACK, false)
-            setChecker("C3", BLACK, false)
+            setCob("C8", BLACK, true) // <-- Mejorada da posibilidad de mate en 2
+            setCob("A1", BLACK, true)
+            setCob("B4", BLACK, false)
+            setCob("B3", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("B2", BLACK, false)
+            setCob("C3", BLACK, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -362,20 +362,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInOne_quickCheckmateShouldBePrioritized2() {
+    fun testMitInOne_quickMitShouldBePrioritized2() {
         // Situación: Negro puede forzar mate en 1 movimientos
         val gameState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (1)
-            setChecker("C10", WHITE, false)
+            setCob("C10", WHITE, false)
             // Piezas negras (7)
-            setChecker("C8", BLACK, false)
-            setChecker("A1", BLACK, true)
-            setChecker("B4", BLACK, false)
-            setChecker("B3", BLACK, false)
-            setChecker("C7", BLACK, false)
-            setChecker("B2", BLACK, false)
-            setChecker("C3", BLACK, false)
+            setCob("C8", BLACK, false)
+            setCob("A1", BLACK, true)
+            setCob("B4", BLACK, false)
+            setCob("B3", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("B2", BLACK, false)
+            setCob("C3", BLACK, false)
         }
 
         val result = getNextBestMove(gameState, Difficulty.DEFAULT)
@@ -394,16 +394,16 @@ class AIForceTest {
     fun evaluateBoard_upgradedPieceIsMoreValuable() {
         val stateNormal = GameState(
             mapOf(
-                "C1" to Checker(WHITE, false),
-                "C7" to Checker(BLACK, false)
+                "C1" to Cob(WHITE, false),
+                "C7" to Cob(BLACK, false)
             ),
             currentTurn = WHITE
         )
 
         val stateUpgraded = GameState(
             mapOf(
-                "C1" to Checker(WHITE, true),
-                "C7" to Checker(BLACK, false)
+                "C1" to Cob(WHITE, true),
+                "C7" to Cob(BLACK, false)
             ),
             currentTurn = WHITE
         )
@@ -423,15 +423,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(WHITE)
             // Piezas blancas (4)
-            setChecker("D2", WHITE, false)
-            setChecker("C1", WHITE, false)
-            setChecker("B1", WHITE, false)
-            setChecker("C12", WHITE, false)
+            setCob("D2", WHITE, false)
+            setCob("C1", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C12", WHITE, false)
             // Piezas negras (4)
-            setChecker("D3", BLACK, false)
-            setChecker("C8", BLACK, false)
-            setChecker("C9", BLACK, false)
-            setChecker("B4", BLACK, false)
+            setCob("D3", BLACK, false)
+            setCob("C8", BLACK, false)
+            setCob("C9", BLACK, false)
+            setCob("B4", BLACK, false)
         }
 
         // Las blancas tienen 6 movimientos posibles.
@@ -446,15 +446,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (4)
-            setChecker("D2", WHITE, false)
-            setChecker("C1", WHITE, false)
-            setChecker("B1", WHITE, false)
-            setChecker("C3", WHITE, false)
+            setCob("D2", WHITE, false)
+            setCob("C1", WHITE, false)
+            setCob("B1", WHITE, false)
+            setCob("C3", WHITE, false)
             // Piezas negras (4)
-            setChecker("D4", BLACK, false)
-            setChecker("C8", BLACK, false)
-            setChecker("C7", BLACK, false)
-            setChecker("B6", BLACK, false)
+            setCob("D4", BLACK, false)
+            setCob("C8", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("B6", BLACK, false)
         }
 
         // Las negras tienen 5 movimientos posibles.
@@ -464,20 +464,20 @@ class AIForceTest {
     }
 
     @Test
-    fun testMateInTwo_Black() {
+    fun testMitInTwo_Black() {
         // Situación: Negro puede forzar mate en 2 movimientos
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (3)
-            setChecker("B4", WHITE, false)
-            setChecker("C10", WHITE, false)
-            setChecker("A1", WHITE, true)
+            setCob("B4", WHITE, false)
+            setCob("C10", WHITE, false)
+            setCob("A1", WHITE, true)
             // Piezas negras (5)
-            setChecker("C6", BLACK, false)
-            setChecker("B2", BLACK, false)
-            setChecker("B1", BLACK, true)
-            setChecker("B6", BLACK, false)
-            setChecker("C2", BLACK, true)
+            setCob("C6", BLACK, false)
+            setCob("B2", BLACK, false)
+            setCob("B1", BLACK, true)
+            setCob("B6", BLACK, false)
+            setCob("C2", BLACK, true)
         }
 
         // Movimiento 1: Negro juega (debe encontrar C6 -> B3)
@@ -510,7 +510,7 @@ class AIForceTest {
         val stateAfterWhite = applyMoveToBoard(stateAfterBlack1, whiteMove.move!!.from, whiteMove.move.to)
             .copy(currentTurn = BLACK)
 
-        // Movimiento 3: Negro da mate
+        // Movimiento 3: Negro da mit
         val blackMove2 = getNextBestMove(stateAfterWhite, Difficulty.DEFAULT)
 
         assertNotNull("Black should find a move", blackMove2.move)
@@ -519,13 +519,13 @@ class AIForceTest {
 
         println("Black move: ${blackMove2.move} with score: ${blackMove2.score}")
 
-        assertNotNull("Black should find mate", blackMove2.move)
+        assertNotNull("Black should find mit", blackMove2.move)
 
         // Aplicar el movimiento final
         val finalState = applyMoveToBoard(stateAfterWhite, blackMove2.move!!.from, blackMove2.move.to)
             .copy(currentTurn = WHITE)
 
-        // Verificar que es mate
+        // Verificar que es mit
         assertTrue("Should be game over", isGameOver(finalState))
         assertEquals("Black should win", BLACK, getWinner(finalState))
 
@@ -542,15 +542,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (7)
-            setChecker("A1", WHITE, true)
-            setChecker("B1", WHITE, true)
-            setChecker("C1", WHITE, true)
-            setChecker("D1", WHITE, true)
-            setChecker("A2", WHITE, true)
-            setChecker("B2", WHITE, true)
-            setChecker("C2", WHITE, true)
+            setCob("A1", WHITE, true)
+            setCob("B1", WHITE, true)
+            setCob("C1", WHITE, true)
+            setCob("D1", WHITE, true)
+            setCob("A2", WHITE, true)
+            setCob("B2", WHITE, true)
+            setCob("C2", WHITE, true)
             // Piezas negras (1) - completamente rodeada
-            setChecker("B3", BLACK, false)
+            setCob("B3", BLACK, false)
         }
 
         val blackMoves = getAllPossibleMoves(initialState)
@@ -566,15 +566,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (1) - rodeada por sus propias piezas
-            setChecker("B4", BLACK, false)
+            setCob("B4", BLACK, false)
             // Piezas negras (7)
-            setChecker("A1", WHITE, false)
-            setChecker("B3", WHITE, false)
-            setChecker("B5", WHITE, false)
-            setChecker("B2", WHITE, false)
-            setChecker("B6", WHITE, false)
-            setChecker("C2", WHITE, false)
-            setChecker("C1", WHITE, false)
+            setCob("A1", WHITE, false)
+            setCob("B3", WHITE, false)
+            setCob("B5", WHITE, false)
+            setCob("B2", WHITE, false)
+            setCob("B6", WHITE, false)
+            setCob("C2", WHITE, false)
+            setCob("C1", WHITE, false)
         }
 
         val whiteMoves = getAllPossibleMoves(initialState)
@@ -590,15 +590,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (2) - muy pocas
-            setChecker("C10", WHITE, false)
-            setChecker("C12", WHITE, false)
+            setCob("C10", WHITE, false)
+            setCob("C12", WHITE, false)
             // Piezas negras (6) - muchas y mejoradas
-            setChecker("C9", BLACK, true)
-            setChecker("C8", BLACK, true)
-            setChecker("C6", BLACK, true)
-            setChecker("C5", BLACK, true)
-            setChecker("B3", BLACK, true)
-            setChecker("B4", BLACK, true)
+            setCob("C9", BLACK, true)
+            setCob("C8", BLACK, true)
+            setCob("C6", BLACK, true)
+            setCob("C5", BLACK, true)
+            setCob("B3", BLACK, true)
+            setCob("B4", BLACK, true)
         }
 
         val blackMove = getNextBestMove(initialState, Difficulty.DEFAULT)
@@ -619,15 +619,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(WHITE)
             // Piezas blancas (3) - en peligro
-            setChecker("C10", WHITE, false)  // Amenazada
-            setChecker("D10", WHITE, false)  // Amenazada
-            setChecker("B11", WHITE, true)   // Segura
+            setCob("C10", WHITE, false)  // Amenazada
+            setCob("D10", WHITE, false)  // Amenazada
+            setCob("B11", WHITE, true)   // Segura
             // Piezas negras (5) - atacando
-            setChecker("C8", BLACK, true)    // Amenazando C10
-            setChecker("D8", BLACK, true)    // Amenazando D10
-            setChecker("B7", BLACK, false)
-            setChecker("C7", BLACK, false)
-            setChecker("D7", BLACK, false)
+            setCob("C8", BLACK, true)    // Amenazando C10
+            setCob("D8", BLACK, true)    // Amenazando D10
+            setCob("B7", BLACK, false)
+            setCob("C7", BLACK, false)
+            setCob("D7", BLACK, false)
         }
 
         val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
@@ -645,15 +645,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (4)
-            setChecker("C9", BLACK, false)  // Cerca de la base blanca
-            setChecker("C11", BLACK, false)
-            setChecker("C3", BLACK, false)
-            setChecker("C12", BLACK, false)
+            setCob("C9", BLACK, false)  // Cerca de la base blanca
+            setCob("C11", BLACK, false)
+            setCob("C3", BLACK, false)
+            setCob("C12", BLACK, false)
             // Piezas negras (4)
-            setChecker("B3", WHITE, false)
-            setChecker("B2", WHITE, false)
-            setChecker("B4", WHITE, false)
-            setChecker("C5", WHITE, false)
+            setCob("B3", WHITE, false)
+            setCob("B2", WHITE, false)
+            setCob("B4", WHITE, false)
+            setCob("C5", WHITE, false)
         }
 
         val blackMove = getNextBestMove(initialState, Difficulty.DEFAULT)
@@ -671,15 +671,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(WHITE)
             // Piezas blancas (4)
-            setChecker("B2", WHITE, false)
-            setChecker("C2", WHITE, false)
-            setChecker("D2", WHITE, false)
-            setChecker("C3", WHITE, false)
+            setCob("B2", WHITE, false)
+            setCob("C2", WHITE, false)
+            setCob("D2", WHITE, false)
+            setCob("C3", WHITE, false)
             // Piezas negras (4)
-            setChecker("B5", BLACK, false)
-            setChecker("C5", BLACK, false)
-            setChecker("D5", BLACK, false)
-            setChecker("C4", BLACK, false)
+            setCob("B5", BLACK, false)
+            setCob("C5", BLACK, false)
+            setCob("D5", BLACK, false)
+            setCob("C4", BLACK, false)
         }
 
         val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
@@ -697,9 +697,9 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(WHITE)
             // Piezas blancas (1)
-            setChecker("C6", WHITE, true)  // Pieza mejorada
+            setCob("C6", WHITE, true)  // Pieza mejorada
             // Piezas negras (1)
-            setChecker("C7", BLACK, true)  // Pieza mejorada
+            setCob("C7", BLACK, true)  // Pieza mejorada
         }
 
         val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
@@ -708,7 +708,7 @@ class AIForceTest {
 
         // En final de juego, priorizar supervivencia sobre riesgo
         val newState = applyMoveToBoard(initialState, whiteMove.move!!.from, whiteMove.move.to)
-        val whitePiecesAfter = newState.checkers.values.count { it.color == WHITE }
+        val whitePiecesAfter = newState.cobs.values.count { it.color == WHITE }
         assertEquals("White should not lose its piece", 1, whitePiecesAfter)
     }
 
@@ -718,15 +718,15 @@ class AIForceTest {
         val initialState = createGameState {
             setTurn(BLACK)
             // Piezas blancas (3)
-            setChecker("C10", WHITE, false)
-            setChecker("B11", WHITE, true)
-            setChecker("D11", WHITE, false)
+            setCob("C10", WHITE, false)
+            setCob("B11", WHITE, true)
+            setCob("D11", WHITE, false)
             // Piezas negras (5)
-            setChecker("C8", BLACK, false)  // Pieza a sacrificar
-            setChecker("B7", BLACK, true)
-            setChecker("C7", BLACK, true)
-            setChecker("D7", BLACK, true)
-            setChecker("C9", BLACK, false)
+            setCob("C8", BLACK, false)  // Pieza a sacrificar
+            setCob("B7", BLACK, true)
+            setCob("C7", BLACK, true)
+            setCob("D7", BLACK, true)
+            setCob("C9", BLACK, false)
         }
 
         val blackMove = getNextBestMove(initialState, Difficulty.HARD)
@@ -738,6 +738,6 @@ class AIForceTest {
 
         // Después del movimiento, negro debería tener amenazas fuertes
         val blackThreats = quickEvaluate(newState)
-        assertTrue("Sacrifice should create strong threats", blackThreats < -evalConfig.materialScore * 2)
+        assertTrue("Sacrifice should create strong threats", blackThreats < -evalConfig.cobScore * 2)
     }
 }

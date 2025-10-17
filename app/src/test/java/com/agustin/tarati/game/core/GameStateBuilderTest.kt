@@ -15,7 +15,7 @@ class GameStateBuilderTest {
         val state = builder.build()
 
         assertNotNull("Builder should return a valid state", state)
-        assertNotNull("State should have checkers", state.checkers)
+        assertNotNull("State should have cobs", state.cobs)
         assertNotNull("State should have current turn", state.currentTurn)
     }
 
@@ -31,126 +31,126 @@ class GameStateBuilderTest {
     }
 
     @Test
-    fun builder_setChecker_addsNewChecker() {
+    fun builder_setCob_addsNewCob() {
         val builder = GameStateBuilder()
         val state = builder
-            .setChecker("C3", Color.WHITE, false)
+            .setCob("C3", Color.WHITE, false)
             .build()
 
-        val checker = state.checkers["C3"]
-        assertNotNull("Checker should be added at C3", checker)
-        assertEquals("Checker color should be WHITE", Color.WHITE, checker!!.color)
-        assertFalse("Checker should not be upgraded", checker.isUpgraded)
+        val cob = state.cobs["C3"]
+        assertNotNull("Cob should be added at C3", cob)
+        assertEquals("Cob color should be WHITE", Color.WHITE, cob!!.color)
+        assertFalse("Cob should not be upgraded", cob.isUpgraded)
     }
 
     @Test
-    fun builder_setChecker_upgradesExistingChecker() {
+    fun builder_setCob_upgradesExistingCob() {
         val initialBuilder = GameStateBuilder()
         val initialState = initialBuilder
-            .setChecker("C3", Color.WHITE, false)
+            .setCob("C3", Color.WHITE, false)
             .build()
 
         val builder = GameStateBuilder(initialState)
         val state = builder
-            .setChecker("C3", Color.WHITE, true)
+            .setCob("C3", Color.WHITE, true)
             .build()
 
-        val checker = state.checkers["C3"]
-        assertNotNull("Checker should exist at C3", checker)
-        assertTrue("Checker should be upgraded", checker!!.isUpgraded)
+        val cob = state.cobs["C3"]
+        assertNotNull("Cob should exist at C3", cob)
+        assertTrue("Cob should be upgraded", cob!!.isUpgraded)
     }
 
     @Test
-    fun builder_setChecker_changesColor() {
+    fun builder_setCob_changesColor() {
         val initialBuilder = GameStateBuilder()
         val initialState = initialBuilder
-            .setChecker("C3", Color.WHITE, false)
+            .setCob("C3", Color.WHITE, false)
             .build()
 
         val builder = GameStateBuilder(initialState)
         val state = builder
-            .setChecker("C3", Color.BLACK, false)
+            .setCob("C3", Color.BLACK, false)
             .build()
 
-        val checker = state.checkers["C3"]
-        assertEquals("Checker color should be BLACK", Color.BLACK, checker!!.color)
+        val cob = state.cobs["C3"]
+        assertEquals("Cob color should be BLACK", Color.BLACK, cob!!.color)
     }
 
     @Test
-    fun builder_removeChecker_removesExistingChecker() {
+    fun builder_removeCob_removesExistingCob() {
         val initialBuilder = GameStateBuilder()
         val initialState = initialBuilder
-            .setChecker("C3", Color.WHITE, false)
+            .setCob("C3", Color.WHITE, false)
             .build()
 
-        assertTrue("Initial state should have checker at C3", initialState.checkers.containsKey("C3"))
+        assertTrue("Initial state should have cob at C3", initialState.cobs.containsKey("C3"))
 
         val builder = GameStateBuilder(initialState)
         val state = builder
-            .removeChecker("C3")
+            .removeCob("C3")
             .build()
 
-        assertFalse("Checker should be removed from C3", state.checkers.containsKey("C3"))
+        assertFalse("Cob should be removed from C3", state.cobs.containsKey("C3"))
     }
 
     @Test
-    fun builder_moveChecker_movesToNewPosition() {
+    fun builder_moveCob_movesToNewPosition() {
         val initialBuilder = GameStateBuilder()
         val initialState = initialBuilder
-            .setChecker("C1", Color.WHITE, false)
+            .setCob("C1", Color.WHITE, false)
             .build()
 
         val builder = GameStateBuilder(initialState)
         val state = builder
-            .moveChecker("C1", "B1")
+            .moveCob("C1", "B1")
             .build()
 
-        assertFalse("Original position should be empty", state.checkers.containsKey("C1"))
-        assertTrue("New position should contain checker", state.checkers.containsKey("B1"))
+        assertFalse("Original position should be empty", state.cobs.containsKey("C1"))
+        assertTrue("New position should contain cob", state.cobs.containsKey("B1"))
 
-        val movedChecker = state.checkers["B1"]
-        assertEquals("Moved checker should retain color", Color.WHITE, movedChecker!!.color)
-        assertFalse("Moved checker should retain upgrade status", movedChecker.isUpgraded)
+        val movedCob = state.cobs["B1"]
+        assertEquals("Moved cob should retain color", Color.WHITE, movedCob!!.color)
+        assertFalse("Moved cob should retain upgrade status", movedCob.isUpgraded)
     }
 
     @Test
     fun builder_chainMultipleOperations() {
         val state = GameStateBuilder()
             .setTurn(Color.BLACK)
-            .setChecker("C1", Color.WHITE, false)
-            .setChecker("C7", Color.BLACK, true)
-            .moveChecker("C1", "B1")
-            .removeChecker("C7")
-            .setChecker("C8", Color.BLACK, false)
+            .setCob("C1", Color.WHITE, false)
+            .setCob("C7", Color.BLACK, true)
+            .moveCob("C1", "B1")
+            .removeCob("C7")
+            .setCob("C8", Color.BLACK, false)
             .build()
 
         assertEquals("Turn should be BLACK", Color.BLACK, state.currentTurn)
-        assertFalse("C1 should be empty", state.checkers.containsKey("C1"))
-        assertTrue("B1 should have checker", state.checkers.containsKey("B1"))
-        assertFalse("C7 should be removed", state.checkers.containsKey("C7"))
-        assertTrue("C8 should have checker", state.checkers.containsKey("C8"))
+        assertFalse("C1 should be empty", state.cobs.containsKey("C1"))
+        assertTrue("B1 should have cob", state.cobs.containsKey("B1"))
+        assertFalse("C7 should be removed", state.cobs.containsKey("C7"))
+        assertTrue("C8 should have cob", state.cobs.containsKey("C8"))
 
-        val b1Checker = state.checkers["B1"]
-        assertEquals("B1 checker should be WHITE", Color.WHITE, b1Checker!!.color)
+        val b1Cob = state.cobs["B1"]
+        assertEquals("B1 cob should be WHITE", Color.WHITE, b1Cob!!.color)
 
-        val c8Checker = state.checkers["C8"]
-        assertEquals("C8 checker should be BLACK", Color.BLACK, c8Checker!!.color)
+        val c8Cob = state.cobs["C8"]
+        assertEquals("C8 cob should be BLACK", Color.BLACK, c8Cob!!.color)
     }
 
     @Test
     fun builder_withCustomInitialState() {
         val customInitial = GameState(
-            checkers = mapOf("A1" to Checker(Color.WHITE, true)),
+            cobs = mapOf("A1" to Cob(Color.WHITE, true)),
             currentTurn = Color.BLACK
         )
 
         val builder = GameStateBuilder(customInitial)
         val state = builder
-            .setChecker("B1", Color.BLACK, false)
+            .setCob("B1", Color.BLACK, false)
             .build()
 
-        assertTrue("Should retain custom initial checker", state.checkers.containsKey("A1"))
-        assertTrue("Should add new checker", state.checkers.containsKey("B1"))
+        assertTrue("Should retain custom initial cob", state.cobs.containsKey("A1"))
+        assertTrue("Should add new cob", state.cobs.containsKey("B1"))
         assertEquals("Should retain custom turn", Color.BLACK, state.currentTurn)
     }
 }

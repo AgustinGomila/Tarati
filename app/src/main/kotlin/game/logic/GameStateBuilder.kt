@@ -13,18 +13,18 @@ class GameStateBuilder(initialState: GameState = cleanGameState()) {
         return this
     }
 
-    fun setChecker(position: String, color: Color, isUpgraded: Boolean = false): GameStateBuilder {
-        state = state.modifyChecker(position, color, isUpgraded)
+    fun setCob(position: String, color: Color, isUpgraded: Boolean = false): GameStateBuilder {
+        state = state.modifyCob(position, color, isUpgraded)
         return this
     }
 
-    fun removeChecker(position: String): GameStateBuilder {
-        state = state.modifyChecker(position)
+    fun removeCob(position: String): GameStateBuilder {
+        state = state.modifyCob(position)
         return this
     }
 
-    fun moveChecker(from: String, to: String): GameStateBuilder {
-        state = state.moveChecker(from, to)
+    fun moveCob(from: String, to: String): GameStateBuilder {
+        state = state.moveCob(from, to)
         return this
     }
 

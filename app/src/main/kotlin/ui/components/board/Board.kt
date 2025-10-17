@@ -52,57 +52,57 @@ interface TapEvents {
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    state: BoardState,
+    boardState: BoardState,
     events: BoardEvents,
     viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
-    var previousGameState by remember { mutableStateOf<GameState?>(null) }
+    var prevGameState by remember { mutableStateOf<GameState?>(null) }
     val isAnimating by animationViewModel.isAnimating.collectAsState()
 
     // Efecto para sincronizar el estado inicial
     LaunchedEffect(Unit) {
-        animationViewModel.syncState(state.gameState)
-        previousGameState = state.gameState
+        animationViewModel.syncState(boardState.gameState)
+        prevGameState = boardState.gameState
     }
 
     // Efecto para procesar movimientos
-    LaunchedEffect(state.lastMove, state.gameState, isAnimating) {
-        val lastMove = state.lastMove
-        if (lastMove != null && previousGameState != null && !isAnimating) {
-            val currentGameState = state.gameState
+    LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
+        val lastMove = boardState.lastMove
+        if (lastMove != null && prevGameState != null && !isAnimating) {
+            val currentGameState = boardState.gameState
 
             // Verificar que el movimiento es válido y diferente del estado anterior
-            if (isValidMoveTransition(previousGameState!!, currentGameState, lastMove)) {
+            if (isValidMoveTransition(prevGameState!!, currentGameState, lastMove)) {
                 val success = animationViewModel.processMove(
                     move = lastMove,
-                    oldGameState = previousGameState!!,
+                    oldGameState = prevGameState!!,
                     newGameState = currentGameState,
                     debug = debug
                 )
 
                 if (success) {
-                    previousGameState = currentGameState
+                    prevGameState = currentGameState
                 }
             }
         }
     }
 
     // Sincronizar estado cuando no hay animaciones y el estado cambió
-    LaunchedEffect(state.gameState, isAnimating) {
-        if (!isAnimating && state.gameState != previousGameState) {
-            animationViewModel.syncState(state.gameState)
-            previousGameState = state.gameState
+    LaunchedEffect(boardState.gameState, isAnimating) {
+        if (!isAnimating && boardState.gameState != prevGameState) {
+            animationViewModel.syncState(boardState.gameState)
+            prevGameState = boardState.gameState
         }
     }
 
     // Efecto para reset
-    LaunchedEffect(state.newGame) {
-        if (state.newGame) {
+    LaunchedEffect(boardState.newGame) {
+        if (boardState.newGame) {
             viewModel.resetSelection()
             animationViewModel.reset()
-            previousGameState = null
+            prevGameState = null
             events.onResetCompleted()
         }
     }
@@ -120,10 +120,10 @@ fun Board(
             modifier = Modifier.fillMaxSize(),
             selectedVertexId = vmSelectedPiece,
             validAdjacentVertexes = vmValidMoves,
-            boardState = state.copy(
+            boardState = boardState.copy(
                 gameState = GameState(
-                    checkers = visualState.checkers,
-                    currentTurn = visualState.currentTurn ?: state.gameState.currentTurn
+                    cobs = visualState.cobs,
+                    currentTurn = visualState.currentTurn ?: boardState.gameState.currentTurn
                 )
             ),
             animatedPieces = animatedPieces,
@@ -183,13 +183,13 @@ fun Board(
 
 private fun isValidMoveTransition(oldState: GameState, newState: GameState, move: Move): Boolean {
     // Verificar que hay un cambio real en el estado
-    if (oldState.checkers == newState.checkers) return false
+    if (oldState.cobs == newState.cobs) return false
 
     // Verificar que hay cambios consistentes
-    val movedPieceExistsOldState = oldState.checkers.containsKey(move.from)
-    val destinationFreeInOldState = !oldState.checkers.containsKey(move.to)
-    val movedPieceExistsInNewState = newState.checkers.containsKey(move.to)
-    val originFreeInNewState = !newState.checkers.containsKey(move.from)
+    val movedPieceExistsOldState = oldState.cobs.containsKey(move.from)
+    val destinationFreeInOldState = !oldState.cobs.containsKey(move.to)
+    val movedPieceExistsInNewState = newState.cobs.containsKey(move.to)
+    val originFreeInNewState = !newState.cobs.containsKey(move.from)
 
     return movedPieceExistsInNewState &&
             originFreeInNewState &&
@@ -211,7 +211,7 @@ fun BoardPreview(
 ) {
     TaratiTheme {
         Board(
-            state = BoardState(
+            boardState = BoardState(
                 gameState = gameState,
                 lastMove = null,
                 boardOrientation = orientation,
@@ -260,14 +260,14 @@ fun BoardPreview_LandscapeBlack() {
 fun BoardPreview_Custom() {
     val exampleGameState = createGameState {
         setTurn(WHITE)
-        setChecker("C2", WHITE, true)
-        setChecker("C8", BLACK, true)
-        setChecker("B1", WHITE, false)
-        setChecker("B4", BLACK, false)
+        setCob("C2", WHITE, true)
+        setCob("C8", BLACK, true)
+        setCob("B1", WHITE, false)
+        setCob("B4", BLACK, false)
 
         // Agregar piezas extra para testing
-        setChecker("C5", WHITE, true)
-        setChecker("C11", BLACK, true)
+        setCob("C5", WHITE, true)
+        setCob("C11", BLACK, true)
     }
     val vm = viewModel<BoardSelectionViewModel>().apply {
         updateSelectedVertex("B1")

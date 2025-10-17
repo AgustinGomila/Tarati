@@ -19,7 +19,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
@@ -102,12 +102,12 @@ fun BoardRenderer(
         }
 
         // Dibujar piezas estáticas (excluyendo las que están siendo animadas)
-        gameState.checkers.forEach { (vertexId, checker) ->
+        gameState.cobs.forEach { (vertexId, cob) ->
             if (!animatedPieces.containsKey(vertexId)) {
                 key(vertexId) {
                     StaticPieceComposable(
                         vertexId = vertexId,
-                        checker = checker,
+                        cob = cob,
                         containerWidth = containerWidthPx,
                         containerHeight = containerHeightPx,
                         orientation = orientation,
@@ -192,7 +192,7 @@ fun AnimatedPieceComposable(
 @Composable
 fun StaticPieceComposable(
     vertexId: String,
-    checker: Checker,
+    cob: Cob,
     containerWidth: Int,
     containerHeight: Int,
     orientation: BoardOrientation,
@@ -224,7 +224,7 @@ fun StaticPieceComposable(
             drawPiece(
                 selectedVertexId = selectedPiece,
                 vertexId = vertexId,
-                checker = checker,
+                cob = cob,
                 colors = colors
             )
         }

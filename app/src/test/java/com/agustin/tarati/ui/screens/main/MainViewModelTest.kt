@@ -1,37 +1,26 @@
 package com.agustin.tarati.ui.screens.main
 
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
-import com.agustin.tarati.ui.screens.settings.SettingsRepository
-import io.mockk.mockk
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.GlobalContext.stopKoin
-import org.koin.dsl.module
 
 class MainViewModelTest {
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var mockSettingsRepository: SettingsRepository
 
     @Before
     fun setUp() {
-        mockSettingsRepository = mockk()
-        startKoin {
-            modules(module {
-                single { mockSettingsRepository }
-            })
-        }
-        viewModel = MainViewModel(mockSettingsRepository)
+        viewModel = MainViewModel()
     }
 
     @After
@@ -44,28 +33,28 @@ class MainViewModelTest {
         val gameState = initialGameState()
 
         assertEquals("Initial turn should be WHITE", Color.WHITE, gameState.currentTurn)
-        assertEquals("Should have 8 checkers total", 8, gameState.checkers.size)
+        assertEquals("Should have 8 cobs total", 8, gameState.cobs.size)
         assertEquals(
-            "Should have 4 white checkers",
+            "Should have 4 white cobs",
             4,
-            gameState.checkers.values.count { it.color == Color.WHITE })
+            gameState.cobs.values.count { it.color == Color.WHITE })
         assertEquals(
-            "Should have 4 black checkers",
+            "Should have 4 black cobs",
             4,
-            gameState.checkers.values.count { it.color == Color.BLACK })
+            gameState.cobs.values.count { it.color == Color.BLACK })
 
         // Verify specific positions
-        assertTrue("C1 should have white checker", gameState.checkers["C1"]?.color == Color.WHITE)
-        assertTrue("C7 should have black checker", gameState.checkers["C7"]?.color == Color.BLACK)
-        assertTrue("D1 should have white checker", gameState.checkers["D1"]?.color == Color.WHITE)
-        assertTrue("D3 should have black checker", gameState.checkers["D3"]?.color == Color.BLACK)
+        assertTrue("C1 should have white cob", gameState.cobs["C1"]?.color == Color.WHITE)
+        assertTrue("C7 should have black cob", gameState.cobs["C7"]?.color == Color.BLACK)
+        assertTrue("D1 should have white cob", gameState.cobs["D1"]?.color == Color.WHITE)
+        assertTrue("D3 should have black cob", gameState.cobs["D3"]?.color == Color.BLACK)
     }
 
     @Test
-    fun cleanGameState_hasNoCheckers() {
+    fun cleanGameState_hasNoCobs() {
         val gameState = cleanGameState()
 
-        assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
+        assertTrue("Clean state should have no cobs", gameState.cobs.isEmpty())
         assertEquals("Turn should be WHITE by default", Color.WHITE, gameState.currentTurn)
     }
 
@@ -73,14 +62,14 @@ class MainViewModelTest {
     fun cleanGameState_withCustomTurn() {
         val gameState = cleanGameState(Color.BLACK)
 
-        assertTrue("Clean state should have no checkers", gameState.checkers.isEmpty())
+        assertTrue("Clean state should have no cobs", gameState.cobs.isEmpty())
         assertEquals("Turn should be BLACK", Color.BLACK, gameState.currentTurn)
     }
 
     @Test
     fun updateGameState_changesState() {
         val newState = GameState(
-            checkers = mapOf("A1" to Checker(Color.WHITE, true)),
+            cobs = mapOf("A1" to Cob(Color.WHITE, true)),
             currentTurn = Color.BLACK
         )
 

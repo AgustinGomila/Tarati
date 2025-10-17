@@ -1,36 +1,36 @@
 package com.agustin.tarati.game.logic
 
-import com.agustin.tarati.game.core.Checker
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 
 // Función de extensión para modificar piezas
-fun GameState.modifyChecker(position: String, color: Color? = null, isUpgraded: Boolean? = null): GameState {
-    val newCheckers = checkers.toMutableMap()
+fun GameState.modifyCob(position: String, color: Color? = null, isUpgraded: Boolean? = null): GameState {
+    val newCobs = cobs.toMutableMap()
 
     if (color == null && isUpgraded == null) {
         // Si ambos son null, eliminar la pieza
-        newCheckers.remove(position)
+        newCobs.remove(position)
     } else {
-        val currentChecker = newCheckers[position]
-        val newColor = color ?: currentChecker?.color ?: Color.WHITE
-        val newUpgraded = isUpgraded ?: currentChecker?.isUpgraded ?: false
+        val currentCob = newCobs[position]
+        val newColor = color ?: currentCob?.color ?: Color.WHITE
+        val newUpgraded = isUpgraded ?: currentCob?.isUpgraded ?: false
 
-        newCheckers[position] = Checker(newColor, newUpgraded)
+        newCobs[position] = Cob(newColor, newUpgraded)
     }
 
-    return this.copy(checkers = newCheckers)
+    return this.copy(cobs = newCobs)
 }
 
 // Función para mover piezas
-fun GameState.moveChecker(from: String, to: String): GameState {
-    val newCheckers = checkers.toMutableMap()
-    val checker = newCheckers[from] ?: return this
+fun GameState.moveCob(from: String, to: String): GameState {
+    val newCobs = cobs.toMutableMap()
+    val cob = newCobs[from] ?: return this
 
-    newCheckers.remove(from)
-    newCheckers[to] = checker
+    newCobs.remove(from)
+    newCobs[to] = cob
 
-    return this.copy(checkers = newCheckers)
+    return this.copy(cobs = newCobs)
 }
 
 // Función para cambiar el turno
@@ -44,9 +44,9 @@ fun GameState.hashBoard(): String {
         append("turn:${currentTurn},")
 
         // Ordenar las posiciones para consistencia
-        val sortedEntries = checkers.entries.sortedBy { it.key }
-        sortedEntries.forEach { (pos, checker) ->
-            append("$pos:${checker.color}:${checker.isUpgraded},")
+        val sortedEntries = cobs.entries.sortedBy { it.key }
+        sortedEntries.forEach { (pos, cob) ->
+            append("$pos:${cob.color}:${cob.isUpgraded},")
         }
     }
 }

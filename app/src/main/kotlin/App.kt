@@ -49,7 +49,7 @@ class App : Application() {
     // Módulo de ViewModels
     private val viewModelModule = module {
         viewModel { SettingsViewModel(getKoin().get()) }
-        viewModel { MainViewModel(getKoin().get()) }
+        viewModel { MainViewModel() }
         viewModel { BoardAnimationViewModel() }
         viewModel { BoardSelectionViewModel() }
     }

@@ -9,6 +9,7 @@ object AppColors {
     fun getBoardColors(): BoardColors {
         val colorScheme = MaterialTheme.colorScheme
         return BoardColors(
+            neutralColor = colorScheme.scrim,
             backgroundColor = colorScheme.surface,
             boardBackgroundColor = colorScheme.surfaceVariant,
             edgeColor = colorScheme.outline.copy(alpha = 0.6f),
@@ -27,6 +28,7 @@ object AppColors {
 }
 
 data class BoardColors(
+    val neutralColor: Color,
     val backgroundColor: Color,
     val boardBackgroundColor: Color,
     val edgeColor: Color,

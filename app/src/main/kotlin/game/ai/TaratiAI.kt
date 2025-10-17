@@ -1,15 +1,20 @@
 package com.agustin.tarati.game.ai
 
+import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
+import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.centerVertices
 import com.agustin.tarati.game.core.GameBoard.edges
 import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
+import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.isCastling
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.hashBoard
 import java.util.concurrent.atomic.AtomicReference
@@ -266,8 +271,8 @@ object TaratiAI {
                 compareByDescending<MoveEvaluation> { it.isImmediateWin }
                     .thenByDescending { !it.isImmediateLoss }
                     .thenByDescending { it.isWinningMove }
-                    .thenByDescending { it.capturesUpgraded }
-                    .thenByDescending { it.capturesNormal }
+                    .thenByDescending { it.flipsRoc }
+                    .thenByDescending { it.flipsCob }
                     .thenByDescending { it.leadsToUpgrade }
                     .thenByDescending { it.score }
             )
@@ -276,8 +281,8 @@ object TaratiAI {
                 compareByDescending<MoveEvaluation> { it.isImmediateWin }
                     .thenByDescending { !it.isImmediateLoss }
                     .thenByDescending { it.isWinningMove }
-                    .thenBy { it.capturesUpgraded }
-                    .thenBy { it.capturesNormal }
+                    .thenBy { it.flipsRoc }
+                    .thenBy { it.flipsCob }
                     .thenBy { it.leadsToUpgrade }
                     .thenBy { it.score }
             )
@@ -290,8 +295,8 @@ object TaratiAI {
     private data class MoveEvaluation(
         val move: Move,
         val score: Double,
-        val capturesUpgraded: Int,
-        val capturesNormal: Int,
+        val flipsRoc: Int,
+        val flipsCob: Int,
         val leadsToUpgrade: Boolean,
         val isWinningMove: Boolean,
         val isImmediateWin: Boolean,
@@ -302,7 +307,7 @@ object TaratiAI {
         val newState = applyMove(gameState, move)
         val wouldCauseRepetition = checkIfWouldCauseRepetition(newState)
 
-        val (upgradedCaptures, normalCaptures) = countCapturesByType(gameState, newState, move.to)
+        val (rocFlips, cobFlips) = countFlipsByType(gameState, newState, move)
         val quickScore = quickEvaluate(newState)
 
         val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
@@ -317,12 +322,18 @@ object TaratiAI {
             if (isImmediateWin) evalConfig.winningScore * evalConfig.immediateWinBonusMultiplier else 0.0
 
         val totalScore = quickScore + upgradeBonus + repetitionPenalty + immediateWinBonus +
-                upgradedCaptures * evalConfig.captureUpgradedBonus +
-                normalCaptures * evalConfig.captureNormalBonus
+                rocFlips * evalConfig.flipRocBonus +
+                cobFlips * evalConfig.flipCobBonus
 
         return MoveEvaluation(
-            move, totalScore, upgradedCaptures, normalCaptures,
-            leadsToUpgrade, isWinningMove, isImmediateWin, wouldCauseRepetition
+            move = move,
+            score = totalScore,
+            flipsRoc = rocFlips,
+            flipsCob = cobFlips,
+            leadsToUpgrade = leadsToUpgrade,
+            isWinningMove = isWinningMove,
+            isImmediateWin = isImmediateWin,
+            isImmediateLoss = wouldCauseRepetition
         )
     }
 
@@ -343,13 +354,13 @@ object TaratiAI {
         val metrics = calculateBoardMetrics(gameState)
 
         return with(evalConfig) {
-            // Material (ya incluye el peso de upgradedPieceScore y materialScore)
+            // Material (ya incluye el peso de rocScore y cobScore)
             (metrics.whiteMaterial - metrics.blackMaterial) +
                     // Factores posicionales y tácticos
                     (metrics.whiteCenterControl - metrics.blackCenterControl) * controlCenterScore +
                     (metrics.whiteMobility - metrics.blackMobility) * mobilityScore +
-                    (metrics.whiteHomeControl - metrics.blackHomeControl) * homeBaseControlScore +
-                    (metrics.whiteOpponentPressure - metrics.blackOpponentPressure) * opponentBasePressureScore +
+                    (metrics.whiteHomeControl - metrics.blackHomeControl) * domesticControlScore +
+                    (metrics.whiteOpponentPressure - metrics.blackOpponentPressure) * opponentDomesticPressureScore +
                     (metrics.whiteUpgradeOpportunities - metrics.blackUpgradeOpportunities) * upgradeScore
         }
     }
@@ -383,11 +394,11 @@ object TaratiAI {
         var whiteUpgradeOpportunities = 0
         var blackUpgradeOpportunities = 0
 
-        for ((vertex, checker) in gameState.checkers) {
-            val materialValue = if (checker.isUpgraded) evalConfig.upgradedPieceScore else evalConfig.materialScore
+        for ((vertex, cob) in gameState.cobs) {
+            val materialValue = if (cob.isUpgraded) evalConfig.rocScore else evalConfig.cobScore
 
             // Material y control del centro
-            if (checker.color == WHITE) {
+            if (cob.color == WHITE) {
                 whiteMaterial += materialValue
                 if (vertex in centerVertices) whiteCenterControl++
             } else {
@@ -396,11 +407,11 @@ object TaratiAI {
             }
 
             // Movilidad
-            val possibleMoves = countValidMoves(gameState, vertex, checker)
-            if (checker.color == WHITE) whiteMobility += possibleMoves else blackMobility += possibleMoves
+            val possibleMoves = countValidMoves(gameState, vertex, cob)
+            if (cob.color == WHITE) whiteMobility += possibleMoves else blackMobility += possibleMoves
 
             // Control de bases y presión
-            when (checker.color) {
+            when (cob.color) {
                 WHITE -> {
                     if (vertex in homeBases[WHITE]!!) whiteHomeControl++
                     if (vertex in homeBases[BLACK]!!) whiteOpponentPressure++
@@ -413,11 +424,11 @@ object TaratiAI {
             }
 
             // Oportunidades de mejora
-            if (!checker.isUpgraded) {
+            if (!cob.isUpgraded) {
                 val adjacent = adjacencyMap[vertex] ?: emptyList()
-                val enemyBase = homeBases[checker.color.opponent()]!!
+                val enemyBase = homeBases[cob.color.opponent()]!!
                 if (adjacent.any { it in enemyBase }) {
-                    if (checker.color == WHITE) whiteUpgradeOpportunities++ else blackUpgradeOpportunities++
+                    if (cob.color == WHITE) whiteUpgradeOpportunities++ else blackUpgradeOpportunities++
                 }
             }
         }
@@ -441,13 +452,13 @@ object TaratiAI {
     private fun countValidMoves(
         gameState: GameState,
         vertex: String,
-        checker: com.agustin.tarati.game.core.Checker
+        cob: Cob
     ): Int {
         val adjacentVertices = adjacencyMap[vertex] ?: emptyList()
         return adjacentVertices.count { to ->
-            !gameState.checkers.containsKey(to) &&
-                    (checker.isUpgraded || com.agustin.tarati.game.core.GameBoard.isForwardMove(
-                        checker.color,
+            !gameState.cobs.containsKey(to) &&
+                    (cob.isUpgraded || isForwardMove(
+                        cob.color,
                         vertex,
                         to
                     ))
@@ -465,10 +476,10 @@ object TaratiAI {
             var whiteThreatsToUpgraded = 0
             var blackThreatsToUpgraded = 0
 
-            for ((vertex, checker) in gameState.checkers) {
-                val materialValue = if (checker.isUpgraded) evalConfig.upgradedPieceScore else evalConfig.materialScore
+            for ((vertex, cob) in gameState.cobs) {
+                val materialValue = if (cob.isUpgraded) evalConfig.rocScore else evalConfig.cobScore
 
-                if (checker.color == WHITE) {
+                if (cob.color == WHITE) {
                     whiteMaterial += materialValue
                     whiteThreatsToUpgraded += countThreatsToUpgraded(gameState, vertex, BLACK)
                 } else {
@@ -486,32 +497,44 @@ object TaratiAI {
     private fun countThreatsToUpgraded(gameState: GameState, vertex: String, enemyColor: Color): Int {
         val adjacent = adjacencyMap[vertex] ?: emptyList()
         return adjacent.count {
-            val enemy = gameState.checkers[it]
+            val enemy = gameState.cobs[it]
             enemy?.color == enemyColor && enemy.isUpgraded
         }
     }
 
-    private fun countCapturesByType(oldState: GameState, newState: GameState, targetVertex: String): Pair<Int, Int> {
-        var upgradedCaptures = 0
-        var normalCaptures = 0
+    private fun countFlipsByType(oldState: GameState, newState: GameState, move: Move): Pair<Int, Int> {
+        var rocFlips = 0
+        var cobFlips = 0
 
-        for (vertex in adjacencyMap[targetVertex] ?: emptyList()) {
-            val oldChecker = oldState.checkers[vertex]
-            val newChecker = newState.checkers[vertex]
+        val cob = oldState.cobs[move.from]!!
 
-            if (oldChecker != null && newChecker != null && oldChecker.color != newChecker.color) {
-                if (oldChecker.isUpgraded) upgradedCaptures++ else normalCaptures++
+        // Capturas especiales
+        if (move.isCastling(cob.color)) {
+            val targetPosition = if (cob.color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
+            val targetCob = oldState.cobs[targetPosition]
+            if (targetCob != null) {
+                if (targetCob.isUpgraded) rocFlips++ else cobFlips++
             }
         }
 
-        return Pair(upgradedCaptures, normalCaptures)
+        // Capturas normales (adyacentes)
+        for (vertex in adjacencyMap[move.to] ?: emptyList()) {
+            val oldCob = oldState.cobs[vertex]
+            val newCob = newState.cobs[vertex]
+
+            if (oldCob != null && newCob != null && oldCob.color != newCob.color) {
+                if (oldCob.isUpgraded) rocFlips++ else cobFlips++
+            }
+        }
+
+        return Pair(rocFlips, cobFlips)
     }
 
     // ==================== Estado del Juego ====================
 
     fun isGameOver(gameState: GameState): Boolean {
-        val whitePieces = gameState.checkers.values.count { it.color == WHITE }
-        val blackPieces = gameState.checkers.values.count { it.color == BLACK }
+        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
+        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
 
         return whitePieces == 0 || blackPieces == 0 ||
                 getAllPossibleMoves(gameState).isEmpty() ||
@@ -525,8 +548,8 @@ object TaratiAI {
             return gameState.currentTurn.opponent()
         }
 
-        val whitePieces = gameState.checkers.values.count { it.color == WHITE }
-        val blackPieces = gameState.checkers.values.count { it.color == BLACK }
+        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
+        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
 
         return when {
             whitePieces == 0 -> BLACK
@@ -560,53 +583,44 @@ object TaratiAI {
     // ==================== Aplicar Movimiento ====================
 
     private fun applyMove(gameState: GameState, move: Move): GameState {
-        val newState = applyMoveToBoard(gameState, move.from, move.to)
-        return newState.copy(currentTurn = gameState.currentTurn.opponent())
+        return applyMoveToBoard(gameState, move.from, move.to)
+            .copy(currentTurn = gameState.currentTurn.opponent())
     }
 
     fun applyMoveToBoard(prevState: GameState, from: String, to: String): GameState {
-        val mutable = prevState.checkers.toMutableMap()
-        val movedChecker = mutable[from] ?: return prevState
+        val mutableCobs = prevState.cobs.toMutableMap()
+        val movedCob = mutableCobs.remove(from) ?: return prevState
 
-        mutable.remove(from)
+        val placedCob = upgradeIfInEnemyBase(movedCob, to)
+        mutableCobs[to] = placedCob
 
-        // Aplicar mejora si llega a base enemiga
-        val placedChecker = upgradeIfInEnemyBase(movedChecker, to)
-        mutable[to] = placedChecker
-
-        // Voltear fichas adyacentes
-        flipAdjacentCheckers(mutable, to, placedChecker.color)
-
-        return GameState(mutable.toMap(), prevState.currentTurn)
-    }
-
-    private fun upgradeIfInEnemyBase(
-        checker: com.agustin.tarati.game.core.Checker,
-        vertex: String
-    ): com.agustin.tarati.game.core.Checker {
-        val enemyBase = homeBases[checker.color.opponent()] ?: emptyList()
-        return if (vertex in enemyBase) {
-            checker.copy(isUpgraded = true)
+        if (Move(from, to).isCastling(movedCob.color)) {
+            flipCastlingCobs(mutableCobs, movedCob.color)
         } else {
-            checker
+            flipAdjacentCobs(mutableCobs, to, placedCob.color)
         }
+
+        return GameState(mutableCobs, prevState.currentTurn)
     }
 
-    private fun flipAdjacentCheckers(
-        mutable: MutableMap<String, com.agustin.tarati.game.core.Checker>,
-        vertex: String,
-        color: Color
-    ) {
-        for (edge in edges) {
-            val (a, b) = edge
-            if (a != vertex && b != vertex) continue
+    private fun upgradeIfInEnemyBase(cob: Cob, vertex: String): Cob {
+        val enemyBase = homeBases[cob.color.opponent()] ?: emptyList()
+        return if (vertex in enemyBase) cob.copy(isUpgraded = true) else cob
+    }
 
-            val adjacent = if (a == vertex) b else a
-            val adjChecker = mutable[adjacent]
-            if (adjChecker == null || adjChecker.color == color) continue
+    private fun flipCastlingCobs(mutable: MutableMap<String, Cob>, color: Color) {
+        val targetVertex = if (color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
+        mutable[targetVertex]?.copy(color = color)
+    }
 
-            val flipped = adjChecker.copy(color = color)
-            mutable[adjacent] = upgradeIfInEnemyBase(flipped, adjacent)
+    private fun flipAdjacentCobs(mutable: MutableMap<String, Cob>, vertex: String, color: Color) {
+        edges.forEach { (a, b) ->
+            val adjacent = if (a == vertex) b else if (b == vertex) a else null
+            adjacent?.let { adj ->
+                mutable[adj]?.takeIf { it.color != color }?.let { adjCob ->
+                    mutable[adj] = upgradeIfInEnemyBase(adjCob.copy(color = color), adj)
+                }
+            }
         }
     }
 }

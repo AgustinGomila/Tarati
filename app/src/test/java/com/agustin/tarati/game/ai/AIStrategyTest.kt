@@ -2,6 +2,7 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
+import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getWinner
@@ -56,7 +57,7 @@ class TaratiChampionDiagnosticTest {
             Move("A1", "B6"),  // 6. Negras
             Move("B2", "A1"),  // 7. Blancas - CAPTURE CENTER
             Move("D4", "C8"),  // 7. Negras
-            Move("A1", "B4")   // 8. Blancas - CHECKMATE
+            Move("A1", "B4")   // 8. Blancas - MIT
         )
 
         var gameState = initialGameState()
@@ -272,12 +273,12 @@ class TaratiChampionDiagnosticTest {
             println("\nOpponent Base Pressure:")
             println("  White: ${metrics.whiteOpponentPressure} | Black: ${metrics.blackOpponentPressure}")
             val pressureScore =
-                (metrics.whiteOpponentPressure - metrics.blackOpponentPressure) * config.opponentBasePressureScore
+                (metrics.whiteOpponentPressure - metrics.blackOpponentPressure) * config.opponentDomesticPressureScore
             println("  Score contribution: $pressureScore")
 
             println("\nHome Base Control:")
             println("  White: ${metrics.whiteHomeControl} | Black: ${metrics.blackHomeControl}")
-            val homeScore = (metrics.whiteHomeControl - metrics.blackHomeControl) * config.homeBaseControlScore
+            val homeScore = (metrics.whiteHomeControl - metrics.blackHomeControl) * config.domesticControlScore
             println("  Score contribution: $homeScore")
 
             println("\nUpgrade Opportunities:")
@@ -340,26 +341,26 @@ class TaratiChampionDiagnosticTest {
 
     private fun printMoveDetails(gameState: GameState, move: Move) {
         val newState = applyMoveToBoard(gameState, move.from, move.to)
-        val movedChecker = gameState.checkers[move.from] ?: return
+        val movedCob = gameState.cobs[move.from] ?: return
 
         var capturedPieces = 0
         var upgradedCaptured = 0
         for (vertex in adjacencyMap[move.to] ?: emptyList()) {
-            val checker = gameState.checkers[vertex]
-            if (checker != null && checker.color != movedChecker.color) {
+            val cob = gameState.cobs[vertex]
+            if (cob != null && cob.color != movedCob.color) {
                 capturedPieces++
-                if (checker.isUpgraded) upgradedCaptured++
+                if (cob.isUpgraded) upgradedCaptured++
             }
         }
 
-        val enemyBase = homeBases[movedChecker.color.opponent()] ?: emptyList()
-        val willUpgrade = move.to in enemyBase && !movedChecker.isUpgraded
+        val enemyBase = homeBases[movedCob.color.opponent()] ?: emptyList()
+        val willUpgrade = move.to in enemyBase && !movedCob.isUpgraded
 
         println("    Captures: $capturedPieces (Upgraded: $upgradedCaptured)")
         println("    Upgrades: ${if (willUpgrade) "YES" else "NO"}")
         println("    Center control: ${if (move.to in centerVertices) "YES" else "NO"}")
 
-        val mobility = getAllPossibleMoves(newState.copy(currentTurn = movedChecker.color)).size
+        val mobility = getAllPossibleMoves(newState.copy(currentTurn = movedCob.color)).size
         println("    Resulting mobility: $mobility moves")
 
         if (isGameOver(newState)) {
@@ -369,18 +370,18 @@ class TaratiChampionDiagnosticTest {
 
     private fun printBoardState(gameState: GameState) {
         println("\nBoard state:")
-        val whitePieces = gameState.checkers.values.count { it.color == WHITE }
-        val blackPieces = gameState.checkers.values.count { it.color == BLACK }
-        val whiteUpgraded = gameState.checkers.values.count { it.color == WHITE && it.isUpgraded }
-        val blackUpgraded = gameState.checkers.values.count { it.color == BLACK && it.isUpgraded }
+        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
+        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
+        val whiteUpgraded = gameState.cobs.values.count { it.color == WHITE && it.isUpgraded }
+        val blackUpgraded = gameState.cobs.values.count { it.color == BLACK && it.isUpgraded }
 
         println("  White: $whitePieces pieces ($whiteUpgraded upgraded)")
         println("  Black: $blackPieces pieces ($blackUpgraded upgraded)")
 
-        val whitesInCenter = gameState.checkers.entries.count {
+        val whitesInCenter = gameState.cobs.entries.count {
             it.key in centerVertices && it.value.color == WHITE
         }
-        val blacksInCenter = gameState.checkers.entries.count {
+        val blacksInCenter = gameState.cobs.entries.count {
             it.key in centerVertices && it.value.color == BLACK
         }
         println("  Center: W:$whitesInCenter B:$blacksInCenter")
@@ -389,9 +390,9 @@ class TaratiChampionDiagnosticTest {
     private fun printDetailedState(gameState: GameState) {
         println("Current turn: ${gameState.currentTurn.name}")
         println("Pieces on board:")
-        gameState.checkers.entries.sortedBy { it.key }.forEach { (pos, checker) ->
-            val upgraded = if (checker.isUpgraded) "[U]" else "   "
-            val color = if (checker.color == WHITE) "W" else "B"
+        gameState.cobs.entries.sortedBy { it.key }.forEach { (pos, cob) ->
+            val upgraded = if (cob.isUpgraded) "[U]" else "   "
+            val color = if (cob.color == WHITE) "W" else "B"
             println("  $pos: $color $upgraded")
         }
         printBoardState(gameState)
@@ -429,12 +430,12 @@ class TaratiChampionDiagnosticTest {
         var whiteUpgradeOpportunities = 0
         var blackUpgradeOpportunities = 0
 
-        val config = TaratiAI.evalConfig
+        val config = evalConfig
 
-        for ((vertex, checker) in gameState.checkers) {
-            val materialValue = if (checker.isUpgraded) config.upgradedPieceScore else config.materialScore
+        for ((vertex, cob) in gameState.cobs) {
+            val materialValue = if (cob.isUpgraded) config.rocScore else config.cobScore
 
-            if (checker.color == WHITE) {
+            if (cob.color == WHITE) {
                 whiteMaterial += materialValue
                 if (vertex in centerVertices) whiteCenterControl++
             } else {
@@ -443,13 +444,13 @@ class TaratiChampionDiagnosticTest {
             }
 
             val possibleMoves = adjacencyMap[vertex]?.count { to ->
-                !gameState.checkers.containsKey(to) &&
-                        (checker.isUpgraded || isForwardMove(checker.color, vertex, to))
+                !gameState.cobs.containsKey(to) &&
+                        (cob.isUpgraded || isForwardMove(cob.color, vertex, to))
             } ?: 0
 
-            if (checker.color == WHITE) whiteMobility += possibleMoves else blackMobility += possibleMoves
+            if (cob.color == WHITE) whiteMobility += possibleMoves else blackMobility += possibleMoves
 
-            when (checker.color) {
+            when (cob.color) {
                 WHITE -> {
                     if (vertex in homeBases[WHITE]!!) whiteHomeControl++
                     if (vertex in homeBases[BLACK]!!) whiteOpponentPressure++
@@ -461,11 +462,11 @@ class TaratiChampionDiagnosticTest {
                 }
             }
 
-            if (!checker.isUpgraded) {
+            if (!cob.isUpgraded) {
                 val adjacent = adjacencyMap[vertex] ?: emptyList()
-                val enemyBase = homeBases[checker.color.opponent()]!!
+                val enemyBase = homeBases[cob.color.opponent()]!!
                 if (adjacent.any { it in enemyBase }) {
-                    if (checker.color == WHITE) whiteUpgradeOpportunities++ else blackUpgradeOpportunities++
+                    if (cob.color == WHITE) whiteUpgradeOpportunities++ else blackUpgradeOpportunities++
                 }
             }
         }
