@@ -8,101 +8,101 @@ import org.junit.Test
 class BoardViewModelTest {
 
     @Test
-    fun initialState_hasNullSelectedPiece() {
-        val viewModel = BoardViewModel()
-        assertNull("Initial selected piece should be null", viewModel.selectedPiece.value)
+    fun initialState_hasNullSelectedVertex() {
+        val viewModel = BoardSelectionViewModel()
+        assertNull("Initial selected piece should be null", viewModel.selectedVertexId.value)
     }
 
     @Test
-    fun initialState_hasEmptyHighlightedMoves() {
-        val viewModel = BoardViewModel()
+    fun initialState_hasEmptyValidAdjacentVertexes() {
+        val viewModel = BoardSelectionViewModel()
         assertTrue(
             "Initial highlighted moves should be empty",
-            viewModel.validMoves.value.isEmpty()
+            viewModel.validAdjacentVertexes.value.isEmpty()
         )
     }
 
     @Test
-    fun updateSelectedPiece_setsNewValue() {
-        val viewModel = BoardViewModel()
+    fun updateSelectedVertex_setsNewValue() {
+        val viewModel = BoardSelectionViewModel()
 
-        viewModel.updateSelectedPiece("C1")
-        assertEquals("Selected piece should be C1", "C1", viewModel.selectedPiece.value)
+        viewModel.updateSelectedVertex("C1")
+        assertEquals("Selected piece should be C1", "C1", viewModel.selectedVertexId.value)
 
-        viewModel.updateSelectedPiece("B2")
-        assertEquals("Selected piece should be B2", "B2", viewModel.selectedPiece.value)
+        viewModel.updateSelectedVertex("B2")
+        assertEquals("Selected piece should be B2", "B2", viewModel.selectedVertexId.value)
     }
 
     @Test
-    fun updateSelectedPiece_withNull_clearsSelection() {
-        val viewModel = BoardViewModel()
-        viewModel.updateSelectedPiece("C1")
+    fun updateSelectedVertex_withNull_clearsSelection() {
+        val viewModel = BoardSelectionViewModel()
+        viewModel.updateSelectedVertex("C1")
 
-        viewModel.updateSelectedPiece(null)
+        viewModel.updateSelectedVertex(null)
         assertNull(
             "Selected piece should be null after setting to null",
-            viewModel.selectedPiece.value
+            viewModel.selectedVertexId.value
         )
     }
 
     @Test
-    fun updateValidMoves_setsNewMoves() {
-        val viewModel = BoardViewModel()
+    fun updateValidAdjacentVertexes_setsNewValidVertexes() {
+        val viewModel = BoardSelectionViewModel()
         val moves = listOf("C2", "B1", "A1")
 
-        viewModel.updateValidMoves(moves)
+        viewModel.updateValidAdjacentVertexes(moves)
         assertEquals(
             "Highlighted moves should match input",
-            moves, viewModel.validMoves.value
+            moves, viewModel.validAdjacentVertexes.value
         )
     }
 
     @Test
-    fun updateValidMoves_withEmptyList_clearsMoves() {
-        val viewModel = BoardViewModel()
-        viewModel.updateValidMoves(listOf("C2", "B1"))
+    fun updateValidAdjacentVertexes_withEmptyList_clearsValidVertexes() {
+        val viewModel = BoardSelectionViewModel()
+        viewModel.updateValidAdjacentVertexes(listOf("C2", "B1"))
 
-        viewModel.updateValidMoves(emptyList())
+        viewModel.updateValidAdjacentVertexes(emptyList())
         assertTrue(
             "Highlighted moves should be empty",
-            viewModel.validMoves.value.isEmpty()
+            viewModel.validAdjacentVertexes.value.isEmpty()
         )
     }
 
     @Test
     fun resetSelection_clearsBothProperties() {
-        val viewModel = BoardViewModel()
-        viewModel.updateSelectedPiece("C1")
-        viewModel.updateValidMoves(listOf("C2", "B1"))
+        val viewModel = BoardSelectionViewModel()
+        viewModel.updateSelectedVertex("C1")
+        viewModel.updateValidAdjacentVertexes(listOf("C2", "B1"))
 
         viewModel.resetSelection()
 
         assertNull(
             "Selected piece should be null after reset",
-            viewModel.selectedPiece.value
+            viewModel.selectedVertexId.value
         )
         assertTrue(
             "Highlighted moves should be empty after reset",
-            viewModel.validMoves.value.isEmpty()
+            viewModel.validAdjacentVertexes.value.isEmpty()
         )
     }
 
     @Test
     fun stateFlow_emitsUpdates() {
-        val viewModel = BoardViewModel()
+        val viewModel = BoardSelectionViewModel()
         val selectedPieceValues = mutableListOf<String?>()
         val highlightedMovesValues = mutableListOf<List<String>>()
 
         // Collect initial values
-        selectedPieceValues.add(viewModel.selectedPiece.value)
-        highlightedMovesValues.add(viewModel.validMoves.value)
+        selectedPieceValues.add(viewModel.selectedVertexId.value)
+        highlightedMovesValues.add(viewModel.validAdjacentVertexes.value)
 
         // Update and collect new values
-        viewModel.updateSelectedPiece("C1")
-        viewModel.updateValidMoves(listOf("C2"))
+        viewModel.updateSelectedVertex("C1")
+        viewModel.updateValidAdjacentVertexes(listOf("C2"))
 
-        selectedPieceValues.add(viewModel.selectedPiece.value)
-        highlightedMovesValues.add(viewModel.validMoves.value)
+        selectedPieceValues.add(viewModel.selectedVertexId.value)
+        highlightedMovesValues.add(viewModel.validAdjacentVertexes.value)
 
         // Verify state changes
         assertNull("First selected piece should be null", selectedPieceValues[0])

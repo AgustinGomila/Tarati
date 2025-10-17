@@ -65,8 +65,8 @@ fun DrawScope.drawPiece(
 fun DrawScope.drawVertices(
     canvasSize: Size,
     vWidth: Float,
-    selectedPiece: String?,
-    validMoves: List<String>,
+    selectedVertexId: String?,
+    adjacentVertexes: List<String>,
     boardState: BoardState,
     colors: BoardColors
 ) {
@@ -79,8 +79,8 @@ fun DrawScope.drawVertices(
         val checker = gameState.checkers[vertexId]
 
         val vertexColor = when {
-            vertexId == selectedPiece -> colors.vertexSelectedColor
-            validMoves.contains(vertexId) -> colors.vertexHighlightColor
+            vertexId == selectedVertexId -> colors.vertexSelectedColor
+            adjacentVertexes.contains(vertexId) -> colors.vertexHighlightColor
             checker != null -> colors.vertexOccupiedColor
             else -> colors.vertexDefaultColor
         }
@@ -109,13 +109,13 @@ fun DrawScope.drawVertices(
 fun DrawScope.drawEdges(canvasSize: Size, orientation: BoardOrientation, colors: BoardColors) {
     edges.forEach { (from, to) ->
         val fromPos = getVisualPosition(
-            logicalVertexId = from,
+            vertexId = from,
             canvasWidth = canvasSize.width,
             canvasHeight = canvasSize.height,
             orientation = orientation
         )
         val toPos = getVisualPosition(
-            logicalVertexId = to,
+            vertexId = to,
             canvasWidth = canvasSize.width,
             canvasHeight = canvasSize.height,
             orientation = orientation

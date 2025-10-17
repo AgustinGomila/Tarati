@@ -31,9 +31,7 @@ class MainViewModelTest {
                 single { mockSettingsRepository }
             })
         }
-        viewModel = MainViewModel().apply {
-            sr = mockSettingsRepository
-        }
+        viewModel = MainViewModel(mockSettingsRepository)
     }
 
     @After

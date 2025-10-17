@@ -13,7 +13,7 @@ import com.agustin.tarati.game.logic.BoardOrientation
 suspend fun PointerInputScope.tapGestures(
     visualWidth: Float,
     gameState: GameState,
-    selectedPiece: String?,
+    from: String?,
     orientation: BoardOrientation,
     editorMode: Boolean,
     tapEvents: TapEvents,
@@ -28,14 +28,14 @@ suspend fun PointerInputScope.tapGestures(
             orientation = orientation
         )
 
-        closestVertex?.let { logicalVertexId ->
+        closestVertex?.let { vertexId ->
             if (editorMode) {
-                tapEvents.onEditPieceRequested(logicalVertexId)
+                tapEvents.onEditPieceRequested(vertexId)
             } else {
                 handleTap(
-                    tappedVertex = logicalVertexId,
                     gameState = gameState,
-                    selectedPiece = selectedPiece,
+                    from = from,
+                    to = vertexId,
                     tapEvents = tapEvents,
                     debug = debug
                 )
@@ -45,29 +45,29 @@ suspend fun PointerInputScope.tapGestures(
 }
 
 fun handleTap(
-    tappedVertex: String,
     gameState: GameState,
-    selectedPiece: String?,
+    from: String?,
+    to: String,
     tapEvents: TapEvents,
     debug: Boolean = false,
 ) {
-    if (debug) println("TAP HANDLED: vertex=$tappedVertex, selectedPiece=$selectedPiece")
+    if (debug) println("TAP HANDLED: vertex=$to, selectedVertexId=$from")
 
-    if (selectedPiece == null) {
+    if (from == null) {
         // Seleccionar pieza
         selectPiece(
             gameState = gameState,
-            from = tappedVertex,
+            from = to,
             onSelected = { from, valid -> tapEvents.onSelected(from, valid) })
     } else {
         // Mover pieza
-        if (debug) println("Attempting move from $selectedPiece to $tappedVertex")
+        if (debug) println("Attempting move from $from to $to")
 
-        if (tappedVertex != selectedPiece) {
+        if (to != from) {
             movePiece(
                 gameState = gameState,
-                selectedPiece = selectedPiece,
-                tappedVertex = tappedVertex,
+                from = from,
+                to = to,
                 onMove = { from, to -> tapEvents.onMove(from, to) },
                 onInvalid = { from, valid -> tapEvents.onInvalid(from, valid) },
                 onCancel = { tapEvents.onCancel() }
@@ -82,33 +82,33 @@ fun handleTap(
 
 fun movePiece(
     gameState: GameState,
-    selectedPiece: String,
-    tappedVertex: String,
+    from: String,
+    to: String,
     onMove: (from: String, to: String) -> Unit,
     onInvalid: (from: String, valid: List<String>) -> Unit,
     onCancel: () -> Unit,
     debug: Boolean = false
 ) {
-    if (tappedVertex != selectedPiece) {
-        val isValid = isValidMove(gameState, selectedPiece, tappedVertex)
-        if (debug) println("Move validation: $selectedPiece -> $tappedVertex = $isValid")
+    if (to != from) {
+        val isValid = isValidMove(gameState, from, to)
+        if (debug) println("Move validation: $from -> $to = $isValid")
 
         if (isValid) {
-            if (debug) println("Calling onMove with: $selectedPiece, $tappedVertex")
-            onMove(selectedPiece, tappedVertex)
+            if (debug) println("Calling onMove with: $from, $to")
+            onMove(from, to)
         } else {
             if (debug) println("Move is invalid")
             // Si el movimiento es inválido, seleccionar la nueva pieza si es del jugador actual
-            val checker = gameState.checkers[tappedVertex]
+            val checker = gameState.checkers[to]
             if (checker != null && checker.color == gameState.currentTurn) {
-                val validMoves = adjacencyMap[tappedVertex]?.filter { to ->
+                val validMoves = adjacencyMap[to]?.filter { to ->
                     !gameState.checkers.containsKey(to) && (checker.isUpgraded || isForwardMove(
                         checker.color,
-                        tappedVertex,
+                        to,
                         to
                     ))
                 } ?: emptyList()
-                onInvalid(tappedVertex, validMoves)
+                onInvalid(to, validMoves)
             } else {
                 onCancel()
             }

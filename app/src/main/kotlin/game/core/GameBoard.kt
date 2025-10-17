@@ -76,13 +76,13 @@ object GameBoard {
     }
 
     fun getVisualPosition(
-        logicalVertexId: String,
+        vertexId: String,
         canvasWidth: Float,
         canvasHeight: Float,
         orientation: BoardOrientation
     ): Offset {
-        val normalized = normalizedPositions[logicalVertexId]
-            ?: throw IllegalArgumentException("Unknown vertex: $logicalVertexId")
+        val normalized = normalizedPositions[vertexId]
+            ?: throw IllegalArgumentException("Unknown vertex: $vertexId")
 
         val rotated = normalized.rotate(orientation)
 
@@ -126,13 +126,13 @@ object GameBoard {
         var closestVertex: String? = null
         var minDistance = Float.MAX_VALUE
 
-        vertices.forEach { logicalVertexId ->
-            val pos = getVisualPosition(logicalVertexId, canvasWidth, canvasHeight, orientation)
+        vertices.forEach { vertexId ->
+            val pos = getVisualPosition(vertexId, canvasWidth, canvasHeight, orientation)
             val distance = sqrt((tapOffset.x - pos.x).pow(2) + (tapOffset.y - pos.y).pow(2))
 
             if (distance < maxTapDistance && distance < minDistance) {
                 minDistance = distance
-                closestVertex = logicalVertexId // Devolvemos coordenada lógica
+                closestVertex = vertexId // Devolvemos coordenada lógica
             }
         }
 

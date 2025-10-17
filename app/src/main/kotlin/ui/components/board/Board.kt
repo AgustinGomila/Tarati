@@ -54,7 +54,7 @@ fun Board(
     modifier: Modifier = Modifier,
     state: BoardState,
     events: BoardEvents,
-    viewModel: BoardViewModel = viewModel(),
+    viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
@@ -107,8 +107,8 @@ fun Board(
         }
     }
 
-    val vmSelectedPiece by viewModel.selectedPiece.collectAsState()
-    val vmValidMoves by viewModel.validMoves.collectAsState()
+    val vmSelectedPiece by viewModel.selectedVertexId.collectAsState()
+    val vmValidMoves by viewModel.validAdjacentVertexes.collectAsState()
     val visualState by animationViewModel.visualState.collectAsState()
     val animatedPieces by animationViewModel.animatedPieces.collectAsState()
 
@@ -118,8 +118,8 @@ fun Board(
     ) {
         BoardRenderer(
             modifier = Modifier.fillMaxSize(),
-            selectedPiece = vmSelectedPiece,
-            validMoves = vmValidMoves,
+            selectedVertexId = vmSelectedPiece,
+            validAdjacentVertexes = vmValidMoves,
             boardState = state.copy(
                 gameState = GameState(
                     checkers = visualState.checkers,
@@ -130,8 +130,8 @@ fun Board(
             tapEvents = object : TapEvents {
                 override fun onSelected(from: String, valid: List<String>) {
                     if (!isAnimating) {
-                        viewModel.updateSelectedPiece(from)
-                        viewModel.updateValidMoves(valid)
+                        viewModel.updateSelectedVertex(from)
+                        viewModel.updateValidAdjacentVertexes(valid)
                     }
                 }
 
@@ -144,8 +144,8 @@ fun Board(
 
                 override fun onInvalid(from: String, valid: List<String>) {
                     if (!isAnimating) {
-                        viewModel.updateSelectedPiece(from)
-                        viewModel.updateValidMoves(valid)
+                        viewModel.updateSelectedVertex(from)
+                        viewModel.updateValidAdjacentVertexes(valid)
                     }
                 }
 
@@ -205,7 +205,7 @@ fun BoardPreview(
     gameState: GameState,
     labelsVisible: Boolean = true,
     isEditing: Boolean = false,
-    viewModel: BoardViewModel = viewModel(),
+    viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
@@ -269,9 +269,9 @@ fun BoardPreview_Custom() {
         setChecker("C5", WHITE, true)
         setChecker("C11", BLACK, true)
     }
-    val vm = viewModel<BoardViewModel>().apply {
-        updateSelectedPiece("B1")
-        updateValidMoves(listOf("B2", "A1", "B6"))
+    val vm = viewModel<BoardSelectionViewModel>().apply {
+        updateSelectedVertex("B1")
+        updateValidAdjacentVertexes(listOf("B2", "A1", "B6"))
     }
     BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
 }
@@ -281,9 +281,9 @@ fun BoardPreview_Custom() {
 fun BoardPreview_BlackPlayer() {
     TaratiTheme(true) {
         val exampleGameState = endGameState(BLACK)
-        val vm = viewModel<BoardViewModel>().apply {
-            updateSelectedPiece("A1")
-            updateValidMoves(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
+        val vm = viewModel<BoardSelectionViewModel>().apply {
+            updateSelectedVertex("A1")
+            updateValidAdjacentVertexes(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
         }
         BoardPreview(
             orientation = BoardOrientation.PORTRAIT_BLACK,
@@ -299,9 +299,9 @@ fun BoardPreview_BlackPlayer() {
 fun BoardPreview_Landscape_BlackPlayer() {
     TaratiTheme {
         val exampleGameState = createGameState { setTurn(BLACK) }
-        val vm = viewModel<BoardViewModel>().apply {
-            updateSelectedPiece("C2")
-            updateValidMoves(listOf("C9", "B4", "B5"))
+        val vm = viewModel<BoardSelectionViewModel>().apply {
+            updateSelectedVertex("C2")
+            updateValidAdjacentVertexes(listOf("C9", "B4", "B5"))
         }
         BoardPreview(
             orientation = BoardOrientation.LANDSCAPE_BLACK,
@@ -317,9 +317,9 @@ fun BoardPreview_Landscape_BlackPlayer() {
 fun BoardPreview_Landscape() {
     TaratiTheme(true) {
         val exampleGameState = createGameState {}
-        val vm = viewModel<BoardViewModel>().apply {
-            updateSelectedPiece("C2")
-            updateValidMoves(listOf("C3", "B2", "B1"))
+        val vm = viewModel<BoardSelectionViewModel>().apply {
+            updateSelectedVertex("C2")
+            updateValidAdjacentVertexes(listOf("C3", "B2", "B1"))
         }
         BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
     }
@@ -330,9 +330,9 @@ fun BoardPreview_Landscape() {
 fun BoardPreview_Landscape_Editing() {
     TaratiTheme(true) {
         val exampleGameState = createGameState {}
-        val vm = viewModel<BoardViewModel>().apply {
-            updateSelectedPiece("C2")
-            updateValidMoves(listOf("C3", "B2", "B1"))
+        val vm = viewModel<BoardSelectionViewModel>().apply {
+            updateSelectedVertex("C2")
+            updateValidAdjacentVertexes(listOf("C3", "B2", "B1"))
         }
         BoardPreview(
             orientation = BoardOrientation.LANDSCAPE_WHITE,

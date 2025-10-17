@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
 /**
  * BoardRenderer: fondo + vertices/edges (Canvas) + piezas overlay animadas
 
- * - selectedPiece / validMoves: piezas y vértices resaltados
+ * - selectedVertexId / validAdjacentVertexes: piezas y vértices resaltados
  * - boardState: contiene gameState: fuente de verdad
  *        y modificadores visuales y de comportamiento
  * - tapEvents: eventos sobre el tablero
@@ -37,8 +37,8 @@ import kotlin.math.roundToInt
 @Composable
 fun BoardRenderer(
     modifier: Modifier = Modifier,
-    selectedPiece: String?,
-    validMoves: List<String>,
+    selectedVertexId: String?,
+    validAdjacentVertexes: List<String>,
     boardState: BoardState,
     animatedPieces: Map<String, AnimatedPiece> = emptyMap(),
     tapEvents: TapEvents,
@@ -63,11 +63,11 @@ fun BoardRenderer(
                 containerWidthPx = coords.size.width
                 containerHeightPx = coords.size.height
             }
-            .pointerInput(visualWidth, gameState, selectedPiece, orientation, editorMode, tapEvents, debug) {
+            .pointerInput(visualWidth, gameState, selectedVertexId, orientation, editorMode, tapEvents, debug) {
                 tapGestures(
                     visualWidth = visualWidth,
                     gameState = gameState,
-                    selectedPiece = selectedPiece,
+                    from = selectedVertexId,
                     orientation = orientation,
                     editorMode = editorMode,
                     tapEvents = tapEvents,
@@ -94,8 +94,8 @@ fun BoardRenderer(
             drawVertices(
                 canvasSize = canvasSize,
                 vWidth = visualWidth,
-                selectedPiece = selectedPiece,
-                validMoves = validMoves,
+                selectedVertexId = selectedVertexId,
+                adjacentVertexes = validAdjacentVertexes,
                 boardState = boardState,
                 colors = colors
             )
@@ -111,7 +111,7 @@ fun BoardRenderer(
                         containerWidth = containerWidthPx,
                         containerHeight = containerHeightPx,
                         orientation = orientation,
-                        selectedPiece = selectedPiece,
+                        selectedPiece = selectedVertexId,
                         colors = colors
                     )
                 }
@@ -130,7 +130,7 @@ fun BoardRenderer(
                     containerWidth = containerWidthPx,
                     containerHeight = containerHeightPx,
                     orientation = orientation,
-                    selectedPiece = selectedPiece,
+                    selectedPiece = selectedVertexId,
                     colors = colors
                 )
             }
