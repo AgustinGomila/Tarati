@@ -132,7 +132,7 @@ fun MainScreen(
 
     var stopAI by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
-    var gameStatus by remember { mutableStateOf(GameStateStatus.PLAYING) }
+    var gameStatus by remember { mutableStateOf(GameStateStatus.NO_PLAYING) }
 
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
@@ -197,12 +197,11 @@ fun MainScreen(
         if (vmIsEditing) return@LaunchedEffect
         when (gameStatus) {
             GameStateStatus.ANIMATING_MOVE -> {
+                // Las animaciones terminaron, verificar si el juego terminó
                 if (!isAnimating) {
-                    // Las animaciones terminaron, verificar si el juego terminó
-                    gameStatus = if (isGameOver(vmGameState)) {
-                        GameStateStatus.PENDING_GAME_OVER
-                    } else {
-                        GameStateStatus.PLAYING
+                    gameStatus = when {
+                        isGameOver(vmGameState) -> GameStateStatus.PENDING_GAME_OVER
+                        else -> GameStateStatus.PLAYING
                     }
                 }
             }
@@ -329,8 +328,8 @@ fun MainScreen(
             gameOverMessage = gameOverMessage,
             onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = {
+                gameStatus = GameStateStatus.NO_PLAYING
                 showGameOverDialog = false
-                gameStatus = GameStateStatus.PLAYING
             }
         )
     }
@@ -339,7 +338,10 @@ fun MainScreen(
     if (showNewGameDialog && !isAnimating) {
         NewGameDialog(
             onConfirmed = { startNewGame(vmPlayerSide) },
-            onDismissed = { showNewGameDialog = false },
+            onDismissed = {
+                gameStatus = GameStateStatus.NO_PLAYING
+                showNewGameDialog = false
+            },
         )
     }
 
@@ -645,6 +647,8 @@ fun CreateBoard(
         }
     }
 
+    val isAnimating by animationViewModel.isAnimating.collectAsState()
+
     Box(
         modifier
             .fillMaxWidth(),
@@ -664,7 +668,7 @@ fun CreateBoard(
             TurnIndicator(
                 modifier = Modifier.align(Alignment.TopEnd),
                 currentTurn = state.gameState.currentTurn,
-                isAIThinking = state.isAIThinking && !animationViewModel.isAnimating.value
+                isAIThinking = state.isAIThinking && !isAnimating
             )
         }
     }
