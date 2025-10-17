@@ -38,9 +38,7 @@ class SettingsViewModelTest {
                 single { mockSettingsRepository }
             })
         }
-        viewModel = SettingsViewModel().apply {
-            sr = mockSettingsRepository
-        }
+        viewModel = SettingsViewModel(mockSettingsRepository)
     }
 
     @After
@@ -125,9 +123,7 @@ class SettingsViewModelTest {
         coEvery { mockSettingsRepository.labelsVisibility } returns MutableStateFlow(true)
 
         // Crear nuevo ViewModel con esta configuración
-        val testViewModel = SettingsViewModel().apply {
-            sr = mockSettingsRepository
-        }
+        val testViewModel = SettingsViewModel(mockSettingsRepository)
 
         // Verificar que el estado inicial refleja los valores del repositorio
         // (aunque no podamos verificar el `combine`, podemos verificar que el ViewModel se inicializa correctamente)

@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext.get
 
-class SettingsViewModel() : ViewModel() {
-
-    var sr: SettingsRepository = get().get()
+class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() {
 
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()

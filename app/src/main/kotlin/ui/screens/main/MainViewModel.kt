@@ -16,9 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.context.GlobalContext.get
 
-class MainViewModel() : ViewModel() {
-
-    var sr: SettingsRepository = get().get()
+class MainViewModel(val sr: SettingsRepository = get().get()) : ViewModel() {
 
     val isDebug: Boolean = BuildConfig.DEBUG
 
