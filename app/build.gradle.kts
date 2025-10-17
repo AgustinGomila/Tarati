@@ -86,6 +86,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
+    // Google Play
+    implementation(libs.google.play)
+
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
 

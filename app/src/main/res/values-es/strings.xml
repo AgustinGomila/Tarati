@@ -76,4 +76,9 @@
     <string name="you_won">Ganaste con %1$s</string>
     <string name="you_lost">Perdiste con %1$s</string>
     <string name="game_over_triple_repetition">¡Juego Terminado! ¡%1$s gana por triple repetición!</string>
+    <string name="download">Descargar %1$s</string>
+    <string name="downloading">Descargando...</string>
+    <string name="language_downloaded">Idioma descargado</string>
+    <string name="download_error">Error al descargar: %1$d</string>
+    <string name="retry">Reintentar</string>
 </resources>
