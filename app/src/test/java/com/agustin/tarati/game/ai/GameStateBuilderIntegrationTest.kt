@@ -24,7 +24,7 @@ class GameStateBuilderIntegrationTest {
         }
 
         // AI should be able to analyze this state
-        val result = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
+        val result = getNextBestMove(state, Difficulty.MIN)
 
         assertNotNull("AI should return a result", result)
         // The move might be null if no valid moves, but the result should not be null

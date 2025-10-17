@@ -26,7 +26,7 @@ class GameIntegrationTest {
         )
 
         // White makes a move
-        val whiteMove = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
+        val whiteMove = getNextBestMove(state, Difficulty.MIN)
         assertNotNull("White should have a valid move", whiteMove.move)
 
         // Apply white move
@@ -34,7 +34,7 @@ class GameIntegrationTest {
         state = state.copy(currentTurn = Color.BLACK)
 
         // Black makes a move
-        val blackMove = getNextBestMove(state, depth = Difficulty.EASY.aiDepth)
+        val blackMove = getNextBestMove(state, Difficulty.MIN)
         assertNotNull("Black should have a valid move", blackMove.move)
 
         // Apply black move
@@ -61,11 +61,11 @@ class GameIntegrationTest {
         )
 
         // Test different depths
-        val depths = listOf(2, 4, 6)
+        val depths = listOf(Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD)
 
         depths.forEach { depth ->
             val startTime = System.currentTimeMillis()
-            val result = getNextBestMove(state, depth = depth)
+            val result = getNextBestMove(state, depth)
             val endTime = System.currentTimeMillis()
 
             assertNotNull("AI should return a move at depth $depth", result.move)

@@ -259,7 +259,7 @@ class TripleRepetitionTest {
         recordRealMove(gameState, BLACK)
 
         // La IA blanca debería evitar movimientos que lleven a esta posición
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         assertNotNull("AI should find a move", result.move)
 
@@ -331,7 +331,7 @@ class TripleRepetitionTest {
 
         // Jugar hasta detectar triple repetición o llegar al límite
         while (moves < maxMoves && !isGameOver(gameState)) {
-            val result = getNextBestMove(gameState, depth = Difficulty.EASY.aiDepth)
+            val result = getNextBestMove(gameState, Difficulty.MIN)
 
             if (result.move == null) break
 

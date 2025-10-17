@@ -22,7 +22,9 @@ enum class Difficulty(
 
     companion object {
         val ALL = entries
+        val MIN = EASY
         val DEFAULT = MEDIUM
+        val MAX = CHAMPION
 
         fun getByDepth(depth: Int): Difficulty =
             ALL.firstOrNull { it.depth == depth } ?: DEFAULT

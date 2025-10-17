@@ -1,6 +1,7 @@
 package com.agustin.tarati.game.ai.tournament
 
 import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.EvaluationConfig
 import org.junit.Test
 import kotlin.system.measureTimeMillis
 
@@ -116,6 +117,9 @@ class TournamentTest {
         val material = ConfigBuilder.materialFocused()
         val positional = ConfigBuilder.positional()
         val balanced = ConfigBuilder.balanced()
+        val swarming = ConfigBuilder.swarming()
+        val strategist = ConfigBuilder.strategist()
+        val gambit = ConfigBuilder.gambit()
 
         val configs = mapOf(
             baseline.name to baseline,
@@ -124,6 +128,9 @@ class TournamentTest {
             material.name to material,
             positional.name to positional,
             balanced.name to balanced,
+            swarming.name to swarming,
+            strategist.name to strategist,
+            gambit.name to gambit,
         )
 
         val totalTime = measureTimeMillis {
@@ -340,24 +347,32 @@ class TournamentTest {
         println("This will take several minutes...")
 
         // Configurar la profundidad, alta profundidad alta duración del proceso.
-        val firstPhaseDepth = Difficulty.EASY
-        val secondPhaseDepth = Difficulty.MEDIUM
+        val firstPhaseDepth = Difficulty.HARD
+        val secondPhaseDepth = Difficulty.HARD
 
-        val baseline = ConfigBuilder.baseline().copy(difficulty = firstPhaseDepth)
+        val firstPhaseWithness = EvaluationConfig.getByDifficulty(Difficulty.MEDIUM)
+        val secondPhaseWithness = EvaluationConfig.getByDifficulty(Difficulty.HARD)
+
         val aggressive = ConfigBuilder.aggressive().copy(difficulty = firstPhaseDepth)
         val defensive = ConfigBuilder.defensive().copy(difficulty = firstPhaseDepth)
         val material = ConfigBuilder.materialFocused().copy(difficulty = firstPhaseDepth)
         val positional = ConfigBuilder.positional().copy(difficulty = firstPhaseDepth)
         val balanced = ConfigBuilder.balanced().copy(difficulty = firstPhaseDepth)
+        val swarming = ConfigBuilder.swarming().copy(difficulty = firstPhaseDepth)
+        val strategist = ConfigBuilder.strategist().copy(difficulty = firstPhaseDepth)
+        val gambit = ConfigBuilder.gambit().copy(difficulty = firstPhaseDepth)
 
         // Fase 1: Probar configuraciones base
         val phase1Configs = mapOf(
-            baseline.name to baseline,
-            aggressive.name to aggressive,
-            defensive.name to defensive,
+            firstPhaseWithness.name to secondPhaseWithness.copy(difficulty = firstPhaseDepth),
+            //aggressive.name to aggressive,
+            //defensive.name to defensive,
             material.name to material,
             positional.name to positional,
-            balanced.name to balanced,
+            //balanced.name to balanced,
+            swarming.name to swarming,
+            strategist.name to strategist,
+            gambit.name to gambit,
         )
 
         println("\n=== PHASE 1: Testing base configurations ===")
@@ -373,11 +388,14 @@ class TournamentTest {
 
         val phase1Winner = phase1Results.first()
         println("\nPhase 1 winner: ${phase1Winner.name}")
+        println("\nConfiguration:")
+        println(phase1Winner.config)
+        println("=".repeat(60))
 
         // Fase 2: Optimizar el ganador
         println("\n=== PHASE 2: Fine-tuning winner ===")
 
-        val winnerConfig = phase1Winner.config.copy(difficulty = secondPhaseDepth)
+        val winnerConfig = phase1Winner.config
 
         val moreMaterial = winnerConfig.copy(
             name = "MoreMaterial",
@@ -404,12 +422,12 @@ class TournamentTest {
 
         // Fase 1: Probar configuraciones base
         val phase2Configs = mapOf(
-            baseline.name to baseline,
-            winnerConfig.name to winnerConfig,
-            moreMaterial.name to moreMaterial,
-            moreCaptures.name to moreCaptures,
-            morePosition.name to morePosition,
-            newBalanced.name to newBalanced,
+            secondPhaseWithness.name to secondPhaseWithness.copy(difficulty = secondPhaseDepth),
+            winnerConfig.name to winnerConfig.copy(difficulty = secondPhaseDepth),
+            moreMaterial.name to moreMaterial.copy(difficulty = secondPhaseDepth),
+            moreCaptures.name to moreCaptures.copy(difficulty = secondPhaseDepth),
+            morePosition.name to morePosition.copy(difficulty = secondPhaseDepth),
+            newBalanced.name to newBalanced.copy(difficulty = secondPhaseDepth),
         )
 
         val phase2Results = runner.runRoundRobin(
@@ -443,8 +461,8 @@ class TournamentTest {
         println("\n========== TEST: Quick Sanity Check ==========")
 
         val result = runner.runSingleMatch(
-            configA = ConfigBuilder.baseline().copy(difficulty = Difficulty.EASY),
-            configB = ConfigBuilder.aggressive().copy(difficulty = Difficulty.EASY),
+            configA = ConfigBuilder.baseline().copy(difficulty = Difficulty.MIN),
+            configB = ConfigBuilder.aggressive().copy(difficulty = Difficulty.MIN),
             tournamentConfig = TournamentConfig(
                 gamesPerMatch = 5,
                 alternateColors = true,
@@ -458,5 +476,44 @@ class TournamentTest {
         assert(result.averageMoves > 0) { "Should have positive average moves" }
 
         println("✓ Test passed: Quick sanity check OK")
+    }
+
+    @Test
+    fun testRoundRobin_Champion() {
+        println("\n========== TEST: Champion Round Robin ==========")
+
+        val easy = EvaluationConfig.EASY
+        val medium = EvaluationConfig.MEDIUM
+        val hard = EvaluationConfig.HARD
+        val champion = EvaluationConfig.CHAMPION
+
+        val configs = mapOf(
+            easy.name to easy,
+            medium.name to medium,
+            hard.name to hard,
+            champion.name to champion,
+        )
+
+        val results = runner.runRoundRobin(
+            configs = configs,
+            tournamentConfig = TournamentConfig(
+                gamesPerMatch = 6,
+                alternateColors = true,
+                verbose = false,
+                showProgress = true
+            )
+        )
+
+        // Verificaciones
+        val finalWinner = results.first()
+        println("\n" + "=".repeat(60))
+        println("FINAL CHAMPION TOURNAMENT")
+        println("=".repeat(60))
+        println("Name: ${finalWinner.name}")
+        println("Win Rate: ${(finalWinner.winRate * 100).toInt()}%")
+        println("Score: ${finalWinner.score} / ${finalWinner.totalGames}")
+        println("=".repeat(60))
+
+        println("✓ Test passed: Tournament completed")
     }
 }

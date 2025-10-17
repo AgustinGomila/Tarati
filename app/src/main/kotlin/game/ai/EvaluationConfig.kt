@@ -2,11 +2,9 @@ package com.agustin.tarati.game.ai
 
 /**
  * Configurable evaluation parameters for Tarati AI.
- * Añadir más campos aquí para exponer más parámetros (p. ej. tablas de valores por vértice).
- *  */
+ */
 data class EvaluationConfig(
-    val name: String = "Default",
-    val winningScore: Double = 1_000_000.0,
+    val name: String = Difficulty.DEFAULT.name,
     val difficulty: Difficulty = Difficulty.DEFAULT,
 
     // Material
@@ -27,6 +25,7 @@ data class EvaluationConfig(
     val upgradeScore: Int = 80,
 
     // Extras
+    val winningScore: Double = 1_000_000.0,
     val quickThreatWeight: Int = 15,
     val winningThreshold: Float = 0.9f,
     val winningPositionThreshold: Float = 0.5f,
@@ -34,4 +33,57 @@ data class EvaluationConfig(
     // Decisions factors
     val immediateWinBonusMultiplier: Float = 2.0f,
     val repetitionPenaltyMultiplier: Float = 10.0f,
-)
+
+    // Parallelization
+    val parallelSearch: Boolean = true,
+    val maxConcurrentThreads: Int = maxOf(2, Runtime.getRuntime().availableProcessors() - 1),
+    val parallelizationThreshold: Int = 6
+) {
+    companion object {
+        val DEFAULT = EvaluationConfig()
+
+        val EASY = EvaluationConfig(
+            name = Difficulty.EASY.name,
+            difficulty = Difficulty.EASY
+        )
+
+        val MEDIUM = EvaluationConfig(
+            name = Difficulty.MEDIUM.name,
+            difficulty = Difficulty.MEDIUM,
+            materialScore = 180,
+            upgradedPieceScore = 345,
+            captureNormalBonus = 77,
+            controlCenterScore = 33,
+            mobilityScore = 9
+        )
+
+        val HARD = EvaluationConfig(
+            name = Difficulty.HARD.name,
+            difficulty = Difficulty.HARD,
+            materialScore = 180,
+            upgradedPieceScore = 379,
+            captureNormalBonus = 77,
+            captureUpgradedBonus = 220,
+            controlCenterScore = 39,
+            mobilityScore = 13
+        )
+
+        val CHAMPION = EvaluationConfig(
+            name = Difficulty.CHAMPION.name,
+            difficulty = Difficulty.CHAMPION,
+            materialScore = 216,
+            upgradedPieceScore = 454,
+            captureNormalBonus = 77,
+            captureUpgradedBonus = 220,
+            controlCenterScore = 39,
+            mobilityScore = 13
+        )
+
+        fun getByDifficulty(difficulty: Difficulty): EvaluationConfig = when (difficulty) {
+            Difficulty.EASY -> EASY
+            Difficulty.MEDIUM -> MEDIUM
+            Difficulty.HARD -> HARD
+            Difficulty.CHAMPION -> CHAMPION
+        }
+    }
+}

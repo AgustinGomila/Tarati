@@ -311,7 +311,7 @@ class TournamentRunner {
                 else -> blackConfig
             }
             setEvaluationConfig(currentConfig)
-            val result = getNextBestMove(gameState, currentConfig.difficulty.aiDepth, debug = false)
+            val result = getNextBestMove(gameState, debug = false)
             if (result.move == null) break
 
             if (tournamentConfig.verbose && moves < 10) {
@@ -390,71 +390,88 @@ class TournamentRunner {
     )
 }
 
-// ==================== Config Builder Helper ====================
-
-/**
- * Helper para crear variaciones de configuración fácilmente
- */
 object ConfigBuilder {
     fun baseline() = EvaluationConfig(name = "Default")
 
     fun aggressive() = EvaluationConfig(
         name = "Aggressive",
-        // Capture
-        captureNormalBonus = 60,
-        captureUpgradedBonus = 180,
-        // Strategic
-        opponentBasePressureScore = 50,
-        // Tactic
-        mobilityScore = 3
+        // +25% presión en base rival, -30% movilidad (prioriza ataques directos)
+        captureNormalBonus = (70 * 1.2).toInt(),        // +20%
+        captureUpgradedBonus = (200 * 1.25).toInt(),    // +25%
+        opponentBasePressureScore = (40 * 1.25).toInt(),
+        mobilityScore = (10 * 0.7).toInt(),             // -30%
+        quickThreatWeight = (15 * 1.3).toInt()          // +30%
     )
 
     fun defensive() = EvaluationConfig(
         name = "Defensive",
-        // Material
-        materialScore = 40,
-        // Strategic       
-        opponentBasePressureScore = 75,
-        controlCenterScore = 60,
-        // Tactic
-        upgradeScore = 240,
+        // +40% control base propia, +50% en centro, -25% capturas normales
+        materialScore = (144 * 1.1).toInt(),            // +10%
+        homeBaseControlScore = (30 * 1.4).toInt(),
+        controlCenterScore = (42 * 1.5).toInt(),
+        captureNormalBonus = (70 * 0.75).toInt(),       // -25%
+        upgradeScore = (80 * 1.2).toInt()               // +20%
     )
 
     fun materialFocused() = EvaluationConfig(
         name = "MaterialFocused",
-        // Material
-        materialScore = 120,
-        upgradedPieceScore = 250,
-        // Capture
-        captureNormalBonus = 70,
-        captureUpgradedBonus = 200,
+        // +25% valor material, +15% piezas mejoradas
+        materialScore = (144 * 1.25).toInt(),
+        upgradedPieceScore = (300 * 1.15).toInt(),
+        captureNormalBonus = (70 * 1.1).toInt(),        // +10%
+        controlCenterScore = (42 * 0.8).toInt(),        // -20% (menos importancia posición)
+        mobilityScore = (10 * 0.9).toInt()              // -10%
     )
 
     fun positional() = EvaluationConfig(
         name = "Positional",
-        // Strategic
-        controlCenterScore = 50,
-        homeBaseControlScore = 40,
-        opponentBasePressureScore = 60,
-        // Tactic
-        mobilityScore = 10,
-        upgradeScore = 100,
+        // +50% control centro, +33% base propia, -20% capturas
+        controlCenterScore = (42 * 1.5).toInt(),
+        homeBaseControlScore = (30 * 1.33).toInt(),
+        opponentBasePressureScore = (40 * 1.1).toInt(), // +10%
+        captureNormalBonus = (70 * 0.8).toInt(),        // -20%
+        mobilityScore = (10 * 1.25).toInt()             // +25%
     )
 
     fun balanced() = EvaluationConfig(
         name = "Balanced",
-        // Material
-        materialScore = 100,
-        upgradedPieceScore = 200,
-        // Capture
-        captureUpgradedBonus = 150,
-        // Strategic      
-        opponentBasePressureScore = 40,
-        controlCenterScore = 35,
-        homeBaseControlScore = 30,
-        // Tactic
-        mobilityScore = 7,
-        upgradeScore = 80,
+        // Valores moderados entre agresivo y defensivo
+        materialScore = (144 * 0.95).toInt(),           // -5%
+        captureNormalBonus = (70 * 1.05).toInt(),       // +5%
+        controlCenterScore = (42 * 1.1).toInt(),        // +10%
+        mobilityScore = (10 * 1.15).toInt(),            // +15%
+        upgradeScore = (80 * 0.9).toInt()               // -10%
+    )
+
+    fun swarming() = EvaluationConfig(
+        name = "Swarming",
+        // +40% movilidad, +30% amenazas rápidas, -20% valor material
+        mobilityScore = (10 * 1.4).toInt(),
+        quickThreatWeight = (15 * 1.3).toInt(),
+        materialScore = (144 * 0.8).toInt(),            // -20%
+        opponentBasePressureScore = (40 * 1.2).toInt(), // +20%
+        captureNormalBonus = (70 * 1.15).toInt()        // +15%
+    )
+
+    fun strategist() = EvaluationConfig(
+        name = "Strategist",
+        // +60% control centro, +25% presión base rival
+        controlCenterScore = (42 * 1.6).toInt(),
+        opponentBasePressureScore = (40 * 1.25).toInt(),
+        homeBaseControlScore = (30 * 1.2).toInt(),      // +20%
+        materialScore = (144 * 0.85).toInt(),           // -15%
+        upgradeScore = (80 * 1.3).toInt()               // +30%
+    )
+
+    fun gambit() = EvaluationConfig(
+        name = "Gambit",
+        // -30% material, +40% capturas, +35% amenazas rápidas
+        materialScore = (144 * 0.7).toInt(),
+        captureNormalBonus = (70 * 1.4).toInt(),
+        captureUpgradedBonus = (200 * 1.25).toInt(),    // +25%
+        quickThreatWeight = (15 * 1.35).toInt(),
+        winningThreshold = 0.85f,                       // Más agresivo en victorias
+        repetitionPenaltyMultiplier = 15.0f             // Evita empates
     )
 
     @Suppress("unused")

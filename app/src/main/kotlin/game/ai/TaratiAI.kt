@@ -13,13 +13,11 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.hashBoard
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 object TaratiAI {
     private const val MAX_TABLE_SIZE = 10000
-    private const val DEFAULT_TIME_LIMIT_MS = 5000L
 
     // Configuración global (thread-safe)
     private val globalConfigRef: AtomicReference<EvaluationConfig> = AtomicReference(EvaluationConfig())
@@ -71,47 +69,24 @@ object TaratiAI {
 
     fun getNextBestMove(
         gameState: GameState,
-        depth: Int = Difficulty.DEFAULT.aiDepth,
+        debug: Boolean = false
+    ): Result {
+        return getNextBestMove(gameState, evalConfig.difficulty, debug)
+    }
+
+    fun getNextBestMove(
+        gameState: GameState,
+        difficulty: Difficulty,
         debug: Boolean = false
     ): Result {
         return minimax(
             gameState = gameState,
-            depth = min(depth, Difficulty.CHAMPION.aiDepth),
+            depth = min(difficulty.aiDepth, Difficulty.MAX.aiDepth),
             alpha = Double.NEGATIVE_INFINITY,
             beta = Double.POSITIVE_INFINITY,
             isMaximizing = (gameState.currentTurn == WHITE),
             debug = debug
         )
-    }
-
-    @Suppress("unused")
-    fun getNextBestMoveWithTimeLimit(
-        gameState: GameState,
-        maxDepth: Int = Difficulty.DEFAULT.aiDepth,
-        timeLimitMs: Long = DEFAULT_TIME_LIMIT_MS,
-        debug: Boolean = false
-    ): Result {
-        val startTime = System.currentTimeMillis()
-        var bestResult = Result(0.0, null)
-
-        for (depth in 1..maxDepth) {
-            if (System.currentTimeMillis() - startTime > timeLimitMs) {
-                if (debug) println("Time limit reached at depth ${depth - 1}")
-                break
-            }
-
-            val result = getNextBestMove(gameState, depth, debug)
-            if (result.move != null) bestResult = result
-
-            if (debug) println("Completed depth $depth: score=${result.score}, move=${result.move}")
-
-            if (abs(result.score) >= evalConfig.winningScore * evalConfig.winningThreshold) {
-                if (debug) println("Found winning/losing line at depth $depth")
-                break
-            }
-        }
-
-        return bestResult
     }
 
     // ==================== Minimax con Alpha-Beta ====================

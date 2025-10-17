@@ -61,6 +61,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.EvaluationConfig
+import com.agustin.tarati.game.ai.TaratiAI
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
@@ -127,8 +129,8 @@ fun MainScreen(
     val vmPlayerSide by viewModel.playerSide.collectAsState(WHITE)
 
     val settingsState by settingsViewModel.settingsState.collectAsState()
-    val vmDifficulty = settingsState.difficulty
     val vmLabelsVisible = settingsState.labelsVisibility
+    val evalConfig = EvaluationConfig.getByDifficulty(settingsState.difficulty)
 
     var stopAI by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
@@ -192,6 +194,10 @@ fun MainScreen(
         }
     }
 
+    LaunchedEffect(evalConfig) {
+        TaratiAI.setEvaluationConfig(evalConfig)
+    }
+
     // Manejar transiciones de estado
     LaunchedEffect(gameStatus, isAnimating) {
         if (vmIsEditing) return@LaunchedEffect
@@ -232,7 +238,6 @@ fun MainScreen(
         vmGameState.currentTurn,
         vmAIEnabled,
         stopAI,
-        vmDifficulty,
         vmPlayerSide,
         vmIsEditing
     )
@@ -259,7 +264,6 @@ fun MainScreen(
             withContext(Dispatchers.Default) {
                 getNextBestMove(
                     gameState = vmGameState,
-                    depth = vmDifficulty.aiDepth,
                     debug = debug
                 )
             }
@@ -503,7 +507,7 @@ fun MainScreen(
                 playerSide = vmPlayerSide,
                 currentMoveIndex = vmMoveIndex,
                 moveHistory = vmHistory.map { it.first },
-                difficulty = vmDifficulty,
+                difficulty = evalConfig.difficulty,
                 isAIEnabled = vmAIEnabled
             )
 

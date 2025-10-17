@@ -95,7 +95,7 @@ class AITest {
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
-        val result = getNextBestMove(gs, Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gs, Difficulty.DEFAULT)
         assertNotNull("Result should not be null", result)
 
         // Si no hay movimientos posibles, el resultado puede ser null (juego terminado)
@@ -121,7 +121,7 @@ class AITest {
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
-        val result = getNextBestMove(gs, Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gs, Difficulty.DEFAULT)
         assertNotNull("Result should not be null", result)
 
         // Si no hay movimientos posibles, el resultado puede ser null (juego terminado)
@@ -411,7 +411,7 @@ class AITest {
             currentTurn = WHITE
         )
 
-        val result = getNextBestMove(state, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(state, Difficulty.DEFAULT)
 
         assertNotNull("AI should find a move", result.move)
         // AI debería preferir moverse a posición ventajosa
@@ -466,11 +466,11 @@ class AITest {
         )
 
         val startTime = System.currentTimeMillis()
-        getNextBestMove(state, depth = Difficulty.DEFAULT.aiDepth) // Profundidad fija para comparar
+        getNextBestMove(state, Difficulty.DEFAULT) // Profundidad fija para comparar
         val firstRunTime = System.currentTimeMillis() - startTime
 
         val startTime2 = System.currentTimeMillis()
-        getNextBestMove(state, depth = Difficulty.DEFAULT.aiDepth) // Misma profundidad
+        getNextBestMove(state, Difficulty.DEFAULT) // Misma profundidad
         val secondRunTime = System.currentTimeMillis() - startTime2
 
         println("First run: ${firstRunTime}ms, Second run: ${secondRunTime}ms")

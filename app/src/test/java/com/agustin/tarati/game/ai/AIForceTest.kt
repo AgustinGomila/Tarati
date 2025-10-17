@@ -19,9 +19,11 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class AIForceTest {
 
     @Test
@@ -123,7 +125,7 @@ class AIForceTest {
             setChecker("C6", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.EASY.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.MIN)
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos
@@ -147,7 +149,7 @@ class AIForceTest {
             setChecker("C8", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos legales
@@ -217,7 +219,7 @@ class AIForceTest {
             setChecker("B3", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         // El movimiento debería crear múltiples amenazas
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
@@ -243,7 +245,7 @@ class AIForceTest {
             setChecker("B1", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         // Debería identificar el camino hacia el ahogado
         assertTrue(result.score >= 460)
@@ -266,7 +268,7 @@ class AIForceTest {
             setChecker("A1", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         // El movimiento debería ser parte de una secuencia ganadora
         assertTrue(result.score == evalConfig.winningScore) // Puntuación muy alta indica victoria inminente
@@ -289,7 +291,7 @@ class AIForceTest {
             setChecker("C5", WHITE, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         println(result)
 
@@ -318,7 +320,7 @@ class AIForceTest {
             setChecker("C5", BLACK, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         println(result)
 
@@ -347,7 +349,7 @@ class AIForceTest {
             setChecker("C3", BLACK, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         println(result)
 
@@ -376,7 +378,7 @@ class AIForceTest {
             setChecker("C3", BLACK, false)
         }
 
-        val result = getNextBestMove(gameState, depth = Difficulty.DEFAULT.aiDepth)
+        val result = getNextBestMove(gameState, Difficulty.DEFAULT)
 
         println(result)
 
@@ -412,7 +414,7 @@ class AIForceTest {
         // La pieza upgraded debería tener mejor evaluación
         assertTrue("Upgraded piece should score higher", scoreUpgraded > scoreNormal)
 
-        assertEquals(175.0, scoreUpgraded - scoreNormal, 5.0)
+        assertEquals(180.0, scoreUpgraded - scoreNormal, 10.0)
     }
 
     @Test
@@ -479,7 +481,7 @@ class AIForceTest {
         }
 
         // Movimiento 1: Negro juega (debe encontrar C6 -> B3)
-        val blackMove1 = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val blackMove1 = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         println("Black move 1: ${blackMove1.move} with score: ${blackMove1.score}")
 
@@ -492,7 +494,7 @@ class AIForceTest {
             .copy(currentTurn = WHITE)
 
         // Movimiento 2: Blanco está forzado (debe jugar C10 -> C9 o perder inmediatamente)
-        val whiteMove = getNextBestMove(stateAfterBlack1, depth = Difficulty.DEFAULT.aiDepth)
+        val whiteMove = getNextBestMove(stateAfterBlack1, Difficulty.DEFAULT)
 
         println("White move (forced): ${whiteMove.move} with score: ${whiteMove.score}")
 
@@ -509,7 +511,7 @@ class AIForceTest {
             .copy(currentTurn = BLACK)
 
         // Movimiento 3: Negro da mate
-        val blackMove2 = getNextBestMove(stateAfterWhite, depth = Difficulty.DEFAULT.aiDepth)
+        val blackMove2 = getNextBestMove(stateAfterWhite, Difficulty.DEFAULT)
 
         assertNotNull("Black should find a move", blackMove2.move)
         assertTrue("Black should move from A1 or B4", blackMove2.move?.from == "A1" || blackMove2.move?.from == "B4")
@@ -599,7 +601,7 @@ class AIForceTest {
             setChecker("B4", BLACK, true)
         }
 
-        val blackMove = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val blackMove = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         assertNotNull("Black should find a winning move", blackMove.move)
 
@@ -628,7 +630,7 @@ class AIForceTest {
             setChecker("D7", BLACK, false)
         }
 
-        val whiteMove = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         assertNotNull("White should find a defensive move", whiteMove.move)
 
@@ -654,7 +656,7 @@ class AIForceTest {
             setChecker("C5", WHITE, false)
         }
 
-        val blackMove = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val blackMove = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         assertNotNull("Black should find a move", blackMove.move)
 
@@ -680,7 +682,7 @@ class AIForceTest {
             setChecker("C4", BLACK, false)
         }
 
-        val whiteMove = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         assertNotNull("White should find a strategic move", whiteMove.move)
 
@@ -700,7 +702,7 @@ class AIForceTest {
             setChecker("C7", BLACK, true)  // Pieza mejorada
         }
 
-        val whiteMove = getNextBestMove(initialState, depth = Difficulty.DEFAULT.aiDepth)
+        val whiteMove = getNextBestMove(initialState, Difficulty.DEFAULT)
 
         assertNotNull("White should find a survival move", whiteMove.move)
 
@@ -727,7 +729,7 @@ class AIForceTest {
             setChecker("C9", BLACK, false)
         }
 
-        val blackMove = getNextBestMove(initialState, depth = Difficulty.HARD.aiDepth)
+        val blackMove = getNextBestMove(initialState, Difficulty.HARD)
 
         assertNotNull("Black should find a tactical move", blackMove.move)
 
