@@ -70,32 +70,35 @@ la [implementación original en React](https://github.com/adamblvck/tarati-react
 ## ☘️ Cómo Jugar
 
 **Tarati** es un juego abstracto de estrategia para dos jugadores.
-Cada jugador controla un conjunto de fichas que compiten por dominar el tablero mediante movimiento, mejora y volteo de
-piezas enemigas.
+Cada jugador controla un conjunto de fichas, llamadas **Cobs**, que compiten por dominar el tablero mediante movimiento,
+mejora y volteo de piezas enemigas.
 
 ### 🎯 Objetivo
 
-Ganar al oponente controlando más piezas propias en el tablero cuando ya no haya movimientos posibles, o logrando una
-ventaja decisiva en número o posición.
+Ganar al oponente controlando todas las piezas del tablero, dejando sin movimientos posibles al oponente u obligándolo a
+repetir el mismo movimiento tres veces.
 
 ### ⚙️ Componentes
 
-* Un **tablero de vértices y conexiones** (no cuadrado): cada punto representa una posición posible para una ficha.
-* Cada jugador tiene un color de fichas (por ejemplo, **blancas** y **negras**).
-* Algunos vértices forman la **base** de cada jugador (su zona inicial).
+* Un **tablero de vértices y conexiones** concéntricas: cada punto representa una posición posible para una ficha.
+* Cada jugador controla un color de fichas (por ejemplo, **blancas** y **negras**).
+* Los vértices exteriores forman la **base** o zona doméstica de cada jugador (su zona inicial).
 
 ### 🚶‍♂️ Movimientos
 
 * En su turno, el jugador elige **una ficha propia** y la mueve a un **vértice adyacente libre** (según las conexiones
   del tablero).
 * Una ficha **normal** solo puede avanzar “hacia adelante” (según la orientación de su jugador).
-* Una ficha **mejorada** (o *upgrade*) puede moverse en **cualquier dirección**.
+* Una ficha **mejorada** (o *upgrade*), llamadas **Rocs**, puede moverse en **cualquier dirección**.
+* Cuando una ficha **normal** en su **base** tiene ocupado el vértice de adelante por una pieza del contrario y el
+  vértice adyacente de su base libre, puede moverse hacia ese vértice, volteando la pieza contraria.
 
 ### ⚡ Volteo de fichas
 
 * Al llegar al nuevo vértice, **todas las fichas enemigas conectadas** directamente a esa posición se **voltean**,
   pasando a pertenecer al jugador que movió.
 * Si una ficha volteada cae dentro de la **base del oponente**, también se convierte automáticamente en **mejorada**.
+* El movimiento de volteo de la última pieza del oponente se llama **Mit** (similar al Mate del ajedrez).
 
 ### ⬆️ Mejoras (Upgrades)
 
@@ -111,23 +114,26 @@ ventaja decisiva en número o posición.
 
 El juego termina cuando:
 
-* Ningún jugador puede mover (bloqueo total), o
-* Se alcanza una condición acordada (por ejemplo, número de turnos).
+* Cuando un jugador controla todas piezas del tablero, o
+* El jugador no puede hacer movimientos, o
+* El jugador repite tres veces el mismo movimiento.
 
-Gana quien **controle más piezas en el tablero** o cumpla el objetivo acordado.
+Gana quien **controle las piezas en el tablero**.
 
 ---
 
-## 🧠 Símbolos y Significado
+## 🧠 Conceptos y Observaciones
 
-El tablero de Tarati representa una estructura simbólica profunda:
-
-| Elemento                | Cantidad      | Significado Simbólico              |
-|-------------------------|---------------|------------------------------------|
-| **Piezas**              | 4 por jugador | Los 4 elementos clásicos           |
-| **Circunferencia (C)**  | 12 posiciones | Los 12 signos zodiacales           |
-| **Frontera (B)**        | 6 posiciones  | 6 conceptos planetarios herméticos |
-| **Centro Absoluto (A)** | 1 posición    | El Sol, Tiphereth                  |
+| Concepto                 | Nota                                                              |
+|--------------------------|-------------------------------------------------------------------|
+| **Pieza (Cob)**          | 4 por jugador, sólo se mueven hacia adelante                      |
+| **Pieza mejorada (Roc)** | Un máximo de 8 en un Mit, se mueven a cualquier vértice conectado |
+| **Mate (Mit)**           | Volteo del último Cob del tablero                                 |
+| **Enroque**              | Movimiento excepcional de captura en zona doméstica               |
+| **Circunferencia (C)**   | 12 posiciones                                                     |
+| **Puente (B)**           | 6 posiciones                                                      |
+| **Zona Doméstica (D)**   | 4 posiciones de inicio                                            |
+| **Centro Absoluto (A)**  | 1 posición                                                        |
 
 ---
 

@@ -69,37 +69,40 @@ the [original React implementation](https://github.com/adamblvck/tarati-react) c
 
 ## ☘️ How to Play
 
-**Tarati** is an abstract strategy game for two players.  
-Each player controls a set of pieces that compete to dominate the board through movement, upgrading, and flipping enemy
-pieces.
+**Tarati** is an abstract two-player strategy game.  
+Each player controls a set of pieces called **Cobs**, competing to dominate the board through movement,  
+upgrades, and flipping enemy pieces.
 
 ### 🎯 Objective
 
-Defeat the opponent by controlling more of your own pieces on the board when no moves are possible, or by achieving a
-decisive advantage in number or position.
+Win by controlling all pieces on the board, leaving the opponent with no possible moves, or forcing them to  
+repeat the same move three times.
 
 ### ⚙️ Components
 
-* A **vertex and connection board** (non-square): each point represents a possible position for a piece.
-* Each player has a set of colored pieces (e.g., **white** and **black**).
-* Some vertices form each player's **base** (their starting zone).
+* A **concentric vertex and connection board**: each point represents a possible position for a piece.
+* Each player controls one color of pieces (e.g., **white** and **black**).
+* The outer vertices form the **base** or home zone for each player (their starting area).
 
-### 🚶‍♂️ Moves
+### 🚶‍♂️ Movements
 
-* On their turn, the player selects **one of their own pieces** and moves it to an adjacent **free vertex** (according
-  to the board's connections).
-* A **normal** piece can only move "forward" (according to the player's orientation).
-* An **upgraded** piece (or *upgrade*) can move in **any direction**.
+* On their turn, a player selects **one of their own pieces** and moves it to an **adjacent free vertex** (according to
+  the board's connections).
+* A **normal** piece can only move “forward” (according to the player’s orientation).
+* An **upgraded** piece, called a **Roc**, can move in **any direction**.
+* When a **normal** piece in its **base** has the forward vertex occupied by an enemy piece and an adjacent vertex in
+  its base is free, it may move to that vertex, flipping the enemy piece.
 
 ### ⚡ Flipping Pieces
 
-* Upon reaching the new vertex, **all enemy pieces directly connected** to that position are **flipped**, becoming the
+* Upon reaching a new vertex, **all enemy pieces directly connected** to that position are **flipped**, becoming the
   property of the moving player.
-* If a flipped piece lands within the **opponent's base**, it automatically becomes **upgraded**.
+* If a flipped piece lands within the **opponent’s base**, it is automatically **upgraded**.
+* The flipping move of the opponent’s last piece is called **Mit** (similar to Checkmate in chess).
 
 ### ⬆️ Upgrades
 
-* If a piece enters the **enemy base**, it is **upgraded** (gaining increased mobility).
+* If a piece enters the **opponent’s base**, it is **upgraded** (gaining greater mobility).
 * An upgraded piece retains its status even if it returns to its original base.
 
 ### 🔄 Turns
@@ -111,23 +114,26 @@ decisive advantage in number or position.
 
 The game ends when:
 
-* No player can move (total blockage), or
-* An agreed condition is met (e.g., number of turns).
+* A player controls all pieces on the board, or
+* The player cannot make any moves, or
+* The player repeats the same move three times.
 
-The player who **controls more pieces on the board** or meets the agreed objective wins.
+The player who **controls the pieces on the board** wins.
 
 ---
 
-## 🧠 Symbols and Meaning
+## 🧠 Concepts and Notes
 
-The Tarati board represents a deep symbolic structure:
-
-| Element                 | Quantity     | Symbolic Meaning              |
-|-------------------------|--------------|-------------------------------|
-| **Pieces**              | 4 per player | The 4 classical elements      |
-| **Circumference (C)**   | 12 positions | The 12 zodiac signs           |
-| **Boundary (B)**        | 6 positions  | 6 hermetic planetary concepts |
-| **Absolute Center (A)** | 1 position   | The Sun, Tiphereth            |
+| Concept                  | Note                                                    |
+|--------------------------|---------------------------------------------------------|
+| **Piece (Cob)**          | 4 per player, can only move forward                     |
+| **Upgraded Piece (Roc)** | Maximum of 8 in a Mit, can move to any connected vertex |
+| **Checkmate (Mit)**      | Flipping of the last Cob on the board                   |
+| **Castling**             | Exceptional capture move in the home zone               |
+| **Circumference (C)**    | 12 positions                                            |
+| **Bridge (B)**           | 6 positions                                             |
+| **Domestic (D)**         | 4 starting positions                                    |
+| **Absolute Center (A)**  | 1 position                                              |
 
 ---
 
