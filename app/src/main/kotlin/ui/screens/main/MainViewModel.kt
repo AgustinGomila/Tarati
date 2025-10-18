@@ -56,6 +56,19 @@ class MainViewModel() : ViewModel() {
         _playerSide.value = newSide
     }
 
+    // Tutorial
+    private val _isTutorialActive = MutableStateFlow(false)
+    val isTutorialActive: StateFlow<Boolean> = _isTutorialActive.asStateFlow()
+
+    fun endTutorial() {
+        _isTutorialActive.value = false
+    }
+
+    fun startTutorial() {
+        _isTutorialActive.value = true
+    }
+
+    // Edición de tablero
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 

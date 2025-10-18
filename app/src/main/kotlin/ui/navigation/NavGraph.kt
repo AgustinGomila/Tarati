@@ -9,15 +9,14 @@ import com.agustin.tarati.ui.navigation.ScreenDestinations.MainScreenDest
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SplashScreenDest
 import com.agustin.tarati.ui.screens.main.MainScreen
+import com.agustin.tarati.ui.screens.settings.SettingsEvents
 import com.agustin.tarati.ui.screens.settings.SettingsScreen
 import com.agustin.tarati.ui.screens.splash.SplashScreen
 import com.agustin.tarati.ui.theme.AppTheme
 
 @Composable
 fun NavGraph(
-    onThemeChange: (AppTheme) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit,
-    onLabelsVisibilityChange: (Boolean) -> Unit,
+    settingsEvents: SettingsEvents,
 ) {
     val navController = rememberNavController()
 
@@ -35,9 +34,18 @@ fun NavGraph(
 
         composable(SettingsScreenDest.route) {
             SettingsScreen(
-                onThemeChange = onThemeChange,
-                onLanguageChange = onLanguageChange,
-                onLabelsVisibilityChange = onLabelsVisibilityChange,
+                object : SettingsEvents {
+                    override fun onThemeChange(theme: AppTheme) = settingsEvents.onThemeChange(theme)
+                    override fun onLanguageChange(language: AppLanguage) = settingsEvents.onLanguageChange(language)
+                    override fun onLabelsVisibilityChange(visible: Boolean) =
+                        settingsEvents.onLabelsVisibilityChange(visible)
+
+                    override fun onVerticesVisibilityChange(visible: Boolean) =
+                        settingsEvents.onVerticesVisibilityChange(visible)
+
+                    override fun onTutorialButtonVisibilityChange(visible: Boolean) =
+                        settingsEvents.onTutorialButtonVisibilityChange(visible)
+                },
                 navController = navController
             )
         }

@@ -31,6 +31,7 @@ data class BoardState(
     val lastMove: Move? = null,
     val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     val labelsVisible: Boolean = true,
+    val verticesVisible: Boolean = true,
     val newGame: Boolean = false,
     val isEditing: Boolean = false
 )
@@ -161,6 +162,7 @@ fun Board(
                     }
                 }
             },
+            onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
             debug = debug
         )
 
@@ -204,6 +206,7 @@ fun BoardPreview(
     orientation: BoardOrientation,
     gameState: GameState,
     labelsVisible: Boolean = true,
+    verticesVisible: Boolean = true,
     isEditing: Boolean = false,
     viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
@@ -216,6 +219,7 @@ fun BoardPreview(
                 lastMove = null,
                 boardOrientation = orientation,
                 labelsVisible = labelsVisible,
+                verticesVisible = verticesVisible,
                 isEditing = isEditing,
             ),
             events = object : BoardEvents {

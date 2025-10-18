@@ -71,4 +71,41 @@
     <string name="you_won">You won with %1$s</string>
     <string name="you_lost">You lost with %1$s</string>
     <string name="game_over_triple_repetition">Game over: %1$s wins by triple repetition!</string>
+    <string name="show_tutorial">Show tutorial</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="next">Next</string>
+    <string name="skip_tutorial">Skip tutorial</string>
+    <string name="repeat_explanation">Repeat explanation</string>
+    <string name="board_vertices">Vertices</string>
+    <string name="welcome_to_tarati">"Welcome to Tarati"</string>
+    <string name="tarati_description">"Tarati is a strategy game created by George Spencer Brown. Learn the basic
+        moves."
+    </string>
+    <string name="board_title">"The Board"</string>
+    <string name="board_description">"The board has connected vertices. Pieces or Cobs move between adjacent
+        vertices."
+    </string>
+    <string name="center">"Center"</string>
+    <string name="white_base">"White Base"</string>
+    <string name="black_base">"Black Base"</string>
+    <string name="basic_moves_title">"Basic Moves"</string>
+    <string name="basic_moves_description">"Pieces move forward or to adjacent vertices. Tap a piece to see valid
+        moves."
+    </string>
+    <string name="capture_title">"Piece Capture"</string>
+    <string name="capture_description">"When moving next to an enemy piece, you capture it and it changes to your
+        color."
+    </string>
+    <string name="upgrade_title">"Piece Upgrade"</string>
+    <string name="upgrade_description">"When reaching the enemy base, your Cob becomes a Roc, which can move in any
+        direction."
+    </string>
+    <string name="castling_title">"Castling Move"</string>
+    <string name="castling_description">"In the bases, you can perform a special castling move that captures enemy
+        pieces in key positions."
+    </string>
+    <string name="absolute_center">Absolute center</string>
+    <string name="bridge">Bridge</string>
+    <string name="circumference">Circumference</string>
+    <string name="domestic">Domestic</string>
 </resources>

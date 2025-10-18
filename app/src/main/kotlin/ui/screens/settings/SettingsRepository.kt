@@ -15,12 +15,18 @@ interface SettingsRepository {
     val isDarkTheme: Flow<Boolean>
     val difficulty: Flow<Difficulty>
     val language: Flow<AppLanguage>
+
     val labelsVisibility: Flow<Boolean>
+    val tutorialButtonVisibility: Flow<Boolean>
+    val verticesVisibility: Flow<Boolean>
 
     suspend fun setDarkTheme(enabled: Boolean)
     suspend fun setDifficulty(difficulty: Difficulty)
     suspend fun setLanguage(language: AppLanguage)
+
     suspend fun setLabelsVisibility(visibility: Boolean)
+    suspend fun setTutorialButtonVisibility(visibility: Boolean)
+    suspend fun setVerticesVisibility(visibility: Boolean)
 }
 
 class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRepository {
@@ -29,7 +35,10 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme_enabled")
         val DIFFICULTY_KEY = intPreferencesKey("difficulty")
         val LANGUAGE_KEY = stringPreferencesKey("app_language")
+
         val LABELS_VISIBILITY_KEY = booleanPreferencesKey("labels_visibles")
+        val TUTORIAL_BUTTON_VISIBILITY_KEY = booleanPreferencesKey("tutorial_button_visible")
+        val VERTICES_VISIBILITY_KEY = booleanPreferencesKey("vertices_visibles")
     }
 
     override val isDarkTheme: Flow<Boolean> = dataStore.data
@@ -52,6 +61,12 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
     override val labelsVisibility: Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[LABELS_VISIBILITY_KEY] == true }
 
+    override val tutorialButtonVisibility: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[TUTORIAL_BUTTON_VISIBILITY_KEY] == true }
+
+    override val verticesVisibility: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[VERTICES_VISIBILITY_KEY] == true }
+
     override suspend fun setDarkTheme(enabled: Boolean) {
         dataStore.edit { settings ->
             settings[DARK_THEME_KEY] = enabled
@@ -73,6 +88,18 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
     override suspend fun setLabelsVisibility(visibility: Boolean) {
         dataStore.edit { settings ->
             settings[LABELS_VISIBILITY_KEY] = visibility
+        }
+    }
+
+    override suspend fun setTutorialButtonVisibility(visibility: Boolean) {
+        dataStore.edit { settings ->
+            settings[TUTORIAL_BUTTON_VISIBILITY_KEY] = visibility
+        }
+    }
+
+    override suspend fun setVerticesVisibility(visibility: Boolean) {
+        dataStore.edit { settings ->
+            settings[VERTICES_VISIBILITY_KEY] = visibility
         }
     }
 }

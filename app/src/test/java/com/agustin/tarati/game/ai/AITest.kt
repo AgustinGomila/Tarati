@@ -433,7 +433,7 @@ class AITest {
         val result = getNextBestMove(state, Difficulty.DEFAULT)
 
         assertNotNull("AI should find a move", result.move)
-        // AI debería preferir moverse a posición ventajosa
+        // IA debería preferir moverse a posición ventajosa
         assertNotNull("Should have a best move", result.move)
     }
 

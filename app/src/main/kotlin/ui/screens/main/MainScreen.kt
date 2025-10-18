@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
 package com.agustin.tarati.ui.screens.main
 
 import android.content.res.Configuration
@@ -53,6 +55,7 @@ import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,7 +80,9 @@ import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.isPortrait
 import com.agustin.tarati.game.logic.toBoardOrientation
+import com.agustin.tarati.game.tutorial.TutorialManager
 import com.agustin.tarati.ui.components.board.Board
 import com.agustin.tarati.ui.components.board.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.BoardEvents
@@ -89,6 +94,7 @@ import com.agustin.tarati.ui.components.sidebar.SidebarUIState
 import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
+import com.agustin.tarati.ui.components.tutorial.TutorialOverlay
 import com.agustin.tarati.ui.helpers.PreviewConfig
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
@@ -111,13 +117,13 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    val isLandscapeScreen = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val viewModel: MainViewModel = viewModel()
     val debug = viewModel.isDebug
 
     val animationViewModel: BoardAnimationViewModel = viewModel()
     val isAnimating by animationViewModel.isAnimating.collectAsState()
+    val boardSize by animationViewModel.boardSize.collectAsState()
 
     val vmIsEditing by viewModel.isEditing.collectAsState()
     val vmEditColor by viewModel.editColor.collectAsState()
@@ -127,30 +133,38 @@ fun MainScreen(
     val vmGameState by viewModel.gameState.collectAsState(initialGameState())
     val vmHistory by viewModel.history.collectAsState(emptyList())
     val vmMoveIndex by viewModel.moveIndex.collectAsState(-1)
+
     val vmAIEnabled by viewModel.aIEnabled.collectAsState(true)
     val vmPlayerSide by viewModel.playerSide.collectAsState(WHITE)
 
     val settingsState by settingsViewModel.settingsState.collectAsState()
-    val vmLabelsVisible = settingsState.labelsVisibility
+    val vmTutorialButtonVisible = settingsState.tutorialButtonVisible
     val evalConfig = EvaluationConfig.getByDifficulty(settingsState.difficulty)
+    val vmLabelsVisibles = settingsState.boardState.labelsVisibles
+    val vmVerticesVisibles = settingsState.boardState.verticesVisibles
 
     var stopAI by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
     var gameStatus by remember { mutableStateOf(GameStateStatus.NO_PLAYING) }
+    var isAIThinking by remember { mutableStateOf(false) }
 
     var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
     var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
 
-    fun isAIThinking(): Boolean {
-        return vmAIEnabled &&
-                vmGameState.currentTurn != vmPlayerSide &&
-                !isGameOver(vmGameState) &&
-                !vmIsEditing &&
-                gameStatus == GameStateStatus.PLAYING
+    // Orientación del Tablero
+    val screenOrientation = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var boardOrientation by remember { mutableStateOf(BoardOrientation.PORTRAIT_WHITE) }
+    LaunchedEffect(screenOrientation) {
+        boardOrientation = toBoardOrientation(screenOrientation, vmPlayerSide)
     }
 
+    // Manager del tutorial inicial
+    val tutorialManager: TutorialManager = remember { TutorialManager() }
+    val isTutorialActive by viewModel.isTutorialActive.collectAsState()
+
+    // Aplica un movimiento sobre el tablero, actualiza el historial y evalúa si finaliza la partida.
     fun applyMove(from: String, to: String) {
         stopAI = false
         gameStatus = GameStateStatus.ANIMATING_MOVE
@@ -196,6 +210,7 @@ fun MainScreen(
         }
     }
 
+    // Manejar cambios de dificultad
     LaunchedEffect(evalConfig) {
         setEvaluationConfig(evalConfig)
     }
@@ -244,8 +259,9 @@ fun MainScreen(
         vmIsEditing
     )
 
+    // Lanzador de IA
     LaunchedEffect(aiThinkingLauncher) {
-        if (!vmAIEnabled || stopAI || vmIsEditing || isAnimating || gameStatus != GameStateStatus.PLAYING) {
+        if (!vmAIEnabled || stopAI || vmIsEditing || isTutorialActive || isAnimating || gameStatus != GameStateStatus.PLAYING) {
             if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus")
             return@LaunchedEffect
         }
@@ -396,6 +412,46 @@ fun MainScreen(
                         pieceCounts.white == 1 && pieceCounts.black == 7)
     }
 
+    // Control del estado de AI
+    LaunchedEffect(vmAIEnabled, vmGameState, vmIsEditing, gameStatus) {
+        isAIThinking =
+            vmAIEnabled &&
+                    vmGameState.currentTurn != vmPlayerSide &&
+                    !isGameOver(vmGameState) &&
+                    !vmIsEditing &&
+                    gameStatus == GameStateStatus.PLAYING
+    }
+
+    // Control del estado tutorial
+    LaunchedEffect(isTutorialActive) {
+        if (isTutorialActive) tutorialManager.startTutorial()
+        else tutorialManager.skipTutorial()
+    }
+
+    LaunchedEffect(tutorialManager.tutorialState) {
+        if (isTutorialActive) {
+            val tutorialGameState = tutorialManager.getCurrentGameState()
+            if (tutorialGameState != null) {
+                viewModel.updateGameState(tutorialGameState)
+            }
+        }
+    }
+
+    // Manejo de movimientos durante el tutorial
+    fun handleTutorialMove(from: String, to: String) {
+        if (isTutorialActive) {
+            val move = Move(from, to)
+            if (tutorialManager.checkMove(move)) {
+                // Movimiento correcto, avanzar al siguiente paso
+                tutorialManager.nextStep()
+            }
+            // Si el movimiento es incorrecto, podrías mostrar un mensaje
+        } else {
+            // Comportamiento normal del juego
+            applyMove(from, to)
+        }
+    }
+
     // Controles de edición
     @Composable
     fun EditControls(isLandscapeScreen: Boolean) {
@@ -468,6 +524,18 @@ fun MainScreen(
         }
     }
 
+    var turnState: TurnIndicatorState by remember { mutableStateOf(TurnIndicatorState.NEUTRAL) }
+    LaunchedEffect(isAnimating, isAIThinking) {
+        val aiThinking = isAIThinking
+
+        turnState = when {
+            vmGameState == initialGameState(vmGameState.currentTurn) && !aiThinking -> TurnIndicatorState.HUMAN_TURN
+            isGameOver(vmGameState) -> TurnIndicatorState.NEUTRAL
+            aiThinking && !isAnimating -> TurnIndicatorState.AI_THINKING
+            else -> TurnIndicatorState.HUMAN_TURN
+        }
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -477,6 +545,7 @@ fun MainScreen(
                 override fun onMoveToCurrent() = ::moveToCurrentState.invoke()
                 override fun onUndo() = ::undoMove.invoke()
                 override fun onRedo() = ::redoMove.invoke()
+
                 override fun onDifficultyChange(difficulty: Difficulty) {
                     settingsViewModel.setDifficulty(difficulty)
                 }
@@ -502,6 +571,13 @@ fun MainScreen(
                 override fun onAboutClick() {
                     showAboutDialog = true
                 }
+
+                override fun onTutorial() {
+                    scope.launch {
+                        drawerState.close()
+                    }
+                    viewModel.startTutorial()
+                }
             }
 
             val sidebarGameState = SidebarGameState(
@@ -510,12 +586,13 @@ fun MainScreen(
                 currentMoveIndex = vmMoveIndex,
                 moveHistory = vmHistory.map { it.first },
                 difficulty = evalConfig.difficulty,
-                isAIEnabled = vmAIEnabled
+                isAIEnabled = vmAIEnabled,
+                showTutorialOption = vmTutorialButtonVisible,
             )
 
             Sidebar(
                 modifier = Modifier.systemBarsPadding(),
-                gameState = sidebarGameState,
+                sidebarState = sidebarGameState,
                 uiState = sidebarUIState,
                 events = sidebarEvents,
                 onUIStateChange = { newState -> sidebarUIState = newState }
@@ -537,7 +614,7 @@ fun MainScreen(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    if (!isLandscapeScreen && !vmIsEditing) {
+                    if (boardOrientation.isPortrait() && !vmIsEditing) {
                         LocalizedText(
                             id = R.string.a_board_game_by_george_spencer_brown,
                             style = MaterialTheme.typography.bodyMedium,
@@ -551,29 +628,92 @@ fun MainScreen(
                             gameState = vmGameState,
                             lastMove = lastMove,
                             playerSide = vmPlayerSide,
-                            isLandscapeScreen = isLandscapeScreen,
                             isEditing = vmIsEditing,
-                            isAIThinking = isAIThinking(),
+                            isTutorialActive = isTutorialActive,
+                            isAIThinking = isAIThinking,
+                            boardOrientation = boardOrientation,
                             editBoardOrientation = vmEditBoardOrientation,
-                            labelsVisible = vmLabelsVisible
+                            labelsVisible = vmLabelsVisibles,
+                            verticesVisible = vmVerticesVisibles,
                         ),
                         events = object : BoardEvents {
-                            override fun onMove(from: String, to: String) = applyMove(from, to)
-                            override fun onEditPiece(from: String) = editPiece(from)
+                            override fun onMove(from: String, to: String) {
+                                if (isTutorialActive) {
+                                    handleTutorialMove(from, to)
+                                } else {
+                                    applyMove(from, to)
+                                }
+                            }
+
+                            override fun onEditPiece(from: String) {
+                                // Durante el tutorial, ignorar ediciones
+                                if (!isTutorialActive) {
+                                    editPiece(from)
+                                }
+                            }
+
                             override fun onResetCompleted() = Unit
                         },
-                        indicatorEvents = object : IndicatorEvents {
-                            override fun onTouch() {
-                                showNewGameDialog = true
+                        boardAnimationViewModel = animationViewModel,
+                        tutorialManager = tutorialManager,
+                        tutorial = {
+                            if (isTutorialActive) {
+                                CreateTutorialOverlay(
+                                    boardSize = boardSize,
+                                    boardOrientation = vmEditBoardOrientation,
+                                    tutorialManager = it,
+                                    onEndTutorial = viewModel::endTutorial,
+                                    updateGameState = {
+                                        // Actualizar estado del tablero con la posición del tutorial
+                                        viewModel.updateGameState(it)
+                                    },
+                                )
                             }
                         },
-                        content = { EditControls(isLandscapeScreen) },
+                        content = { EditControls(!vmEditBoardOrientation.isPortrait()) },
+                        turnIndicator = {
+                            TurnIndicator(
+                                modifier = it,
+                                currentTurn = vmGameState.currentTurn,
+                                state = turnState,
+                                indicatorEvents = object : IndicatorEvents {
+                                    override fun onTouch() {
+                                        showNewGameDialog = true
+                                    }
+                                },
+                            )
+                        },
                         debug = debug
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+fun CreateTutorialOverlay(
+    boardSize: Size,
+    boardOrientation: BoardOrientation,
+    tutorialManager: TutorialManager,
+    onEndTutorial: () -> Unit,
+    updateGameState: (GameState) -> Unit,
+) {
+    if (boardSize == Size.Zero) return
+
+    LaunchedEffect(tutorialManager.isTutorialActive()) {
+        if (!tutorialManager.isTutorialActive()) {
+            onEndTutorial()
+        }
+    }
+
+    TutorialOverlay(
+        tutorialManager = tutorialManager,
+        updateGameState = { updateGameState(it) },
+        boardWidth = boardSize.width,
+        boardHeight = boardSize.height,
+        boardOrientation = boardOrientation,
+    )
 }
 
 @ExperimentalMaterial3Api
@@ -612,11 +752,13 @@ data class CreateBoardState(
     val gameState: GameState,
     val lastMove: Move?,
     val playerSide: Color,
-    val isLandscapeScreen: Boolean,
     val isEditing: Boolean,
+    val isTutorialActive: Boolean,
     val isAIThinking: Boolean,
+    val boardOrientation: BoardOrientation,
     val editBoardOrientation: BoardOrientation,
-    val labelsVisible: Boolean
+    val labelsVisible: Boolean,
+    val verticesVisible: Boolean,
 )
 
 @Composable
@@ -624,10 +766,12 @@ fun CreateBoard(
     modifier: Modifier = Modifier,
     state: CreateBoardState,
     events: BoardEvents,
-    indicatorEvents: IndicatorEvents,
-    content: @Composable () -> Unit,
-    debug: Boolean = false,
     boardAnimationViewModel: BoardAnimationViewModel = viewModel(),
+    tutorialManager: TutorialManager,
+    tutorial: @Composable (TutorialManager) -> Unit,
+    content: @Composable () -> Unit,
+    turnIndicator: @Composable (modifier: Modifier) -> Unit,
+    debug: Boolean = false,
 ) {
     // Construir el estado para Board
     val boardState = BoardState(
@@ -635,9 +779,10 @@ fun CreateBoard(
         lastMove = state.lastMove,
         boardOrientation = when {
             state.isEditing -> state.editBoardOrientation
-            else -> toBoardOrientation(state.isLandscapeScreen, state.playerSide)
+            else -> state.boardOrientation
         },
         labelsVisible = state.labelsVisible,
+        verticesVisible = state.verticesVisible,
         isEditing = state.isEditing
     )
 
@@ -658,19 +803,9 @@ fun CreateBoard(
         }
     }
 
-    val isAnimating by boardAnimationViewModel.isAnimating.collectAsState()
-    var turnState: TurnIndicatorState by remember { mutableStateOf(TurnIndicatorState.NEUTRAL) }
-    val gameState = state.gameState
-
-    LaunchedEffect(isAnimating, gameState) {
-        val aiThinking = state.isAIThinking
-
-        turnState = when {
-            state == initialGameState(gameState.currentTurn) && !aiThinking -> TurnIndicatorState.HUMAN_TURN
-            isGameOver(gameState) -> TurnIndicatorState.NEUTRAL
-            aiThinking && !isAnimating -> TurnIndicatorState.AI_THINKING
-            else -> TurnIndicatorState.HUMAN_TURN
-        }
+    LaunchedEffect(state.isTutorialActive) {
+        // val highlights = tutorialManager.getCurrentStep()?.highlights
+        // boardAnimationViewModel.animate(highlights)
     }
 
     Box(
@@ -686,15 +821,12 @@ fun CreateBoard(
             animationViewModel = boardAnimationViewModel,
         )
 
-        if (state.isEditing) {
-            content()
-        } else {
-            TurnIndicator(
-                modifier = Modifier.align(Alignment.TopEnd),
-                currentTurn = state.gameState.currentTurn,
-                state = turnState,
-                indicatorEvents = indicatorEvents,
-            )
+        when {
+            state.isEditing -> content()
+
+            state.isTutorialActive -> tutorial(tutorialManager)
+
+            else -> turnIndicator(Modifier.align(Alignment.TopEnd))
         }
     }
 }
@@ -726,6 +858,7 @@ fun EditingModePreviewContent(
             lastMove = null,
             boardOrientation = boardOrientation,
             labelsVisible = false,
+            verticesVisible = true,
             isEditing = isEditing,
         )
 
@@ -1262,8 +1395,11 @@ private fun MainScreenPreviewContent(
         // Estado del juego para el preview
         var previewGameState by remember { mutableStateOf(initialGameState()) }
         var currentPlayerSide by remember { mutableStateOf(config.playerSide) }
-        var currentIsEditing by remember { mutableStateOf(config.isEditing) }
+        var isEditing by remember { mutableStateOf(config.isEditing) }
+        var isTutorial by remember { mutableStateOf(config.isTutorialActive) }
+        var tutorialManager by remember { mutableStateOf(config.tutorialManager) }
         var currentLabelsVisible by remember { mutableStateOf(config.labelsVisible) }
+        var currentVerticesVisible by remember { mutableStateOf(config.verticesVisible) }
 
         // Estado UI para el Sidebar
         var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
@@ -1273,10 +1409,10 @@ private fun MainScreenPreviewContent(
             debug = config.debug,
             scope = scope,
             drawerState = drawerState,
-            currentIsEditing = currentIsEditing,
+            currentIsEditing = isEditing,
             onGameStateUpdate = { previewGameState = it },
             onPlayerSideUpdate = { currentPlayerSide = it },
-            onEditingUpdate = { currentIsEditing = it }
+            onEditingUpdate = { isEditing = it }
         )
 
         // Crear el estado del juego para el Sidebar
@@ -1286,7 +1422,8 @@ private fun MainScreenPreviewContent(
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
-            isAIEnabled = true
+            isAIEnabled = true,
+            showTutorialOption = true
         )
 
         // Estado y eventos para CreateBoard
@@ -1294,14 +1431,17 @@ private fun MainScreenPreviewContent(
             gameState = previewGameState,
             lastMove = null,
             playerSide = currentPlayerSide,
-            isLandscapeScreen = config.landScape,
-            isEditing = currentIsEditing,
+            isEditing = isEditing,
+            isTutorialActive = isTutorial,
             isAIThinking = false,
+            boardOrientation = toBoardOrientation(config.landScape, currentPlayerSide),
             editBoardOrientation = toBoardOrientation(config.landScape, currentPlayerSide),
-            labelsVisible = currentLabelsVisible
+            labelsVisible = currentLabelsVisible,
+            verticesVisible = currentVerticesVisible,
         )
-
         val createBoardEvents = createPreviewBoardEvents(config.debug)
+
+        val indicatorState = TurnIndicatorState.HUMAN_TURN
         val indicatorEvents = createPreviewIndicatorEvents(config.debug)
 
         ModalNavigationDrawer(
@@ -1309,7 +1449,7 @@ private fun MainScreenPreviewContent(
             drawerContent = {
                 Sidebar(
                     modifier = Modifier.systemBarsPadding(),
-                    gameState = sidebarGameState,
+                    sidebarState = sidebarGameState,
                     uiState = sidebarUIState,
                     events = sidebarEvents,
                     onUIStateChange = { newState -> sidebarUIState = newState }
@@ -1321,7 +1461,7 @@ private fun MainScreenPreviewContent(
                     TaratiTopBar(
                         scope = scope,
                         drawerState = drawerState,
-                        isEditing = currentIsEditing
+                        isEditing = isEditing
                     )
                 }
             ) { innerPadding ->
@@ -1337,7 +1477,7 @@ private fun MainScreenPreviewContent(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        if (!config.landScape && !currentIsEditing) {
+                        if (!config.landScape && !isEditing) {
                             LocalizedText(
                                 id = R.string.a_board_game_by_george_spencer_brown,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -1349,7 +1489,8 @@ private fun MainScreenPreviewContent(
                             modifier = Modifier.weight(1f),
                             state = createBoardState,
                             events = createBoardEvents,
-                            indicatorEvents = indicatorEvents,
+                            tutorialManager = tutorialManager,
+                            tutorial = { },
                             content = {
                                 EditControlsPreview(
                                     isLandscapeScreen = config.landScape,
@@ -1365,6 +1506,14 @@ private fun MainScreenPreviewContent(
                                         isCompletedDistribution = true
                                     ),
                                     actionEvents = ActionControlsEvents()
+                                )
+                            },
+                            turnIndicator = {
+                                TurnIndicator(
+                                    modifier = it,
+                                    state = indicatorState,
+                                    currentTurn = previewGameState.currentTurn,
+                                    indicatorEvents = indicatorEvents
                                 )
                             }
                         )
@@ -1655,6 +1804,10 @@ private fun createPreviewSidebarEvents(
 
         override fun onAboutClick() {
             if (debug) println("About clicked")
+        }
+
+        override fun onTutorial() {
+            if (debug) println("Show tutorial!")
         }
     }
 }

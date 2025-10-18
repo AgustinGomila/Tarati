@@ -34,7 +34,7 @@ import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
 
 enum class TurnIndicatorState {
-    AI_THINKING,    // AI está pensando
+    AI_THINKING,    // IA está pensando
     HUMAN_TURN,     // Turno del jugador humano
     NEUTRAL         // Estado neutral - listo para nueva partida
 }

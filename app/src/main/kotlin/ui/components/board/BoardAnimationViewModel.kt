@@ -1,5 +1,6 @@
 package com.agustin.tarati.ui.components.board
 
+import androidx.compose.ui.geometry.Size
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agustin.tarati.game.core.Cob
@@ -46,6 +47,12 @@ class BoardAnimationViewModel : ViewModel() {
     val isAnimating: StateFlow<Boolean> = _isAnimating.asStateFlow()
 
     private var previousVisualState: VisualGameState? = null
+
+    private val _boardSize = MutableStateFlow(Size.Zero)
+    val boardSize: StateFlow<Size> = _boardSize.asStateFlow()
+    fun updateBoardSize(newBoardSize: Size) {
+        _boardSize.value = newBoardSize
+    }
 
     // Sincronizar el estado sin animación
     fun syncState(gameState: GameState) {

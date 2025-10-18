@@ -73,34 +73,40 @@ fun DrawScope.drawVertices(
     val gameState = boardState.gameState
     val orientation = boardState.boardOrientation
     val labelsVisible = boardState.labelsVisible
+    val verticesVisible = boardState.verticesVisible
 
-    vertices.forEach { vertexId ->
-        val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
-        val cob = gameState.cobs[vertexId]
+    if (verticesVisible) {
+        vertices.forEach { vertexId ->
+            val pos = getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
+            val cob = gameState.cobs[vertexId]
 
-        val vertexColor = when {
-            vertexId == selectedVertexId -> colors.vertexSelectedColor
-            adjacentVertexes.contains(vertexId) -> colors.vertexHighlightColor
-            cob != null -> colors.vertexOccupiedColor
-            else -> colors.vertexDefaultColor
-        }
+            val vertexColor = when {
+                vertexId == selectedVertexId -> colors.vertexSelectedColor
+                adjacentVertexes.contains(vertexId) -> colors.vertexHighlightColor
+                cob != null -> colors.vertexOccupiedColor
+                else -> colors.vertexDefaultColor
+            }
 
-        drawCircle(color = vertexColor, center = pos, radius = vWidth / 10)
+            drawCircle(color = vertexColor, center = pos, radius = vWidth / 10)
 
-        // Borde del vértice
-        drawCircle(
-            color = colors.textColor.copy(alpha = 0.3f), center = pos, radius = vWidth / 10, style = Stroke(width = 1f)
-        )
+            // Borde del vértice
+            drawCircle(
+                color = colors.textColor.copy(alpha = 0.3f),
+                center = pos,
+                radius = vWidth / 10,
+                style = Stroke(width = 1f)
+            )
 
-        if (labelsVisible) {
-            // Etiqueta del vértice
-            drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
-                        color = colors.textColor.hashCode()
-                        textSize = vWidth / 6
-                        isAntiAlias = true
-                    })
+            if (labelsVisible) {
+                // Etiqueta del vértice
+                drawContext.canvas.nativeCanvas.apply {
+                    drawText(
+                        vertexId, pos.x - vWidth / 5, pos.y - vWidth / 5, Paint().apply {
+                            color = colors.textColor.hashCode()
+                            textSize = vWidth / 6
+                            isAntiAlias = true
+                        })
+                }
             }
         }
     }

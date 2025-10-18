@@ -14,11 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -42,6 +44,7 @@ fun BoardRenderer(
     boardState: BoardState,
     animatedPieces: Map<String, AnimatedPiece> = emptyMap(),
     tapEvents: TapEvents,
+    onBoardSizeChange: (Size) -> Unit = {},
     debug: Boolean = false
 ) {
     val colors = getBoardColors()
@@ -62,6 +65,7 @@ fun BoardRenderer(
             .onGloballyPositioned { coords ->
                 containerWidthPx = coords.size.width
                 containerHeightPx = coords.size.height
+                onBoardSizeChange(coords.size.toSize())
             }
             .pointerInput(visualWidth, gameState, selectedVertexId, orientation, editorMode, tapEvents, debug) {
                 tapGestures(
@@ -77,7 +81,8 @@ fun BoardRenderer(
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
             drawRect(color = colors.backgroundColor)
-            val canvasSize = size
+            val size = size
+            //onBoardSizeChange(size)
 
             drawCircle(
                 color = colors.boardBackgroundColor,
@@ -86,13 +91,13 @@ fun BoardRenderer(
             )
 
             drawEdges(
-                canvasSize = canvasSize,
+                canvasSize = size,
                 orientation = orientation,
                 colors = colors
             )
 
             drawVertices(
-                canvasSize = canvasSize,
+                canvasSize = size,
                 vWidth = visualWidth,
                 selectedVertexId = selectedVertexId,
                 adjacentVertexes = validAdjacentVertexes,
