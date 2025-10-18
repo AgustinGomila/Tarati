@@ -610,7 +610,7 @@ object TaratiAI {
 
     private fun flipCastlingCobs(mutable: MutableMap<String, Cob>, color: Color) {
         val targetVertex = if (color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
-        mutable[targetVertex]?.copy(color = color)
+        mutable[targetVertex]?.let { mutable[targetVertex] = it.copy(color = color) }
     }
 
     private fun flipAdjacentCobs(mutable: MutableMap<String, Cob>, vertex: String, color: Color) {

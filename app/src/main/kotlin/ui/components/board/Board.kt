@@ -161,6 +161,7 @@ fun Board(
                     }
                 }
             },
+            onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
             debug = debug
         )
 

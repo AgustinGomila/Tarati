@@ -71,4 +71,9 @@
     <string name="you_won">You won with %1$s</string>
     <string name="you_lost">You lost with %1$s</string>
     <string name="game_over_triple_repetition">Game over: %1$s wins by triple repetition!</string>
+    <string name="show_tutorial">Show tutorial</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="next">Next</string>
+    <string name="skip_tutorial">Skip tutorial</string>
+    <string name="repeat_explanation">Repeat explanation</string>
 </resources>

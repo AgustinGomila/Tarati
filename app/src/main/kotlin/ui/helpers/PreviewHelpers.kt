@@ -2,7 +2,10 @@ package com.agustin.tarati.ui.helpers
 
 import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
@@ -12,6 +15,8 @@ import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.modifyCob
 import com.agustin.tarati.game.logic.withTurn
+import com.agustin.tarati.game.tutorial.TutorialManager
+import com.agustin.tarati.game.tutorial.TutorialState
 import com.agustin.tarati.ui.components.board.BoardState
 
 /**
@@ -94,6 +99,39 @@ data class PreviewConfig(
     val playerSide: Color = WHITE,
     val landScape: Boolean = false,
     val isEditing: Boolean = false,
+    val isTutorial: Boolean = false,
     val labelsVisible: Boolean = true,
     val debug: Boolean = false
 )
+
+class PreviewTutorialState {
+    var currentStepIndex by mutableStateOf(0)
+    var isActive by mutableStateOf(true)
+
+    fun getMockTutorialManager(step: com.agustin.tarati.game.tutorial.TutorialStep): TutorialManager {
+        val manager = TutorialManager()
+        // Usamos reflexión para forzar el estado (solo para previews)
+        try {
+            val stateField = TutorialManager::class.java.getDeclaredField("tutorialState")
+            stateField.isAccessible = true
+            stateField.set(manager, TutorialState.ShowingStep(step))
+
+            val progressField = TutorialManager::class.java.getDeclaredField("progress")
+            progressField.isAccessible = true
+            progressField.set(
+                manager, com.agustin.tarati.game.tutorial.TutorialProgress(
+                    currentStepIndex = currentStepIndex + 1,
+                    totalSteps = 6,
+                    completed = false
+                )
+            )
+        } catch (e: Exception) {
+            // En caso de error, el preview mostrará el estado por defecto
+            e.printStackTrace()
+        }
+        return manager
+    }
+}
+
+@Composable
+fun rememberPreviewTutorialState() = remember { PreviewTutorialState() }
