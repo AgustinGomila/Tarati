@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.agustin.tarati.game.core.Cob
+import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
@@ -39,12 +40,14 @@ import kotlin.math.roundToInt
 @Composable
 fun BoardRenderer(
     modifier: Modifier = Modifier,
+    playerSide: Color,
     selectedVertexId: String?,
     validAdjacentVertexes: List<String>,
     boardState: BoardState,
-    animatedPieces: Map<String, AnimatedPiece> = emptyMap(),
+    animatedPieces: Map<String, AnimatedPiece>,
+    currentHighlight: HighlightAnimation?,
     tapEvents: TapEvents,
-    onBoardSizeChange: (Size) -> Unit = {},
+    onBoardSizeChange: (Size) -> Unit,
     debug: Boolean = false
 ) {
     val colors = getBoardColors()
@@ -54,8 +57,6 @@ fun BoardRenderer(
     var containerWidthPx by remember { mutableIntStateOf(0) }
     var containerHeightPx by remember { mutableIntStateOf(0) }
 
-    // Usar el estado visual proporcionado (puede estar en medio de una animación)
-    val gameState = boardState.gameState
     val orientation = boardState.boardOrientation
     val editorMode = boardState.isEditing
 
@@ -67,10 +68,20 @@ fun BoardRenderer(
                 containerHeightPx = coords.size.height
                 onBoardSizeChange(coords.size.toSize())
             }
-            .pointerInput(visualWidth, gameState, selectedVertexId, orientation, editorMode, tapEvents, debug) {
+            .pointerInput(
+                visualWidth,
+                boardState.gameState,
+                playerSide,
+                selectedVertexId,
+                orientation,
+                editorMode,
+                tapEvents,
+                debug
+            ) {
                 tapGestures(
                     visualWidth = visualWidth,
-                    gameState = gameState,
+                    gameState = boardState.gameState,
+                    playerSide = playerSide,
                     from = selectedVertexId,
                     orientation = orientation,
                     editorMode = editorMode,
@@ -104,10 +115,36 @@ fun BoardRenderer(
                 boardState = boardState,
                 colors = colors
             )
+
+            currentHighlight?.let { highlight ->
+                when (highlight) {
+                    is HighlightAnimation.Vertex -> {
+                        drawVertexHighlight(
+                            highlight = highlight.highlight,
+                            canvasSize = size,
+                            orientation = orientation,
+                            colors = colors
+                        )
+                    }
+
+                    is HighlightAnimation.Edge -> {
+                        drawEdgeHighlight(
+                            highlight = highlight.highlight,
+                            canvasSize = size,
+                            orientation = orientation,
+                            colors = colors
+                        )
+                    }
+
+                    is HighlightAnimation.Pause -> {
+                        // No dibujar nada durante pausas
+                    }
+                }
+            }
         }
 
         // Dibujar piezas estáticas (excluyendo las que están siendo animadas)
-        gameState.cobs.forEach { (vertexId, cob) ->
+        boardState.gameState.cobs.forEach { (vertexId, cob) ->
             if (!animatedPieces.containsKey(vertexId)) {
                 key(vertexId) {
                     StaticPieceComposable(
@@ -129,7 +166,6 @@ fun BoardRenderer(
                 animatedPiece.vertexId + animatedPiece.animationProgress +
                         animatedPiece.upgradeProgress + animatedPiece.conversionProgress
             ) {
-
                 AnimatedPieceComposable(
                     animatedPiece = animatedPiece,
                     containerWidth = containerWidthPx,

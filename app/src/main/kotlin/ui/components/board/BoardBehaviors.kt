@@ -2,6 +2,7 @@ package com.agustin.tarati.ui.components.board
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.PointerInputScope
+import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.findClosestVertex
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
@@ -12,6 +13,7 @@ import com.agustin.tarati.game.logic.BoardOrientation
 suspend fun PointerInputScope.tapGestures(
     visualWidth: Float,
     gameState: GameState,
+    playerSide: Color,
     from: String?,
     orientation: BoardOrientation,
     editorMode: Boolean,
@@ -23,7 +25,7 @@ suspend fun PointerInputScope.tapGestures(
             tapOffset = offset,
             canvasWidth = size.width.toFloat(),
             canvasHeight = size.height.toFloat(),
-            maxTapDistance = visualWidth / 3,
+            maxTapDistance = visualWidth,
             orientation = orientation
         )
 
@@ -33,6 +35,7 @@ suspend fun PointerInputScope.tapGestures(
             } else {
                 handleTap(
                     gameState = gameState,
+                    playerSide = playerSide,
                     from = from,
                     to = vertexId,
                     tapEvents = tapEvents,
@@ -45,16 +48,23 @@ suspend fun PointerInputScope.tapGestures(
 
 fun handleTap(
     gameState: GameState,
+    playerSide: Color,
     from: String?,
     to: String,
     tapEvents: TapEvents,
     debug: Boolean = false,
 ) {
-    if (debug) println("TAP HANDLED: vertex=$to, selectedVertexId=$from")
+    if (debug) println("TAP HANDLED: fromVertexId=$from, toVertexId=$to")
 
     // Seleccionar pieza si no hay origen
     if (from == null) {
-        selectPiece(gameState, to, tapEvents::onSelected)
+        selectPiece(
+            gameState = gameState,
+            playerSide = playerSide,
+            from = to,
+            onSelected = tapEvents::onSelected,
+            debug = debug
+        )
         return
     }
 
@@ -76,7 +86,13 @@ fun handleTap(
 
     when {
         // Seleccionar otra pieza del mismo color
-        toColor == fromColor -> selectPiece(gameState, to, tapEvents::onSelected)
+        toColor == fromColor -> selectPiece(
+            gameState = gameState,
+            playerSide = playerSide,
+            from = to,
+            onSelected = tapEvents::onSelected,
+            debug = debug
+        )
 
         // Deseleccionar si toca pieza adversaria
         toColor != null -> {
@@ -135,15 +151,16 @@ fun movePiece(
 
 fun selectPiece(
     gameState: GameState,
+    playerSide: Color,
     from: String,
     onSelected: (from: String, valid: List<String>) -> Unit,
     debug: Boolean = false
 ) {
-    val cob = gameState.cobs[from]
+    val cob = gameState.cobs[from] ?: return
     if (debug) println("Checking piece: $cob at $from, currentTurn: ${gameState.currentTurn}")
 
-    if (cob?.color != gameState.currentTurn) {
-        if (debug) println("Cannot select: cob=$cob, currentTurn=${gameState.currentTurn}")
+    if (cob.color != playerSide) {
+        if (debug) println("Cannot select: cob=$cob, playerSide=${playerSide}")
         return
     }
 

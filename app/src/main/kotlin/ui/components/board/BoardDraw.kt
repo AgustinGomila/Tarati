@@ -14,6 +14,7 @@ import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.BoardColors
+import kotlin.math.sin
 
 fun DrawScope.drawPiece(
     selectedVertexId: String?,
@@ -214,4 +215,110 @@ fun DrawScope.drawAnimatedPiece(
             style = Stroke(width = 3f)
         )
     }
+}
+
+fun DrawScope.drawVertexHighlight(
+    highlight: VertexHighlight,
+    canvasSize: Size,
+    orientation: BoardOrientation,
+    colors: BoardColors
+) {
+    val pos = getVisualPosition(highlight.vertexId, canvasSize.width, canvasSize.height, orientation)
+    val baseRadius = minOf(canvasSize.width, canvasSize.height) * 0.03f
+
+    // Efecto de pulso si está activado
+    val pulseFactor = if (highlight.pulse) {
+        val pulseTime = System.currentTimeMillis() % 1000L / 1000f
+        (0.7f + 0.3f * sin(pulseTime * 2 * Math.PI).toFloat())
+    } else {
+        1f
+    }
+
+    val pulseRadius = baseRadius * pulseFactor
+
+    // Círculo exterior brillante
+    drawCircle(
+        color = highlight.color.copy(alpha = 0.3f),
+        center = pos,
+        radius = pulseRadius * 1.8f
+    )
+
+    // Círculo principal del highlight
+    drawCircle(
+        color = highlight.color,
+        center = pos,
+        radius = pulseRadius * 1.2f,
+        style = Stroke(width = 3f)
+    )
+
+    // Núcleo brillante
+    drawCircle(
+        color = highlight.color,
+        center = pos,
+        radius = pulseRadius * 0.6f
+    )
+
+    // Si hay mensaje, dibujar texto (opcional)
+    highlight.messageResId?.let {
+        // Aquí podrías agregar texto si lo necesitas
+        // drawContext.canvas.nativeCanvas.drawText(...)
+    }
+}
+
+fun DrawScope.drawEdgeHighlight(
+    highlight: EdgeHighlight,
+    canvasSize: Size,
+    orientation: BoardOrientation,
+    colors: BoardColors
+) {
+    val fromPos = getVisualPosition(
+        highlight.from,
+        canvasSize.width,
+        canvasSize.height,
+        orientation
+    )
+    val toPos = getVisualPosition(
+        highlight.to,
+        canvasSize.width,
+        canvasSize.height,
+        orientation
+    )
+
+    // Efecto de pulso para edges
+    val pulseFactor = if (highlight.pulse) {
+        val pulseTime = System.currentTimeMillis() % 1000L / 1000f
+        (0.8f + 0.2f * sin(pulseTime * 2 * Math.PI).toFloat())
+    } else {
+        1f
+    }
+
+    // Línea principal resaltada
+    drawLine(
+        color = highlight.color,
+        start = fromPos,
+        end = toPos,
+        strokeWidth = 12f * pulseFactor,
+        alpha = 0.8f
+    )
+
+    // Borde brillante
+    drawLine(
+        color = highlight.color.copy(alpha = 0.4f),
+        start = fromPos,
+        end = toPos,
+        strokeWidth = 18f * pulseFactor,
+        alpha = 0.3f
+    )
+
+    // Efecto de puntos en los extremos
+    drawCircle(
+        color = highlight.color,
+        center = fromPos,
+        radius = 8f * pulseFactor
+    )
+    drawCircle(
+        color = highlight.color,
+        center = toPos,
+        radius = 8f * pulseFactor
+    )
 }

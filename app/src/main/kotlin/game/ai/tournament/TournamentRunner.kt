@@ -4,9 +4,9 @@ import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
+import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
 import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.ai.TaratiAI.isGameOver
-import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
@@ -337,7 +337,7 @@ class TournamentRunner {
             }
 
             localHistory[hash] = count + 1
-            recordRealMove(nextState, gameState.currentTurn)
+            if (getRepetitionCount(nextState) == 3) break
 
             gameState = nextState
             moves++

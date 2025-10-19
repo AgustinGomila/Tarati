@@ -37,6 +37,7 @@ class TripleRepetitionTest {
 
         // Simular triple repetición causada por las blancas
         repeat(3) {
+
             recordRealMove(gameState, WHITE)
         }
 

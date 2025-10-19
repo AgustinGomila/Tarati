@@ -14,6 +14,7 @@ import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.countFlipsByType
 import com.agustin.tarati.game.core.isCastling
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.hashBoard
@@ -307,7 +308,7 @@ object TaratiAI {
         val newState = applyMove(gameState, move)
         val wouldCauseRepetition = checkIfWouldCauseRepetition(newState)
 
-        val (rocFlips, cobFlips) = countFlipsByType(gameState, newState, move)
+        val (rocFlips, cobFlips) = move.countFlipsByType(gameState, newState)
         val quickScore = quickEvaluate(newState)
 
         val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
@@ -500,34 +501,6 @@ object TaratiAI {
             val enemy = gameState.cobs[it]
             enemy?.color == enemyColor && enemy.isUpgraded
         }
-    }
-
-    private fun countFlipsByType(oldState: GameState, newState: GameState, move: Move): Pair<Int, Int> {
-        var rocFlips = 0
-        var cobFlips = 0
-
-        val cob = oldState.cobs[move.from]!!
-
-        // Capturas especiales
-        if (move.isCastling(cob.color)) {
-            val targetPosition = if (cob.color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
-            val targetCob = oldState.cobs[targetPosition]
-            if (targetCob != null) {
-                if (targetCob.isUpgraded) rocFlips++ else cobFlips++
-            }
-        }
-
-        // Capturas normales (adyacentes)
-        for (vertex in adjacencyMap[move.to] ?: emptyList()) {
-            val oldCob = oldState.cobs[vertex]
-            val newCob = newState.cobs[vertex]
-
-            if (oldCob != null && newCob != null && oldCob.color != newCob.color) {
-                if (oldCob.isUpgraded) rocFlips++ else cobFlips++
-            }
-        }
-
-        return Pair(rocFlips, cobFlips)
     }
 
     // ==================== Estado del Juego ====================

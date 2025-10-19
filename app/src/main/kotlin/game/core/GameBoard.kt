@@ -7,6 +7,7 @@ import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.getCastlingMoves
+import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.logic.BoardOrientation
 import kotlin.math.cos
@@ -294,6 +295,72 @@ fun Move.isCastling(cobColor: Color): Boolean {
         WHITE -> from in listOf("C1", "C2") && to in listOf("C1", "C2")
         BLACK -> from in listOf("C7", "C8") && to in listOf("C7", "C8")
     }
+}
+
+fun Move.countFlipsByType(oldState: GameState, newState: GameState): Pair<Int, Int> {
+    var rocFlips = 0
+    var cobFlips = 0
+
+    val cob = oldState.cobs[this.from]!!
+
+    // Capturas especiales
+    if (this.isCastling(cob.color)) {
+        val targetPosition = if (cob.color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
+        val targetCob = oldState.cobs[targetPosition]
+        if (targetCob != null) {
+            if (targetCob.isUpgraded) rocFlips++ else cobFlips++
+        }
+    }
+
+    // Capturas normales (adyacentes)
+    for (vertex in adjacencyMap[this.to] ?: emptyList()) {
+        val oldCob = oldState.cobs[vertex]
+        val newCob = newState.cobs[vertex]
+
+        if (oldCob != null && newCob != null && oldCob.color != newCob.color) {
+            if (oldCob.isUpgraded) rocFlips++ else cobFlips++
+        }
+    }
+
+    return Pair(rocFlips, cobFlips)
+}
+
+fun Move.isUpgradeMove(oldState: GameState, newState: GameState): Boolean {
+    val movingCob = oldState.cobs[this.from] ?: return false
+
+    // Si la pieza ya estaba mejorada, no puede mejorar nuevamente
+    if (movingCob.isUpgraded) return false
+
+    // Caso especial: enroque (castling) - no cuenta como mejora
+    if (this.isCastling(movingCob.color)) {
+        return false
+    }
+
+    // Verificar si la pieza se movió a la base ENEMIGA
+    val enemyBase = homeBases[movingCob.color.opponent()] ?: emptyList()
+    val isOnEnemyBase = this.to in enemyBase
+
+    if (!isOnEnemyBase) return false
+
+    // Verificar que en el nuevo estado la pieza está mejorada
+    val newCob = newState.cobs[this.to]
+    return newCob?.isUpgraded == true
+}
+
+fun Move.isPotentialUpgradeMove(oldState: GameState): Boolean {
+    val movingCob = oldState.cobs[this.from] ?: return false
+
+    // Si la pieza ya estaba mejorada, no puede mejorar nuevamente
+    if (movingCob.isUpgraded) return false
+
+    // Caso especial: enroque (castling) - no cuenta como mejora
+    if (this.isCastling(movingCob.color)) {
+        return false
+    }
+
+    // Verificar si la pieza se mueve a la base enemiga
+    val enemyBase = homeBases[movingCob.color.opponent()] ?: emptyList()
+    return this.to in enemyBase
 }
 
 data class NormalizedBoard(val x: Float, val y: Float) {
