@@ -1,12 +1,9 @@
 package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
-import com.agustin.tarati.game.ai.TaratiAI.checkIfWouldCauseRepetition
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.Color.BLACK
@@ -14,7 +11,10 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.checkIfWouldCauseRepetition
+import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.game.logic.hashBoard
+import com.agustin.tarati.game.logic.isGameOver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -37,12 +37,13 @@ class TripleRepetitionTest {
 
         // Simular triple repetición causada por las blancas
         repeat(3) {
+
             recordRealMove(gameState, WHITE)
         }
 
         // Verificar que las blancas pierden
-        assertTrue("Game should be over due to triple repetition", isGameOver(gameState))
-        val winner = getWinner(gameState)
+        assertTrue("Game should be over due to triple repetition", gameState.isGameOver())
+        val winner = gameState.getWinner()
         assertEquals("Black should win when white causes triple repetition", BLACK, winner)
     }
 
@@ -61,8 +62,8 @@ class TripleRepetitionTest {
             recordRealMove(gameState, BLACK)
         }
 
-        assertTrue("Game should be over due to triple repetition", isGameOver(gameState))
-        val winner = getWinner(gameState)
+        assertTrue("Game should be over due to triple repetition", gameState.isGameOver())
+        val winner = gameState.getWinner()
         assertEquals("White should win when black causes triple repetition", WHITE, winner)
     }
 
@@ -80,18 +81,18 @@ class TripleRepetitionTest {
         // Primera vez - no debería detectar
         val loser1 = recordRealMove(gameState, WHITE)
         assertNull("Should not detect repetition first time", loser1)
-        assertFalse("Game should not be over", isGameOver(gameState))
+        assertFalse("Game should not be over", gameState.isGameOver())
 
         // Segunda vez - no debería detectar
         val loser2 = recordRealMove(gameState, WHITE)
         assertNull("Should not detect repetition second time", loser2)
-        assertFalse("Game should not be over", isGameOver(gameState))
+        assertFalse("Game should not be over", gameState.isGameOver())
 
         // Tercera vez - DEBERÍA detectar
         val loser3 = recordRealMove(gameState, WHITE)
         assertEquals("Should detect triple repetition and white should lose", WHITE, loser3)
-        assertTrue("Game should be over", isGameOver(gameState))
-        assertEquals("Black should win", BLACK, getWinner(gameState))
+        assertTrue("Game should be over", gameState.isGameOver())
+        assertEquals("Black should win", BLACK, gameState.getWinner())
     }
 
     @Test
@@ -117,8 +118,8 @@ class TripleRepetitionTest {
         // Registrar state2 una vez - no debería activar triple repetición para state1
         val loser = recordRealMove(state2, BLACK)
         assertNull("Should not detect repetition for different state", loser)
-        assertFalse("State1 should not be over", isGameOver(state1))
-        assertFalse("State2 should not be over", isGameOver(state2))
+        assertFalse("State1 should not be over", state1.isGameOver())
+        assertFalse("State2 should not be over", state2.isGameOver())
     }
 
     @Test
@@ -132,14 +133,14 @@ class TripleRepetitionTest {
         }
 
         // Verificar que inicialmente no causaría repetición
-        assertFalse("Should not cause repetition initially", checkIfWouldCauseRepetition(gameState))
+        assertFalse("Should not cause repetition initially", gameState.checkIfWouldCauseRepetition())
 
         // Registrar dos veces
         recordRealMove(gameState, WHITE)
         recordRealMove(gameState, WHITE)
 
         // Ahora debería causar repetición si se registra otra vez
-        assertTrue("Should cause repetition after two records", checkIfWouldCauseRepetition(gameState))
+        assertTrue("Should cause repetition after two records", gameState.checkIfWouldCauseRepetition())
     }
 
     @Test
@@ -158,7 +159,7 @@ class TripleRepetitionTest {
         clearAIHistory()
 
         // Verificar que después de limpiar, no causa repetición
-        assertFalse("Should not cause repetition after clear", checkIfWouldCauseRepetition(gameState))
+        assertFalse("Should not cause repetition after clear", gameState.checkIfWouldCauseRepetition())
 
         val loser = recordRealMove(gameState, WHITE)
         assertNull("Should not detect repetition after clear", loser)
@@ -265,7 +266,7 @@ class TripleRepetitionTest {
 
         // Aplicar el movimiento y verificar que no causa triple repetición
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
-        val wouldCauseRepetition = checkIfWouldCauseRepetition(newState)
+        val wouldCauseRepetition = newState.checkIfWouldCauseRepetition()
 
         assertTrue("AI should avoid moves that cause triple repetition", !wouldCauseRepetition)
     }
@@ -293,8 +294,8 @@ class TripleRepetitionTest {
         recordRealMove(state1, WHITE) // Solo segunda vez para state1
 
         // No debería haber triple repetición
-        assertTrue("Game should not be over - different positions", !isGameOver(state1))
-        assertTrue("Game should not be over - different positions", !isGameOver(state2))
+        assertTrue("Game should not be over - different positions", !state1.isGameOver())
+        assertTrue("Game should not be over - different positions", !state2.isGameOver())
     }
 
     @Test
@@ -316,7 +317,7 @@ class TripleRepetitionTest {
         val loser = recordRealMove(gameState, WHITE)
 
         assertEquals("Should not detect triple repetition after clear", null, loser)
-        assertTrue("Game should not be over after clear", !isGameOver(gameState))
+        assertTrue("Game should not be over after clear", !gameState.isGameOver())
     }
 
     @Test
@@ -330,7 +331,7 @@ class TripleRepetitionTest {
         val maxMoves = 50
 
         // Jugar hasta detectar triple repetición o llegar al límite
-        while (moves < maxMoves && !isGameOver(gameState)) {
+        while (moves < maxMoves && !gameState.isGameOver()) {
             val result = getNextBestMove(gameState, Difficulty.MIN)
 
             if (result.move == null) break
@@ -353,8 +354,8 @@ class TripleRepetitionTest {
         // En un juego real, puede que no ocurra triple repetición rápidamente,
         // pero al menos verificamos que el mecanismo funciona
         if (repetitionDetected) {
-            assertTrue("Game should be over when repetition detected", isGameOver(gameState))
-            val winner = getWinner(gameState)
+            assertTrue("Game should be over when repetition detected", gameState.isGameOver())
+            val winner = gameState.getWinner()
             assertNotNull("There should be a winner when repetition occurs", winner)
         } else {
             println("No triple repetition detected in $moves moves")
@@ -394,7 +395,7 @@ class TripleRepetitionTest {
         assertEquals("State should have count 3", 3, realGameHistory[gameState.hashBoard()])
 
         // Verificar que isGameOver detecta la triple repetición
-        assertTrue("Game should be over due to triple repetition", isGameOver(gameState))
+        assertTrue("Game should be over due to triple repetition", gameState.isGameOver())
     }
 
     @Test
@@ -531,8 +532,8 @@ class TripleRepetitionTest {
         }
 
         // Verificar el estado del juego
-        println("isGameOver: ${isGameOver(stateAfterMove4WithTurn)}")
-        println("Winner: ${getWinner(stateAfterMove4WithTurn)}")
+        println("isGameOver: ${stateAfterMove4WithTurn.isGameOver()}")
+        println("Winner: ${stateAfterMove4WithTurn.getWinner()}")
         println("After moves: $moves")
 
         // No hacemos asserts aquí - solo queremos el output para debug

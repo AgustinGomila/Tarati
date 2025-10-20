@@ -28,7 +28,7 @@ fun LanguageAwareApp(
 ) {
     val settingsState by viewModel.settingsState.collectAsState()
     val context = LocalContext.current
-    val deviceConfig = LocalConfiguration.current // Configuración observable del dispositivo
+    val deviceConfig = LocalConfiguration.current
 
     // Determinar el locale actual
     val currentLocale = remember(settingsState.language) {

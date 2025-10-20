@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tarati</string>
-    <string name="game_over_wins">¡Juego Terminado! ¡%1$s gana!</string>
+    <string name="game_over_wins">¡Juego Terminado! ¡%1$s gana por Mit!</string>
+    <string name="game_over_stalemit">¡Juego Terminado! ¡%1$s gana por Ahogado!</string>
     <string name="black">NEGRO</string>
     <string name="white">BLANCO</string>
     <string name="about_tarati">Acerca de Tarati</string>
@@ -76,4 +77,39 @@
     <string name="you_won">Ganaste con %1$s</string>
     <string name="you_lost">Perdiste con %1$s</string>
     <string name="game_over_triple_repetition">¡Juego Terminado! ¡%1$s gana por triple repetición!</string>
+    <string name="show_tutorial">Ver tutorial</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="next">Siguiente</string>
+    <string name="skip_tutorial">Saltar tutorial</string>
+    <string name="repeat_explanation">Repetir explicación</string>
+    <string name="board_vertices">Vértices</string>
+    <string name="welcome_to_tarati">"Bienvenido a Tarati"</string>
+    <string name="tarati_description">"Tarati es un juego de estrategia creado por George Spencer Brown. Aprende los
+        movimientos básicos."
+    </string>
+    <string name="board_title">"El Tablero"</string>
+    <string name="board_description">"El tablero tiene vértices conectados. Las piezas o Cobs se mueven entre vértices
+        adyacentes."
+    </string>
+    <string name="center">"Centro"</string>
+    <string name="white_base">"Base Blanca"</string>
+    <string name="black_base">"Base Negra"</string>
+    <string name="basic_moves_title">"Movimientos Básicos"</string>
+    <string name="basic_moves_description">"Las piezas se mueven hacia adelante o a vértices adyacentes. Toca una pieza
+        para ver los movimientos válidos."
+    </string>
+    <string name="capture_title">"Captura de Piezas"</string>
+    <string name="capture_description">"Al moverte junto a una pieza enemiga, la capturas y cambia a tu color."</string>
+    <string name="upgrade_title">"Mejora de Piezas"</string>
+    <string name="upgrade_description">"Al llegar a la base enemiga, tu Cob se convierte en Roc, que puede moverse en
+        cualquier dirección."
+    </string>
+    <string name="castling_title">"Movimiento de Enroque"</string>
+    <string name="castling_description">"En las bases, puedes realizar un movimiento especial de enroque que captura
+        piezas enemigas en posiciones clave."
+    </string>
+    <string name="absolute_center">Centro absoluto</string>
+    <string name="bridge">Puente</string>
+    <string name="circumference">Circunferencia</string>
+    <string name="domestic">Zona doméstica</string>
 </resources>

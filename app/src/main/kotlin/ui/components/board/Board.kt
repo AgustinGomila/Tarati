@@ -5,16 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
@@ -31,6 +25,7 @@ data class BoardState(
     val lastMove: Move? = null,
     val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     val labelsVisible: Boolean = true,
+    val verticesVisible: Boolean = true,
     val newGame: Boolean = false,
     val isEditing: Boolean = false
 )
@@ -53,148 +48,51 @@ interface TapEvents {
 fun Board(
     modifier: Modifier = Modifier,
     boardState: BoardState,
+    playerSide: Color,
     events: BoardEvents,
-    viewModel: BoardSelectionViewModel = viewModel(),
+    selectViewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
-    var prevGameState by remember { mutableStateOf<GameState?>(null) }
-    val isAnimating by animationViewModel.isAnimating.collectAsState()
-
-    // Efecto para sincronizar el estado inicial
-    LaunchedEffect(Unit) {
-        animationViewModel.syncState(boardState.gameState)
-        prevGameState = boardState.gameState
-    }
-
-    // Efecto para procesar movimientos
-    LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
-        val lastMove = boardState.lastMove
-        if (lastMove != null && prevGameState != null && !isAnimating) {
-            val currentGameState = boardState.gameState
-
-            // Verificar que el movimiento es válido y diferente del estado anterior
-            if (isValidMoveTransition(prevGameState!!, currentGameState, lastMove)) {
-                val success = animationViewModel.processMove(
-                    move = lastMove,
-                    oldGameState = prevGameState!!,
-                    newGameState = currentGameState,
-                    debug = debug
-                )
-
-                if (success) {
-                    prevGameState = currentGameState
-                }
-            }
-        }
-    }
-
-    // Sincronizar estado cuando no hay animaciones y el estado cambió
-    LaunchedEffect(boardState.gameState, isAnimating) {
-        if (!isAnimating && boardState.gameState != prevGameState) {
-            animationViewModel.syncState(boardState.gameState)
-            prevGameState = boardState.gameState
-        }
-    }
-
-    // Efecto para reset
-    LaunchedEffect(boardState.newGame) {
-        if (boardState.newGame) {
-            viewModel.resetSelection()
-            animationViewModel.reset()
-            prevGameState = null
-            events.onResetCompleted()
-        }
-    }
-
-    val vmSelectedPiece by viewModel.selectedVertexId.collectAsState()
-    val vmValidMoves by viewModel.validAdjacentVertexes.collectAsState()
-    val visualState by animationViewModel.visualState.collectAsState()
-    val animatedPieces by animationViewModel.animatedPieces.collectAsState()
-
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
     ) {
         BoardRenderer(
             modifier = Modifier.fillMaxSize(),
-            selectedVertexId = vmSelectedPiece,
-            validAdjacentVertexes = vmValidMoves,
-            boardState = boardState.copy(
-                gameState = GameState(
-                    cobs = visualState.cobs,
-                    currentTurn = visualState.currentTurn ?: boardState.gameState.currentTurn
-                )
-            ),
-            animatedPieces = animatedPieces,
+            playerSide = playerSide,
+            selectViewModel = selectViewModel,
+            animationViewModel = animationViewModel,
+            boardState = boardState,
             tapEvents = object : TapEvents {
                 override fun onSelected(from: String, valid: List<String>) {
-                    if (!isAnimating) {
-                        viewModel.updateSelectedVertex(from)
-                        viewModel.updateValidAdjacentVertexes(valid)
-                    }
+                    selectViewModel.updateSelectedVertex(from)
+                    selectViewModel.updateValidAdjacentVertexes(valid)
                 }
 
                 override fun onMove(from: String, to: String) {
-                    if (!isAnimating) {
-                        events.onMove(from, to)
-                        viewModel.resetSelection()
-                    }
+                    events.onMove(from, to)
+                    selectViewModel.resetSelection()
                 }
 
                 override fun onInvalid(from: String, valid: List<String>) {
-                    if (!isAnimating) {
-                        viewModel.updateSelectedVertex(from)
-                        viewModel.updateValidAdjacentVertexes(valid)
-                    }
+                    selectViewModel.updateSelectedVertex(from)
+                    selectViewModel.updateValidAdjacentVertexes(valid)
                 }
 
                 override fun onEditPieceRequested(from: String) {
-                    if (!isAnimating) {
-                        events.onEditPiece(from)
-                    }
+                    events.onEditPiece(from)
                 }
 
                 override fun onCancel() {
-                    if (!isAnimating) {
-                        viewModel.resetSelection()
-                    }
+                    selectViewModel.resetSelection()
                 }
             },
+            onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
+            onResetCompleted = events::onResetCompleted,
             debug = debug
         )
-
-        // Bloquear interacciones durante animaciones
-        if (isAnimating) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                awaitPointerEvent()
-                            }
-                        }
-                    }
-            )
-        }
     }
-}
-
-private fun isValidMoveTransition(oldState: GameState, newState: GameState, move: Move): Boolean {
-    // Verificar que hay un cambio real en el estado
-    if (oldState.cobs == newState.cobs) return false
-
-    // Verificar que hay cambios consistentes
-    val movedPieceExistsOldState = oldState.cobs.containsKey(move.from)
-    val destinationFreeInOldState = !oldState.cobs.containsKey(move.to)
-    val movedPieceExistsInNewState = newState.cobs.containsKey(move.to)
-    val originFreeInNewState = !newState.cobs.containsKey(move.from)
-
-    return movedPieceExistsInNewState &&
-            originFreeInNewState &&
-            destinationFreeInOldState &&
-            movedPieceExistsOldState
 }
 
 // region Previews
@@ -203,7 +101,9 @@ private fun isValidMoveTransition(oldState: GameState, newState: GameState, move
 fun BoardPreview(
     orientation: BoardOrientation,
     gameState: GameState,
+    playerSide: Color,
     labelsVisible: Boolean = true,
+    verticesVisible: Boolean = true,
     isEditing: Boolean = false,
     viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
@@ -216,8 +116,10 @@ fun BoardPreview(
                 lastMove = null,
                 boardOrientation = orientation,
                 labelsVisible = labelsVisible,
+                verticesVisible = verticesVisible,
                 isEditing = isEditing,
             ),
+            playerSide = playerSide,
             events = object : BoardEvents {
                 override fun onMove(from: String, to: String) {
                     if (debug) println("Move from $from to $to")
@@ -231,7 +133,7 @@ fun BoardPreview(
                     if (debug) println("Reset completed")
                 }
             },
-            viewModel = viewModel,
+            selectViewModel = viewModel,
             animationViewModel = animationViewModel,
         )
     }
@@ -240,19 +142,28 @@ fun BoardPreview(
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitWhite() {
-    BoardPreview(BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades())
+    BoardPreview(
+        BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades(),
+        playerSide = BLACK,
+    )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitBlack() {
-    BoardPreview(BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades())
+    BoardPreview(
+        BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades(),
+        playerSide = WHITE,
+    )
 }
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_LandscapeBlack() {
-    BoardPreview(BoardOrientation.LANDSCAPE_BLACK, midGameState())
+    BoardPreview(
+        BoardOrientation.LANDSCAPE_BLACK, midGameState(),
+        playerSide = BLACK,
+    )
 }
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
@@ -273,7 +184,12 @@ fun BoardPreview_Custom() {
         updateSelectedVertex("B1")
         updateValidAdjacentVertexes(listOf("B2", "A1", "B6"))
     }
-    BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
+    BoardPreview(
+        orientation = BoardOrientation.LANDSCAPE_WHITE,
+        gameState = exampleGameState,
+        playerSide = WHITE,
+        viewModel = vm
+    )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
@@ -288,6 +204,7 @@ fun BoardPreview_BlackPlayer() {
         BoardPreview(
             orientation = BoardOrientation.PORTRAIT_BLACK,
             gameState = exampleGameState,
+            playerSide = BLACK,
             labelsVisible = false,
             viewModel = vm
         )
@@ -307,6 +224,7 @@ fun BoardPreview_Landscape_BlackPlayer() {
             orientation = BoardOrientation.LANDSCAPE_BLACK,
             gameState = exampleGameState,
             labelsVisible = false,
+            playerSide = WHITE,
             viewModel = vm
         )
     }
@@ -321,7 +239,12 @@ fun BoardPreview_Landscape() {
             updateSelectedVertex("C2")
             updateValidAdjacentVertexes(listOf("C3", "B2", "B1"))
         }
-        BoardPreview(orientation = BoardOrientation.LANDSCAPE_WHITE, gameState = exampleGameState, viewModel = vm)
+        BoardPreview(
+            orientation = BoardOrientation.LANDSCAPE_WHITE,
+            gameState = exampleGameState,
+            playerSide = BLACK,
+            viewModel = vm
+        )
     }
 }
 
@@ -338,6 +261,7 @@ fun BoardPreview_Landscape_Editing() {
             orientation = BoardOrientation.LANDSCAPE_WHITE,
             gameState = exampleGameState,
             isEditing = true,
+            playerSide = BLACK,
             viewModel = vm
         )
     }

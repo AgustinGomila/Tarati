@@ -12,8 +12,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
+import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.localization.LanguageAwareApp
 import com.agustin.tarati.ui.navigation.NavGraph
+import com.agustin.tarati.ui.screens.settings.SettingsEvents
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
 import com.agustin.tarati.ui.theme.TaratiTheme
@@ -56,9 +58,27 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.background
                     ) {
                         NavGraph(
-                            onThemeChange = { viewModel.toggleDarkTheme(it == AppTheme.MODE_NIGHT) },
-                            onLanguageChange = { viewModel.setLanguage(it) },
-                            onLabelsVisibilityChange = { viewModel.setLabelsVisibility(it) }
+                            object : SettingsEvents {
+                                override fun onThemeChange(theme: AppTheme) {
+                                    viewModel.toggleDarkTheme(theme == AppTheme.MODE_NIGHT)
+                                }
+
+                                override fun onLanguageChange(language: AppLanguage) {
+                                    viewModel.setLanguage(language)
+                                }
+
+                                override fun onLabelsVisibilityChange(visible: Boolean) {
+                                    viewModel.setLabelsVisibility(visible)
+                                }
+
+                                override fun onVerticesVisibilityChange(visible: Boolean) {
+                                    viewModel.setVerticesVisibility(visible)
+                                }
+
+                                override fun onTutorialButtonVisibilityChange(visible: Boolean) {
+                                    viewModel.setTutorialButtonVisibility(visible)
+                                }
+                            },
                         )
                     }
                 }

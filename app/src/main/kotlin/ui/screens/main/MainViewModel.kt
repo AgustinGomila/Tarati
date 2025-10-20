@@ -5,6 +5,7 @@ import com.agustin.tarati.BuildConfig
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
@@ -17,6 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 class MainViewModel() : ViewModel() {
 
     val isDebug: Boolean = BuildConfig.DEBUG
+
+    private val _gameStatus = MutableStateFlow(GameStatus.NO_PLAYING)
+    val gameStatus: StateFlow<GameStatus> = _gameStatus.asStateFlow()
+    fun updateGameStatus(newStatus: GameStatus) {
+        _gameStatus.value = newStatus
+    }
 
     private val _gameState = MutableStateFlow(initialGameState())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -56,6 +63,19 @@ class MainViewModel() : ViewModel() {
         _playerSide.value = newSide
     }
 
+    // Tutorial
+    private val _isTutorialActive = MutableStateFlow(false)
+    val isTutorialActive: StateFlow<Boolean> = _isTutorialActive.asStateFlow()
+
+    fun endTutorial() {
+        _isTutorialActive.value = false
+    }
+
+    fun startTutorial() {
+        _isTutorialActive.value = true
+    }
+
+    // Edición de tablero
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 

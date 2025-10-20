@@ -12,6 +12,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.koin.core.context.GlobalContext.startKoin
@@ -32,6 +33,7 @@ class SettingsViewModelTest {
         coEvery { mockSettingsRepository.difficulty } returns MutableStateFlow(Difficulty.DEFAULT)
         coEvery { mockSettingsRepository.language } returns MutableStateFlow(AppLanguage.SPANISH)
         coEvery { mockSettingsRepository.labelsVisibility } returns MutableStateFlow(false)
+        coEvery { mockSettingsRepository.verticesVisibility } returns MutableStateFlow(true)
 
         startKoin {
             modules(module {
@@ -53,7 +55,8 @@ class SettingsViewModelTest {
         assertEquals("Initial theme should be AUTO", AppTheme.MODE_AUTO, state.appTheme)
         assertEquals("Initial difficulty should be DEFAULT", Difficulty.DEFAULT, state.difficulty)
         assertEquals("Initial language should be SPANISH", AppLanguage.SPANISH, state.language)
-        assertFalse("Initial labels should be hidden", state.labelsVisibility)
+        assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
+        assertTrue("Initial vertices should be visibles", state.boardState.verticesVisibles)
     }
 
     @Test

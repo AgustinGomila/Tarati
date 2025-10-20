@@ -4,16 +4,16 @@ import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
-import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
+import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.game.logic.hashBoard
+import com.agustin.tarati.game.logic.isGameOver
 import kotlin.math.roundToInt
 
 // ==================== Configuración ====================
@@ -281,7 +281,7 @@ class TournamentRunner {
             }
         }
 
-        // Ordenar por score (wins + 0.5*draws)
+        // Ordenar por score
         val sortedResults = results.values.sortedByDescending { it.score }
 
         // Imprimir tabla final
@@ -298,14 +298,14 @@ class TournamentRunner {
         blackConfig: EvaluationConfig,
         tournamentConfig: TournamentConfig,
         gameNumber: Int
-    ): GameResult {
+    ): TestGameResult {
         clearAIHistory()
 
         var gameState = initialGameState()
         var moves = 0
         val localHistory = mutableMapOf<String, Int>()
 
-        while (moves < tournamentConfig.maxMovesPerGame && !isGameOver(gameState)) {
+        while (moves < tournamentConfig.maxMovesPerGame && !gameState.isGameOver()) {
             val currentConfig = when (gameState.currentTurn) {
                 WHITE -> whiteConfig
                 else -> blackConfig
@@ -333,17 +333,17 @@ class TournamentRunner {
                     println("  Game $gameNumber ended by triple repetition at move $moves")
                     println("  Winner: $winner")
                 }
-                return GameResult(winner = winner, moves = moves + 1, timeout = false)
+                return TestGameResult(winner = winner, moves = moves + 1, timeout = false)
             }
 
             localHistory[hash] = count + 1
-            recordRealMove(nextState, gameState.currentTurn)
+            if (getRepetitionCount(nextState) == 3) break
 
             gameState = nextState
             moves++
         }
 
-        val winner = getWinner(gameState)
+        val winner = gameState.getWinner()
         val timeout = moves >= tournamentConfig.maxMovesPerGame
 
         if (tournamentConfig.verbose) {
@@ -351,7 +351,7 @@ class TournamentRunner {
             println("  Winner: ${winner ?: "DRAW"} ${if (timeout) "(timeout)" else ""}")
         }
 
-        return GameResult(winner = winner, moves = moves, timeout = timeout)
+        return TestGameResult(winner = winner, moves = moves, timeout = timeout)
     }
 
     private fun printLeaderboard(results: List<ConfigPerformance>) {
@@ -383,7 +383,7 @@ class TournamentRunner {
         println("=".repeat(80))
     }
 
-    private data class GameResult(
+    private data class TestGameResult(
         val winner: Color?,
         val moves: Int,
         val timeout: Boolean
@@ -396,21 +396,21 @@ object ConfigBuilder {
     fun aggressive() = EvaluationConfig(
         name = "Aggressive",
         // +25% presión en base rival, -30% movilidad (prioriza ataques directos)
-        flipCobBonus = (70 * 1.2).toInt(),        // +20%
-        flipRocBonus = (200 * 1.25).toInt(),    // +25%
+        flipCobBonus = (70 * 1.2).toInt(),  // +20%
+        flipRocBonus = (200 * 1.25).toInt(),  // +25%
         opponentDomesticPressureScore = (40 * 1.25).toInt(),
-        mobilityScore = (10 * 0.7).toInt(),             // -30%
-        quickThreatWeight = (15 * 1.3).toInt()          // +30%
+        mobilityScore = (10 * 0.7).toInt(),  // -30%
+        quickThreatWeight = (15 * 1.3).toInt()  // +30%
     )
 
     fun defensive() = EvaluationConfig(
         name = "Defensive",
         // +40% control base propia, +50% en centro, -25% capturas normales
-        cobScore = (144 * 1.1).toInt(),            // +10%
+        cobScore = (144 * 1.1).toInt(),  // +10%
         domesticControlScore = (30 * 1.4).toInt(),
         controlCenterScore = (42 * 1.5).toInt(),
-        flipCobBonus = (70 * 0.75).toInt(),       // -25%
-        upgradeScore = (80 * 1.2).toInt()               // +20%
+        flipCobBonus = (70 * 0.75).toInt(),  // -25%
+        upgradeScore = (80 * 1.2).toInt()  // +20%
     )
 
     fun materialFocused() = EvaluationConfig(
@@ -418,9 +418,9 @@ object ConfigBuilder {
         // +25% valor material, +15% piezas mejoradas
         cobScore = (144 * 1.25).toInt(),
         rocScore = (300 * 1.15).toInt(),
-        flipCobBonus = (70 * 1.1).toInt(),        // +10%
-        controlCenterScore = (42 * 0.8).toInt(),        // -20% (menos importancia posición)
-        mobilityScore = (10 * 0.9).toInt()              // -10%
+        flipCobBonus = (70 * 1.1).toInt(),  // +10%
+        controlCenterScore = (42 * 0.8).toInt(),  // -20% (menos importancia posición)
+        mobilityScore = (10 * 0.9).toInt()  // -10%
     )
 
     fun positional() = EvaluationConfig(
@@ -429,17 +429,17 @@ object ConfigBuilder {
         controlCenterScore = (42 * 1.5).toInt(),
         domesticControlScore = (30 * 1.33).toInt(),
         opponentDomesticPressureScore = (40 * 1.1).toInt(), // +10%
-        flipCobBonus = (70 * 0.8).toInt(),        // -20%
-        mobilityScore = (10 * 1.25).toInt()             // +25%
+        flipCobBonus = (70 * 0.8).toInt(),  // -20%
+        mobilityScore = (10 * 1.25).toInt()  // +25%
     )
 
     fun balanced() = EvaluationConfig(
         name = "Balanced",
         // Valores moderados entre agresivo y defensivo
-        cobScore = (144 * 0.95).toInt(),           // -5%
-        flipCobBonus = (70 * 1.05).toInt(),       // +5%
-        controlCenterScore = (42 * 1.1).toInt(),        // +10%
-        mobilityScore = (10 * 1.15).toInt(),            // +15%
+        cobScore = (144 * 0.95).toInt(),  // -5%
+        flipCobBonus = (70 * 1.05).toInt(),  // +5%
+        controlCenterScore = (42 * 1.1).toInt(),  // +10%
+        mobilityScore = (10 * 1.15).toInt(),  // +15%
         upgradeScore = (80 * 0.9).toInt()               // -10%
     )
 
@@ -448,9 +448,9 @@ object ConfigBuilder {
         // +40% movilidad, +30% amenazas rápidas, -20% valor material
         mobilityScore = (10 * 1.4).toInt(),
         quickThreatWeight = (15 * 1.3).toInt(),
-        cobScore = (144 * 0.8).toInt(),            // -20%
+        cobScore = (144 * 0.8).toInt(),  // -20%
         opponentDomesticPressureScore = (40 * 1.2).toInt(), // +20%
-        flipCobBonus = (70 * 1.15).toInt()        // +15%
+        flipCobBonus = (70 * 1.15).toInt()  // +15%
     )
 
     fun strategist() = EvaluationConfig(
@@ -458,9 +458,9 @@ object ConfigBuilder {
         // +60% control centro, +25% presión base rival
         controlCenterScore = (42 * 1.6).toInt(),
         opponentDomesticPressureScore = (40 * 1.25).toInt(),
-        domesticControlScore = (30 * 1.2).toInt(),      // +20%
-        cobScore = (144 * 0.85).toInt(),           // -15%
-        upgradeScore = (80 * 1.3).toInt()               // +30%
+        domesticControlScore = (30 * 1.2).toInt(),  // +20%
+        cobScore = (144 * 0.85).toInt(),  // -15%
+        upgradeScore = (80 * 1.3).toInt()  // +30%
     )
 
     fun gambit() = EvaluationConfig(
@@ -468,10 +468,10 @@ object ConfigBuilder {
         // -30% material, +40% capturas, +35% amenazas rápidas
         cobScore = (144 * 0.7).toInt(),
         flipCobBonus = (70 * 1.4).toInt(),
-        flipRocBonus = (200 * 1.25).toInt(),    // +25%
+        flipRocBonus = (200 * 1.25).toInt(),  // +25%
         quickThreatWeight = (15 * 1.35).toInt(),
-        winningThreshold = 0.85f,                       // Más agresivo en victorias
-        repetitionPenaltyMultiplier = 15.0f             // Evita empates
+        winningThreshold = 0.85f,  // Más agresivo en victorias
+        repetitionPenaltyMultiplier = 15.0f  // Evita empates
     )
 
     @Suppress("unused")

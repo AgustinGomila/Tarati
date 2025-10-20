@@ -28,12 +28,16 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                 sr.difficulty,
                 sr.language,
                 sr.labelsVisibility,
-            ) { isDark, difficulty, language, labelsVisible ->
+                sr.verticesVisibility,
+            ) { isDark, difficulty, language, labelsVisible, verticesVisible ->
                 SettingsState(
                     appTheme = if (isDark) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO,
                     difficulty = difficulty,
                     language = language,
-                    labelsVisibility = labelsVisible
+                    boardState = BoardState(
+                        labelsVisibles = labelsVisible,
+                        verticesVisibles = verticesVisible,
+                    ),
                 )
             }.collect { newState ->
                 _settingsState.value = newState
@@ -53,15 +57,27 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
         }
     }
 
+    fun setDifficulty(newDifficulty: Difficulty) {
+        viewModelScope.launch {
+            sr.setDifficulty(newDifficulty)
+        }
+    }
+
     fun setLabelsVisibility(visible: Boolean) {
         viewModelScope.launch {
             sr.setLabelsVisibility(visible)
         }
     }
 
-    fun setDifficulty(newDifficulty: Difficulty) {
+    fun setVerticesVisibility(visible: Boolean) {
         viewModelScope.launch {
-            sr.setDifficulty(newDifficulty)
+            sr.setVerticesVisibility(visible)
+        }
+    }
+
+    fun setTutorialButtonVisibility(visible: Boolean) {
+        viewModelScope.launch {
+            sr.setTutorialButtonVisibility(visible)
         }
     }
 }

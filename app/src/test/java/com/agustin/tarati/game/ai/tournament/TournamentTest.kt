@@ -22,10 +22,7 @@ class TournamentTest {
             configA = baseline,
             configB = aggressive,
             tournamentConfig = TournamentConfig(
-                gamesPerMatch = 20,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+                gamesPerMatch = 20, alternateColors = true, verbose = false, showProgress = true
             ),
         )
 
@@ -48,18 +45,12 @@ class TournamentTest {
         val defensive = ConfigBuilder.defensive()
 
         val configs = mapOf(
-            baseline.name to baseline,
-            aggressive.name to aggressive,
-            defensive.name to defensive
+            baseline.name to baseline, aggressive.name to aggressive, defensive.name to defensive
         )
 
         val results = runner.runRoundRobin(
-            configs = configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 10,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 10, alternateColors = true, verbose = false, showProgress = true
             )
         )
 
@@ -84,17 +75,14 @@ class TournamentTest {
         println("-".repeat(60))
 
         for (depth in depths) {
-            if (depth == baseConfig.difficulty) continue // Skip baseline vs baseline
+            if (depth == baseConfig.difficulty) continue
 
             measureTimeMillis {
                 val result = runner.runSingleMatch(
                     configA = baseConfig.copy(name = "Depth: ${baseConfig.difficulty}"),
                     configB = baseConfig.copy(name = "Depth: $depth", difficulty = depth),
                     tournamentConfig = TournamentConfig(
-                        gamesPerMatch = 10,
-                        alternateColors = true,
-                        verbose = false,
-                        showProgress = false
+                        gamesPerMatch = 10, alternateColors = true, verbose = false, showProgress = false
                     ),
                 )
 
@@ -135,12 +123,8 @@ class TournamentTest {
 
         val totalTime = measureTimeMillis {
             runner.runRoundRobin(
-                configs = configs,
-                tournamentConfig = TournamentConfig(
-                    gamesPerMatch = 20,
-                    alternateColors = true,
-                    verbose = false,
-                    showProgress = true
+                configs = configs, tournamentConfig = TournamentConfig(
+                    gamesPerMatch = 20, alternateColors = true, verbose = false, showProgress = true
                 )
             )
         }
@@ -168,12 +152,8 @@ class TournamentTest {
         )
 
         runner.runRoundRobin(
-            configs = configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 20,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 20, alternateColors = true, verbose = false, showProgress = true
             )
         )
 
@@ -201,10 +181,7 @@ class TournamentTest {
                 configA = baseline,
                 configB = config,
                 tournamentConfig = TournamentConfig(
-                    gamesPerMatch = 30,
-                    alternateColors = true,
-                    verbose = false,
-                    showProgress = false
+                    gamesPerMatch = 30, alternateColors = true, verbose = false, showProgress = false
                 ),
             )
 
@@ -212,8 +189,7 @@ class TournamentTest {
 
             val performance = result.winsB - result.winsA
             println(
-                "Mobility $weight: ${result.winsB}W ${result.draws}D ${result.winsA}L " +
-                        "(Performance: ${if (performance > 0) "+" else ""}$performance)"
+                "Mobility $weight: ${result.winsB}W ${result.draws}D ${result.winsA}L " + "(Performance: ${if (performance > 0) "+" else ""}$performance)"
             )
         }
 
@@ -244,21 +220,14 @@ class TournamentTest {
         )
 
         val variations = listOf(
-            low.name to low,
-            baseline.name to baseline,
-            high.name to high,
-            veryHigh.name to veryHigh
+            low.name to low, baseline.name to baseline, high.name to high, veryHigh.name to veryHigh
         )
 
         val configs = variations.toMap()
 
         runner.runRoundRobin(
-            configs = configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 25,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 25, alternateColors = true, verbose = false, showProgress = true
             )
         )
 
@@ -283,10 +252,7 @@ class TournamentTest {
                     configA = config.copy(name = "A"),
                     configB = config.copy(name = "B", difficulty = depth),
                     tournamentConfig = TournamentConfig(
-                        gamesPerMatch = 10,
-                        alternateColors = true,
-                        verbose = false,
-                        showProgress = false
+                        gamesPerMatch = 10, alternateColors = true, verbose = false, showProgress = false
                     ),
                 )
             }
@@ -311,11 +277,7 @@ class TournamentTest {
             configA = configA,
             configB = configB,
             tournamentConfig = TournamentConfig(
-                gamesPerMatch = 50,
-                maxMovesPerGame = 200,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+                gamesPerMatch = 50, maxMovesPerGame = 200, alternateColors = true, verbose = false, showProgress = true
             ),
         )
 
@@ -377,12 +339,8 @@ class TournamentTest {
 
         println("\n=== PHASE 1: Testing base configurations ===")
         val phase1Results = runner.runRoundRobin(
-            configs = phase1Configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 10,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = phase1Configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 10, alternateColors = true, verbose = false, showProgress = true
             )
         )
 
@@ -431,12 +389,8 @@ class TournamentTest {
         )
 
         val phase2Results = runner.runRoundRobin(
-            configs = phase2Configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 10,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = phase2Configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 10, alternateColors = true, verbose = false, showProgress = true
             )
         )
 
@@ -464,10 +418,7 @@ class TournamentTest {
             configA = ConfigBuilder.baseline().copy(difficulty = Difficulty.MIN),
             configB = ConfigBuilder.aggressive().copy(difficulty = Difficulty.MIN),
             tournamentConfig = TournamentConfig(
-                gamesPerMatch = 5,
-                alternateColors = true,
-                verbose = false,
-                showProgress = false
+                gamesPerMatch = 5, alternateColors = true, verbose = false, showProgress = false
             ),
         )
 
@@ -495,12 +446,8 @@ class TournamentTest {
         )
 
         val results = runner.runRoundRobin(
-            configs = configs,
-            tournamentConfig = TournamentConfig(
-                gamesPerMatch = 6,
-                alternateColors = true,
-                verbose = false,
-                showProgress = true
+            configs = configs, tournamentConfig = TournamentConfig(
+                gamesPerMatch = 6, alternateColors = true, verbose = false, showProgress = true
             )
         )
 

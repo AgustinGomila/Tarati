@@ -1,5 +1,6 @@
 package com.agustin.tarati.ui.screens.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,12 +36,18 @@ import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppTheme
 
+interface SettingsEvents {
+    fun onThemeChange(theme: AppTheme)
+    fun onLanguageChange(language: AppLanguage)
+    fun onLabelsVisibilityChange(visible: Boolean)
+    fun onVerticesVisibilityChange(visible: Boolean)
+    fun onTutorialButtonVisibilityChange(visible: Boolean)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onThemeChange: (AppTheme) -> Unit = {},
-    onLanguageChange: (AppLanguage) -> Unit = {},
-    onLabelsVisibilityChange: (Boolean) -> Unit = {},
+    events: SettingsEvents,
     navController: NavController
 ) {
     val viewModel: SettingsViewModel = viewModel()
@@ -48,7 +55,10 @@ fun SettingsScreen(
 
     val currLanguage = settingsState.language
     val currTheme = settingsState.appTheme
-    val currLabelsVisibility = settingsState.labelsVisibility
+    val boardState = settingsState.boardState
+
+    val currLabelsVisibility = boardState.labelsVisibles
+    val currVerticesVisibility = boardState.verticesVisibles
 
     Scaffold(
         topBar = {
@@ -73,15 +83,26 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            LanguageOption(currLanguage, onLanguageChange)
+            LanguageOption(currLanguage, events::onLanguageChange)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            ThemeOption(currTheme, onThemeChange)
+            ThemeOption(currTheme, events::onThemeChange)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            LabelsVisibilityOption(currLabelsVisibility) {
+            VisibilityOption(
+                id = R.string.board_labels,
+                visibility = currLabelsVisibility
+            ) {
                 viewModel.setLabelsVisibility(it)
-                onLabelsVisibilityChange(it)
+                events.onLabelsVisibilityChange(it)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            VisibilityOption(
+                id = R.string.board_vertices,
+                visibility = currVerticesVisibility
+            ) {
+                viewModel.setVerticesVisibility(it)
+                events.onVerticesVisibilityChange(it)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
@@ -159,7 +180,7 @@ fun ThemeOption(
                 checked = theme == AppTheme.MODE_NIGHT,
                 onCheckedChange = {
                     val appTheme = if (it) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO
-                    onChange.invoke(appTheme)
+                    onChange(appTheme)
                 }
             )
         }
@@ -167,12 +188,13 @@ fun ThemeOption(
 }
 
 @Composable
-fun LabelsVisibilityOption(
+fun VisibilityOption(
+    @StringRes id: Int,
     visibility: Boolean,
     onChange: (Boolean) -> Unit = {},
 ) {
     LocalizedText(
-        id = R.string.board_labels,
+        id = id,
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier.padding(16.dp)
     )
@@ -189,9 +211,7 @@ fun LabelsVisibilityOption(
         trailing = {
             Switch(
                 checked = visibility,
-                onCheckedChange = {
-                    onChange.invoke(it)
-                }
+                onCheckedChange = onChange
             )
         }
     )

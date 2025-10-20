@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
 package com.agustin.tarati.ui.components.sidebar
 
 import androidx.compose.foundation.background
@@ -17,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SmartToy
@@ -48,13 +51,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
+import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.ui.helpers.customGameState
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
@@ -65,24 +68,13 @@ data class SidebarGameState(
     val currentMoveIndex: Int,
     val moveHistory: List<Move>,
     val difficulty: Difficulty,
-    val isAIEnabled: Boolean
+    val isAIEnabled: Boolean,
+    val showTutorialOption: Boolean,
 )
 
 data class SidebarUIState(
     val isDifficultyExpanded: Boolean = false
 )
-
-class DefaultSidebarEvents : SidebarEvents {
-    override fun onMoveToCurrent() {}
-    override fun onUndo() {}
-    override fun onRedo() {}
-    override fun onDifficultyChange(difficulty: Difficulty) {}
-    override fun onToggleAI() {}
-    override fun onSettings() {}
-    override fun onNewGame(color: Color) {}
-    override fun onEditBoard() {}
-    override fun onAboutClick() {}
-}
 
 interface SidebarEvents {
     fun onMoveToCurrent()
@@ -94,13 +86,14 @@ interface SidebarEvents {
     fun onNewGame(color: Color)
     fun onEditBoard()
     fun onAboutClick()
+    fun onTutorial()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sidebar(
     modifier: Modifier = Modifier,
-    gameState: SidebarGameState,
+    sidebarState: SidebarGameState,
     uiState: SidebarUIState = SidebarUIState(),
     events: SidebarEvents,
     onUIStateChange: (SidebarUIState) -> Unit = {}
@@ -121,30 +114,34 @@ fun Sidebar(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        SettingsButton(events::onSettings)
+        SettingsRow(
+            showTutorialButton = sidebarState.showTutorialOption,
+            onSettings = events::onSettings,
+            onShowTutorial = events::onTutorial,
+        )
 
         // Controles para iniciar una nueva partida
         GameSettingsControls(
-            playerSide = gameState.playerSide,
+            playerSide = sidebarState.playerSide,
             onNewGame = events::onNewGame,
-            onEditBoard = events::onEditBoard
+            onEditBoard = events::onEditBoard,
         )
 
         // Sección de IA y Dificultad en una fila
         AIDifficultyControls(
-            playerSide = gameState.playerSide,
+            playerSide = sidebarState.playerSide,
             expanded = uiState.isDifficultyExpanded,
             onExpandedChange = { expanded ->
                 onUIStateChange(uiState.copy(isDifficultyExpanded = expanded))
             },
-            difficulty = gameState.difficulty,
+            difficulty = sidebarState.difficulty,
             onDifficultyChange = events::onDifficultyChange,
-            isAIEnabled = gameState.isAIEnabled,
+            isAIEnabled = sidebarState.isAIEnabled,
             onToggleAI = events::onToggleAI,
         )
 
         // Indicador de turno con información del jugador
-        GameStateIndicator(gameState.gameState, gameState.playerSide)
+        GameStateIndicator(sidebarState.gameState, sidebarState.playerSide)
 
         // Controles del historial de la partida
         Column(
@@ -152,8 +149,8 @@ fun Sidebar(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HistorialControls(
-                currentMoveIndex = gameState.currentMoveIndex,
-                moveHistory = gameState.moveHistory,
+                currentMoveIndex = sidebarState.currentMoveIndex,
+                moveHistory = sidebarState.moveHistory,
                 onUndo = events::onUndo,
                 onRedo = events::onRedo,
                 onMoveToCurrent = events::onMoveToCurrent
@@ -166,21 +163,47 @@ fun Sidebar(
 }
 
 @Composable
-fun SettingsButton(onSettings: () -> Unit) {
-    Button(
-        onClick = onSettings,
+fun SettingsRow(
+    onSettings: () -> Unit,
+    showTutorialButton: Boolean,
+    onShowTutorial: () -> Unit
+) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary
-        )
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        LocalizedText(R.string.settings)
+        Button(
+            onClick = onSettings,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        ) {
+            LocalizedText(R.string.settings)
+        }
+
+        if (showTutorialButton) {
+            IconButton(
+                onClick = onShowTutorial,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                    contentDescription = stringResource(R.string.show_tutorial),
+                    tint = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun GameSettingsControls(playerSide: Color, onNewGame: (Color) -> Unit, onEditBoard: () -> Unit) {
+fun GameSettingsControls(
+    playerSide: Color,
+    onNewGame: (Color) -> Unit,
+    onEditBoard: () -> Unit,
+) {
     LocalizedText(
         id = R.string.new_game,
         style = MaterialTheme.typography.labelMedium,
@@ -370,7 +393,7 @@ fun HistorialControls(
 
 @Composable
 fun GameStateIndicator(gameState: GameState, playerSide: Color) {
-    val winner = getWinner(gameState)
+    val winner = gameState.getWinner()
     val relevantSide = winner ?: gameState.currentTurn
 
     val (color, backgroundColor) = when (relevantSide) {
@@ -442,7 +465,7 @@ fun AIDifficultyControls(
             DifficultySelector(expanded, onExpandedChange, difficulty, onDifficultyChange)
         }
 
-        // Botón de toggle AI (icono solamente)
+        // Botón de toggle IA (icono solamente)
         Spacer(modifier = Modifier.width(8.dp))
         AIEnabledButton(playerSide, isAIEnabled, onToggleAI)
     }
@@ -529,6 +552,19 @@ fun DifficultySelector(
 
 // region Previews
 
+class PreviewSidebarEvents : SidebarEvents {
+    override fun onMoveToCurrent() {}
+    override fun onUndo() {}
+    override fun onRedo() {}
+    override fun onDifficultyChange(difficulty: Difficulty) {}
+    override fun onToggleAI() {}
+    override fun onSettings() {}
+    override fun onNewGame(color: Color) {}
+    override fun onEditBoard() {}
+    override fun onAboutClick() {}
+    override fun onTutorial() {}
+}
+
 @Preview(showBackground = true, widthDp = 280, heightDp = 800)
 @Composable
 fun SidebarPreview() {
@@ -547,12 +583,13 @@ fun SidebarPreview() {
             currentMoveIndex = 2,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
-            isAIEnabled = true
+            isAIEnabled = true,
+            showTutorialOption = true
         )
 
         Sidebar(
-            gameState = sidebarGameState,
-            events = DefaultSidebarEvents()
+            sidebarState = sidebarGameState,
+            events = PreviewSidebarEvents()
         )
     }
 }
@@ -575,40 +612,13 @@ fun SidebarPreview_Dark() {
             currentMoveIndex = 1,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.HARD,
-            isAIEnabled = false
+            isAIEnabled = false,
+            showTutorialOption = false
         )
 
         Sidebar(
-            gameState = sidebarGameState,
-            events = DefaultSidebarEvents()
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 280, heightDp = 800)
-@Composable
-fun SidebarPreview_CustomState() {
-    MaterialTheme {
-        val exampleGameState = customGameState()
-        val exampleMoveHistory = listOf(
-            Move("C1", "B1"),
-            Move("C7", "B4"),
-            Move("B1", "A1"),
-            Move("B4", "A1")
-        )
-
-        val sidebarGameState = SidebarGameState(
-            gameState = exampleGameState,
-            playerSide = WHITE,
-            currentMoveIndex = 2,
-            moveHistory = exampleMoveHistory,
-            difficulty = Difficulty.DEFAULT,
-            isAIEnabled = true
-        )
-
-        Sidebar(
-            gameState = sidebarGameState,
-            events = DefaultSidebarEvents()
+            sidebarState = sidebarGameState,
+            events = PreviewSidebarEvents()
         )
     }
 }
@@ -629,15 +639,16 @@ fun SidebarPreview_ExpandedDropdown() {
             currentMoveIndex = 1,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
-            isAIEnabled = true
+            isAIEnabled = true,
+            showTutorialOption = false
         )
 
         var uiState by remember { mutableStateOf(SidebarUIState(isDifficultyExpanded = true)) }
 
         Sidebar(
-            gameState = sidebarGameState,
+            sidebarState = sidebarGameState,
             uiState = uiState,
-            events = DefaultSidebarEvents(),
+            events = PreviewSidebarEvents(),
             onUIStateChange = { uiState = it }
         )
     }
