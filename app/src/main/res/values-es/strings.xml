@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tarati</string>
-    <string name="game_over_wins">¡Juego Terminado! ¡%1$s gana!</string>
+    <string name="game_over_wins">¡Juego Terminado! ¡%1$s gana por Mit!</string>
+    <string name="game_over_stalemit">¡Juego Terminado! ¡%1$s gana por Ahogado!</string>
     <string name="black">NEGRO</string>
     <string name="white">BLANCO</string>
     <string name="about_tarati">Acerca de Tarati</string>

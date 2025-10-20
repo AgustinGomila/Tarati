@@ -5,8 +5,6 @@ import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
@@ -15,13 +13,15 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.centerVertices
-import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.getAllMovesForTurn
+import com.agustin.tarati.game.logic.getWinner
+import com.agustin.tarati.game.logic.isGameOver
 import org.junit.Before
 import org.junit.Test
 
@@ -92,9 +92,9 @@ class TaratiChampionDiagnosticTest {
             printBoardState(gameState)
             printEvaluation(gameState)
 
-            if (isGameOver(gameState)) {
+            if (gameState.isGameOver()) {
                 println("\nGAME OVER")
-                val winner = getWinner(gameState)
+                val winner = gameState.getWinner()
                 println("Winner: ${winner?.name ?: "DRAW"}")
                 break
             }
@@ -147,7 +147,7 @@ class TaratiChampionDiagnosticTest {
         println("ALL POSSIBLE MOVES EVALUATION:")
         println("-" * 80)
 
-        val allMoves = getAllPossibleMoves(gameState)
+        val allMoves = gameState.getAllMovesForTurn()
         val evaluations = allMoves.map { move ->
             val newState = applyMoveToBoard(gameState, move.from, move.to)
                 .copy(currentTurn = gameState.currentTurn.opponent())
@@ -191,7 +191,7 @@ class TaratiChampionDiagnosticTest {
         println("MOVE COMPARISON WITH WHITE RESPONSES:")
         println("-" * 80)
 
-        val allMoves = getAllPossibleMoves(gameState)
+        val allMoves = gameState.getAllMovesForTurn()
 
         allMoves.forEach { move ->
             println("\n${move.from} -> ${move.to}:")
@@ -219,8 +219,8 @@ class TaratiChampionDiagnosticTest {
                 println("  Eval after response: $finalEval")
                 println("  Net change: ${finalEval - evalAfterMove}")
 
-                if (isGameOver(afterWhiteResponse)) {
-                    val winner = getWinner(afterWhiteResponse)
+                if (afterWhiteResponse.isGameOver()) {
+                    val winner = afterWhiteResponse.getWinner()
                     println("  WARNING: Game ends! Winner: ${winner?.name}")
                 }
             }
@@ -297,7 +297,7 @@ class TaratiChampionDiagnosticTest {
     private fun analyzeAIDecision(gameState: GameState, actualMove: Move): Boolean {
         println("\nAI DECISION ANALYSIS:")
 
-        val allMoves = getAllPossibleMoves(gameState)
+        val allMoves = gameState.getAllMovesForTurn()
         println("  Possible moves: ${allMoves.size}")
 
         val result = getNextBestMove(gameState, Difficulty.CHAMPION, debug = false)
@@ -360,11 +360,11 @@ class TaratiChampionDiagnosticTest {
         println("    Upgrades: ${if (willUpgrade) "YES" else "NO"}")
         println("    Center control: ${if (move.to in centerVertices) "YES" else "NO"}")
 
-        val mobility = getAllPossibleMoves(newState.copy(currentTurn = movedCob.color)).size
+        val mobility = newState.copy(currentTurn = movedCob.color).getAllMovesForTurn().size
         println("    Resulting mobility: $mobility moves")
 
-        if (isGameOver(newState)) {
-            println("    WARNING: GAME ENDS - Winner: ${getWinner(newState)?.name}")
+        if (newState.isGameOver()) {
+            println("    WARNING: GAME ENDS - Winner: ${newState.getWinner()?.name}")
         }
     }
 

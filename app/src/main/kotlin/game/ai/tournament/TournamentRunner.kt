@@ -5,15 +5,15 @@ import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.game.logic.hashBoard
+import com.agustin.tarati.game.logic.isGameOver
 import kotlin.math.roundToInt
 
 // ==================== Configuración ====================
@@ -298,14 +298,14 @@ class TournamentRunner {
         blackConfig: EvaluationConfig,
         tournamentConfig: TournamentConfig,
         gameNumber: Int
-    ): GameResult {
+    ): TestGameResult {
         clearAIHistory()
 
         var gameState = initialGameState()
         var moves = 0
         val localHistory = mutableMapOf<String, Int>()
 
-        while (moves < tournamentConfig.maxMovesPerGame && !isGameOver(gameState)) {
+        while (moves < tournamentConfig.maxMovesPerGame && !gameState.isGameOver()) {
             val currentConfig = when (gameState.currentTurn) {
                 WHITE -> whiteConfig
                 else -> blackConfig
@@ -333,7 +333,7 @@ class TournamentRunner {
                     println("  Game $gameNumber ended by triple repetition at move $moves")
                     println("  Winner: $winner")
                 }
-                return GameResult(winner = winner, moves = moves + 1, timeout = false)
+                return TestGameResult(winner = winner, moves = moves + 1, timeout = false)
             }
 
             localHistory[hash] = count + 1
@@ -343,7 +343,7 @@ class TournamentRunner {
             moves++
         }
 
-        val winner = getWinner(gameState)
+        val winner = gameState.getWinner()
         val timeout = moves >= tournamentConfig.maxMovesPerGame
 
         if (tournamentConfig.verbose) {
@@ -351,7 +351,7 @@ class TournamentRunner {
             println("  Winner: ${winner ?: "DRAW"} ${if (timeout) "(timeout)" else ""}")
         }
 
-        return GameResult(winner = winner, moves = moves, timeout = timeout)
+        return TestGameResult(winner = winner, moves = moves, timeout = timeout)
     }
 
     private fun printLeaderboard(results: List<ConfigPerformance>) {
@@ -383,7 +383,7 @@ class TournamentRunner {
         println("=".repeat(80))
     }
 
-    private data class GameResult(
+    private data class TestGameResult(
         val winner: Color?,
         val moves: Int,
         val timeout: Boolean

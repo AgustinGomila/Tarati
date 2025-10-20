@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Tarati</string>
-    <string name="game_over_wins">Game Over! %1$s wins!</string>
+    <string name="game_over_wins">Game Over! %1$s wins by Mit!</string>
+    <string name="game_over_stalemit">Game Over! %1$s wins by Stalemit!</string>
     <string name="black">BLACK</string>
     <string name="white">WHITE</string>
     <string name="about_tarati">About Tarati</string>

@@ -6,7 +6,7 @@ data class VertexHighlight(
     val vertexId: String,
     val color: Color,
     val pulse: Boolean = false,
-    val duration: Long = 1000L,
+    val duration: Long = 500L,
     val messageResId: Int? = null
 )
 
@@ -15,7 +15,7 @@ data class EdgeHighlight(
     val to: String,
     val color: Color,
     val pulse: Boolean = false,
-    val duration: Long = 1000L
+    val duration: Long = 500L
 )
 
 sealed class HighlightAnimation {
@@ -30,9 +30,9 @@ fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
             EdgeHighlight(
                 from = from,
                 to = to,
-                color = Color(0xFF4CAF50),
+                color = Color(0xFFDED760),
                 pulse = true,
-                duration = 800L
+                duration = 500L
             )
         ),
         HighlightAnimation.Vertex(
@@ -40,7 +40,7 @@ fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
                 vertexId = to,
                 color = Color(0xFF4CAF50),
                 pulse = true,
-                duration = 800L
+                duration = 500L
             )
         )
     )
@@ -72,12 +72,12 @@ fun createUpgradeHighlight(vertexId: String): List<HighlightAnimation> {
     )
 }
 
-fun createValidMoveHighlights(validMoves: List<String>): List<HighlightAnimation> {
+fun createValidMovesHighlights(validMoves: List<String>): List<HighlightAnimation> {
     return validMoves.map { vertexId ->
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = vertexId,
-                color = Color(0xFF2196F3),
+                color = Color(0xFFF3A621),
                 pulse = false,
                 duration = 500L
             )

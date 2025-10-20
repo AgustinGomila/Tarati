@@ -9,7 +9,7 @@ class HighlightService(private val animationViewModel: BoardAnimationViewModel) 
     }
 
     fun createValidMoveHighlights(validMoves: List<String>): List<HighlightAnimation> {
-        return createValidMoveHighlights(validMoves)
+        return createValidMovesHighlights(validMoves)
     }
 
     fun createCaptureHighlights(capturedPieces: List<String>): List<HighlightAnimation> {
@@ -22,10 +22,6 @@ class HighlightService(private val animationViewModel: BoardAnimationViewModel) 
 
     fun animateHighlights(highlights: List<HighlightAnimation>) {
         animationViewModel.animate(highlights)
-    }
-
-    fun animateConcurrentHighlights(highlights: List<HighlightAnimation>) {
-        animationViewModel.animateConcurrent(highlights)
     }
 
     fun stopHighlights() {

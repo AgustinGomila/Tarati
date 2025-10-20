@@ -4,8 +4,6 @@ import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.sortMoves
 import com.agustin.tarati.game.core.Cob
@@ -13,10 +11,12 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard.centerVertices
-import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.logic.getAllMovesForTurn
+import com.agustin.tarati.game.logic.getWinner
+import com.agustin.tarati.game.logic.isGameOver
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -129,7 +129,7 @@ class AIForceTest {
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos
-        assertTrue(getAllPossibleMoves(newState).none { gameState.cobs[it.from]?.color == BLACK })
+        assertTrue(newState.getAllMovesForTurn().none { gameState.cobs[it.from]?.color == BLACK })
     }
 
     @Test
@@ -153,7 +153,7 @@ class AIForceTest {
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
 
         // Después del movimiento, negro no debería tener movimientos legales
-        val blackMoves = getAllPossibleMoves(newState).filter { gameState.cobs[it.from]?.color == BLACK }
+        val blackMoves = newState.getAllMovesForTurn().filter { gameState.cobs[it.from]?.color == BLACK }
         assertTrue("Negro debería estar ahogado. Movimientos disponibles: $blackMoves", blackMoves.isEmpty())
     }
 
@@ -198,7 +198,7 @@ class AIForceTest {
         val newState = applyMoveToBoard(gameState, "B1", "C1")
 
         // Debería detectar juego terminado
-        assertTrue(isGameOver(newState))
+        assertTrue(newState.isGameOver())
     }
 
     @Test
@@ -223,7 +223,7 @@ class AIForceTest {
 
         // El movimiento debería crear múltiples amenazas
         val newState = applyMoveToBoard(gameState, result.move!!.from, result.move.to)
-        val threats = getAllPossibleMoves(newState).size
+        val threats = newState.getAllMovesForTurn().size
         assertTrue("Debería crear múltiples amenazas. Amenazas: $threats", threats > 8)
     }
 
@@ -435,7 +435,7 @@ class AIForceTest {
         }
 
         // Las blancas tienen 6 movimientos posibles.
-        val move = getAllPossibleMoves(initialState)
+        val move = initialState.getAllMovesForTurn()
 
         assertNotNull("White should find a move", move.size == 6)
     }
@@ -458,7 +458,7 @@ class AIForceTest {
         }
 
         // Las negras tienen 5 movimientos posibles.
-        val move = getAllPossibleMoves(initialState)
+        val move = initialState.getAllMovesForTurn()
 
         assertTrue("Black should find a move", move.size == 5)
     }
@@ -526,8 +526,8 @@ class AIForceTest {
             .copy(currentTurn = WHITE)
 
         // Verificar que es mit
-        assertTrue("Should be game over", isGameOver(finalState))
-        assertEquals("Black should win", BLACK, getWinner(finalState))
+        assertTrue("Should be game over", finalState.isGameOver())
+        assertEquals("Black should win", BLACK, finalState.getWinner())
 
         // El score del primer movimiento debería indicar mate forzado
         assertTrue(
@@ -553,11 +553,11 @@ class AIForceTest {
             setCob("B3", BLACK, false)
         }
 
-        val blackMoves = getAllPossibleMoves(initialState)
+        val blackMoves = initialState.getAllMovesForTurn()
         assertEquals("Black should have no legal moves", 0, blackMoves.size)
 
-        assertTrue("Game should be over", isGameOver(initialState))
-        assertEquals("White should win by stalemate", WHITE, getWinner(initialState))
+        assertTrue("Game should be over", initialState.isGameOver())
+        assertEquals("White should win by stalemate", WHITE, initialState.getWinner())
     }
 
     @Test
@@ -577,11 +577,11 @@ class AIForceTest {
             setCob("C1", WHITE, false)
         }
 
-        val whiteMoves = getAllPossibleMoves(initialState)
+        val whiteMoves = initialState.getAllMovesForTurn()
         assertEquals("Black should have no legal moves", 0, whiteMoves.size)
 
-        assertTrue("Game should be over", isGameOver(initialState))
-        assertEquals("White should win by stalemate", WHITE, getWinner(initialState))
+        assertTrue("Game should be over", initialState.isGameOver())
+        assertEquals("White should win by stalemate", WHITE, initialState.getWinner())
     }
 
     @Test

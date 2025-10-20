@@ -70,18 +70,20 @@ import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
-import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameResult
 import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.getMatchState
+import com.agustin.tarati.game.logic.isGameOver
 import com.agustin.tarati.game.logic.isPortrait
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.game.tutorial.TutorialManager
@@ -92,7 +94,6 @@ import com.agustin.tarati.ui.components.board.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.BoardEvents
 import com.agustin.tarati.ui.components.board.BoardState
 import com.agustin.tarati.ui.components.board.HighlightService
-import com.agustin.tarati.ui.components.board.StateChangeDetector
 import com.agustin.tarati.ui.components.sidebar.Sidebar
 import com.agustin.tarati.ui.components.sidebar.SidebarEvents
 import com.agustin.tarati.ui.components.sidebar.SidebarGameState
@@ -112,12 +113,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-data class GameOverState(
-    val isGameOver: Boolean = false,
-    val winner: Color? = null,
-    val message: String = ""
-)
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -156,17 +151,13 @@ fun MainScreen(
     val vmLabelsVisibles = settingsState.boardState.labelsVisibles
     val vmVerticesVisibles = settingsState.boardState.verticesVisibles
 
-    var stopAI by remember { mutableStateOf(false) }
     var lastMove by remember { mutableStateOf<Move?>(null) }
-    var gameStatus by remember { mutableStateOf(GameStateStatus.NO_PLAYING) }
+    var gameStatus by remember { mutableStateOf(GameStatus.NO_PLAYING) }
     var isAIThinking by remember { mutableStateOf(false) }
 
-    var gameOverState by remember { mutableStateOf<GameOverState?>(null) }
-
-    var showGameOverDialog by remember { mutableStateOf(false) }
     var showNewGameDialog by remember { mutableStateOf(false) }
-    var gameOverMessage by remember { mutableStateOf("") }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showGameOverDialog by remember { mutableStateOf(false) }
 
     // Orientación del Tablero
     val screenOrientation = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -178,7 +169,7 @@ fun MainScreen(
     // Indicador de turno
     val turnState: TurnIndicatorState by derivedStateOf {
         when {
-            gameOverState?.isGameOver == true -> TurnIndicatorState.NEUTRAL
+            vmGameState.isGameOver() -> TurnIndicatorState.NEUTRAL
             isAIThinking -> TurnIndicatorState.AI_THINKING
             else -> TurnIndicatorState.HUMAN_TURN
         }
@@ -188,111 +179,32 @@ fun MainScreen(
     val tutorialManager: TutorialManager = remember { TutorialManager() }
     val isTutorialActive by viewModel.isTutorialActive.collectAsState()
 
-    // Estado para controlar game over
-    var detectedGameOver by remember { mutableStateOf(false) }
-    var gameOverWinner by remember { mutableStateOf<Color?>(null) }
-
-    LaunchedEffect(vmGameState, isAnimating) {
-        if (vmIsEditing || isTutorialActive) return@LaunchedEffect
-
-        // Solo verificar game over cuando no hay animaciones en curso
-        if (!isAnimating) {
-            val gameOverResult = withContext(Dispatchers.Default) {
-                val gameOver = isGameOver(vmGameState)
-                if (gameOver) {
-                    val isTripleRepetition = getRepetitionCount(vmGameState) >= 3
-                    val winner = if (isTripleRepetition) vmGameState.currentTurn.opponent() else vmGameState.currentTurn
-                    val message = if (isTripleRepetition) {
-                        String.format(
-                            context.getString(R.string.game_over_triple_repetition),
-                            context.getString(winner.getColorStringResource())
-                        )
-                    } else {
-                        String.format(
-                            context.getString(R.string.game_over_wins),
-                            context.getString(winner.getColorStringResource())
-                        )
-                    }
-                    GameOverState(true, winner, message)
-                } else {
-                    null
-                }
-            }
-
-            if (gameOverResult != null && gameOverState?.isGameOver != true) {
-                gameOverState = gameOverResult
-                gameStatus = GameStateStatus.SHOWING_GAME_OVER
-                showGameOverDialog = true
-            } else if (gameOverResult == null) {
-                gameOverState = null
-            }
-        }
-    }
-
-    LaunchedEffect(vmGameState) {
-        if (vmIsEditing || isTutorialActive) return@LaunchedEffect
-
-        withContext(Dispatchers.Default) {
-            val gameOver = isGameOver(vmGameState)
-            val repetitionLoser = if (gameOver) {
-                if (getRepetitionCount(vmGameState) < 3) vmGameState.currentTurn
-                else vmGameState.currentTurn.opponent()
-            } else null
-
-            withContext(Dispatchers.Main) {
-                if (gameOver && !detectedGameOver) {
-                    detectedGameOver = true
-                    gameOverWinner = repetitionLoser ?: vmGameState.currentTurn.opponent()
-
-                    gameOverMessage = if (repetitionLoser != null) {
-                        String.format(
-                            context.getString(R.string.game_over_triple_repetition),
-                            context.getString(repetitionLoser.getColorStringResource())
-                        )
-                    } else {
-                        String.format(
-                            context.getString(R.string.game_over_wins),
-                            context.getString(gameOverWinner!!.getColorStringResource())
-                        )
-                    }
-
-                    // Cambiar estado para mostrar diálogo después de animaciones
-                    if (!isAnimating) {
-                        gameStatus = GameStateStatus.SHOWING_GAME_OVER
-                        showGameOverDialog = true
-                    } else {
-                        gameStatus = GameStateStatus.PENDING_GAME_OVER
-                    }
-                } else if (!gameOver) {
-                    detectedGameOver = false
-                    gameOverWinner = null
-                }
-            }
-        }
-    }
-
-    // Efecto para manejar transiciones cuando las animaciones terminan
-    LaunchedEffect(isAnimating, gameStatus) {
-        if (gameStatus == GameStateStatus.PENDING_GAME_OVER && !isAnimating) {
-            delay(300)
-            gameStatus = GameStateStatus.SHOWING_GAME_OVER
-            showGameOverDialog = true
-        }
-    }
-
     // Efecto para resetear estados cuando comienza nuevo juego
     LaunchedEffect(vmGameState) {
-        if (vmGameState == initialGameState()) {
-            detectedGameOver = false
-            gameOverWinner = null
-            gameStatus = GameStateStatus.PLAYING
-            showGameOverDialog = false
+        if (vmIsEditing || isTutorialActive) return@LaunchedEffect
+        when {
+            vmGameState == initialGameState() -> {
+                gameStatus = GameStatus.PLAYING
+            }
+
+            vmGameState.isGameOver() && gameStatus == GameStatus.PLAYING -> {
+                delay(1500)
+                showGameOverDialog = true
+            }
+
+            else -> {
+                gameStatus = GameStatus.PLAYING
+            }
         }
     }
 
     val animationCoordinator = remember { AnimationCoordinator(animationViewModel) }
     val highlightService = remember { HighlightService(animationViewModel) }
-    val stateChangeDetector = remember { StateChangeDetector() }
+
+    // Manejar cambios de dificultad
+    LaunchedEffect(evalConfig) {
+        setEvaluationConfig(evalConfig)
+    }
 
     fun applyMove(from: String, to: String) {
         val move = Move(from, to)
@@ -311,59 +223,16 @@ fun MainScreen(
         viewModel.updateGameState(nextState)
     }
 
-    // Manejar cambios de dificultad
-    LaunchedEffect(evalConfig) {
-        setEvaluationConfig(evalConfig)
-    }
-
-    // Estado para controlar cuándo verificar game over
-    var shouldCheckGameOver by remember { mutableStateOf(false) }
-
-    // Efecto para verificar game over
-    LaunchedEffect(shouldCheckGameOver, isAnimating, vmGameState) {
-        if (!shouldCheckGameOver || vmIsEditing || isAnimating) return@LaunchedEffect
-
-        shouldCheckGameOver = false
-
-        withContext(Dispatchers.Default) {
-            val gameOver = isGameOver(vmGameState)
-            withContext(Dispatchers.Main) {
-                if (gameOver && gameStatus == GameStateStatus.PLAYING) {
-                    gameStatus = GameStateStatus.PENDING_GAME_OVER
-                }
-            }
-        }
-    }
-
-    // Efecto para transiciones de estado
-    LaunchedEffect(gameStatus, isAnimating) {
-        if (vmIsEditing) return@LaunchedEffect
-
-        when (gameStatus) {
-            GameStateStatus.ANIMATING_MOVE -> {
-                if (!isAnimating) {
-                    // Cuando terminan las animaciones, volver al estado playing
-                    gameStatus = GameStateStatus.PLAYING
-                }
+    // Control del estado de AI
+    LaunchedEffect(vmAIEnabled, vmIsEditing, isTutorialActive, gameStatus, vmGameState.currentTurn) {
+        isAIThinking = when {
+            vmGameState.currentTurn == vmPlayerSide || isTutorialActive || vmIsEditing -> {
+                false
             }
 
-            GameStateStatus.PENDING_GAME_OVER -> {
-                if (!isAnimating) {
-                    delay(300) // Reducir el delay
-                    gameStatus = GameStateStatus.SHOWING_GAME_OVER
-                    showGameOverDialog = true
-                }
+            else -> {
+                vmAIEnabled && gameStatus == GameStatus.PLAYING
             }
-
-            else -> {}
-        }
-    }
-
-    // Detectar game over después de movimientos de IA
-    LaunchedEffect(vmGameState) {
-        if (vmIsEditing) return@LaunchedEffect
-        if (gameStatus == GameStateStatus.PLAYING && isGameOver(vmGameState)) {
-            gameStatus = GameStateStatus.PENDING_GAME_OVER
         }
     }
 
@@ -371,14 +240,13 @@ fun MainScreen(
     val aiThinkingLauncher = listOf(
         vmGameState.currentTurn,
         vmAIEnabled,
-        stopAI,
         vmPlayerSide,
         vmIsEditing
     )
 
     // Lanzador de IA
     LaunchedEffect(aiThinkingLauncher) {
-        if (!vmAIEnabled || stopAI || vmIsEditing || isTutorialActive || gameStatus != GameStateStatus.PLAYING) {
+        if (!vmAIEnabled || vmIsEditing || isTutorialActive || gameStatus != GameStatus.PLAYING) {
             if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus")
             return@LaunchedEffect
         }
@@ -389,7 +257,7 @@ fun MainScreen(
         // 3. El juego no está terminado
         // 4. Estamos en estado PLAYING
         val shouldAIPlay = vmGameState.currentTurn != vmPlayerSide &&
-                !isGameOver(vmGameState)
+                !vmGameState.isGameOver()
 
         if (!shouldAIPlay) return@LaunchedEffect
 
@@ -417,26 +285,20 @@ fun MainScreen(
     fun startNewGame(playerSide: Color) {
         clearAIHistory()
         lastMove = null
-        gameOverState = null
 
         showNewGameDialog = false
         showGameOverDialog = false
         showAboutDialog = false
-        gameStatus = GameStateStatus.PLAYING
 
         scope.launch {
             drawerState.close()
         }
 
-        // Reset completo del sistema de animación
-        animationCoordinator.handleEvent(AnimationEvent.Reset)
         highlightService.stopHighlights()
-
-        viewModel.startGame(playerSide)
-        stopAI = false
-
         // Sincronizar el estado visual con el nuevo estado del juego
         animationCoordinator.handleEvent(AnimationEvent.SyncState)
+
+        viewModel.startGame(playerSide)
 
         if (debug) println("New game started: playerSide=$playerSide")
     }
@@ -451,7 +313,6 @@ fun MainScreen(
             }
             viewModel.updateGameState(newState)
         }
-        stopAI = true
     }
 
     fun redoMove() {
@@ -470,18 +331,43 @@ fun MainScreen(
     }
 
     // Diálogo de fin de juego
-    if (showGameOverDialog && gameOverState != null) {
+    if (showGameOverDialog) {
+        val matchState = vmGameState.getMatchState()
+        val winner = matchState.winner
+        if (matchState.gameResult == GameResult.PLAYING || matchState.gameResult == GameResult.UNDETERMINED || winner == null) {
+            showGameOverDialog = false
+            return
+        }
+
+        val message = when (matchState.gameResult) {
+            GameResult.TRIPLE -> {
+                String.format(
+                    context.getString(R.string.game_over_triple_repetition),
+                    context.getString(winner.getColorStringResource())
+                )
+            }
+
+            GameResult.MIT -> {
+                String.format(
+                    context.getString(R.string.game_over_wins),
+                    context.getString(winner.getColorStringResource())
+                )
+            }
+
+            else -> {
+                String.format(
+                    context.getString(R.string.game_over_stalemit),
+                    context.getString(winner.getColorStringResource())
+                )
+            }
+        }
+
         GameOverDialog(
-            gameOverMessage = gameOverState!!.message,
-            onConfirmed = {
-                showGameOverDialog = false
-                gameOverState = null
-                gameStatus = GameStateStatus.NO_PLAYING
-                startNewGame(vmPlayerSide)
-            },
+            gameOverMessage = message,
+            onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = {
                 showGameOverDialog = false
-                gameStatus = GameStateStatus.NO_PLAYING
+                gameStatus = GameStatus.NO_PLAYING
             }
         )
     }
@@ -491,8 +377,8 @@ fun MainScreen(
         NewGameDialog(
             onConfirmed = { startNewGame(vmPlayerSide) },
             onDismissed = {
-                gameStatus = GameStateStatus.NO_PLAYING
                 showNewGameDialog = false
+                gameStatus = GameStatus.NO_PLAYING
             },
         )
     }
@@ -540,16 +426,6 @@ fun MainScreen(
                         pieceCounts.white == 3 && pieceCounts.black == 5 ||
                         pieceCounts.white == 2 && pieceCounts.black == 6 ||
                         pieceCounts.white == 1 && pieceCounts.black == 7)
-    }
-
-    // Control del estado de AI
-    LaunchedEffect(vmAIEnabled, vmGameState, vmIsEditing, gameStatus) {
-        isAIThinking =
-            vmAIEnabled &&
-                    vmGameState.currentTurn != vmPlayerSide &&
-                    !isGameOver(vmGameState) &&
-                    !vmIsEditing &&
-                    gameStatus == GameStateStatus.PLAYING
     }
 
     // Control del estado tutorial
@@ -781,14 +657,14 @@ fun MainScreen(
                                     boardOrientation = vmEditBoardOrientation,
                                     tutorialManager = it,
                                     onEndTutorial = viewModel::endTutorial,
-                                    updateGameState = {
+                                    updateGameState = { newState ->
                                         // Actualizar estado del tablero con la posición del tutorial
-                                        viewModel.updateGameState(it)
+                                        viewModel.updateGameState(newState)
                                     },
                                 )
                             }
                         },
-                        content = { EditControls(!vmEditBoardOrientation.isPortrait()) },
+                        content = { EditControls(!boardOrientation.isPortrait()) },
                         turnIndicator = {
                             TurnIndicator(
                                 modifier = it,

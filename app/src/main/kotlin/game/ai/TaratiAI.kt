@@ -9,7 +9,6 @@ import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.centerVertices
 import com.agustin.tarati.game.core.GameBoard.edges
-import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameState
@@ -17,7 +16,12 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.countFlipsByType
 import com.agustin.tarati.game.core.isCastling
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.game.logic.checkIfWouldCauseRepetition
+import com.agustin.tarati.game.logic.getAllMovesForTurn
+import com.agustin.tarati.game.logic.getWinner
+import com.agustin.tarati.game.logic.hasTripleRepetition
 import com.agustin.tarati.game.logic.hashBoard
+import com.agustin.tarati.game.logic.isGameOver
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
 import kotlin.math.min
@@ -106,7 +110,7 @@ object TaratiAI {
         debug: Boolean = false
     ): Result {
         // Verificar triple repetición
-        if (hasTripleRepetition(gameState)) {
+        if (gameState.hasTripleRepetition()) {
             val losingPlayer = gameState.currentTurn.opponent()
             val score = if (losingPlayer == WHITE) -evalConfig.winningScore else evalConfig.winningScore
             if (debug) println("[TRIPLE REPETITION] Player $losingPlayer loses")
@@ -127,7 +131,7 @@ object TaratiAI {
         if (terminalResult != null) return terminalResult
 
         // Generar y ordenar movimientos
-        val moves = getAllPossibleMoves(gameState)
+        val moves = gameState.getAllMovesForTurn()
         if (moves.isEmpty()) {
             return Result(evaluateBoard(gameState), null)
         }
@@ -147,9 +151,9 @@ object TaratiAI {
     }
 
     private fun checkTerminalState(gameState: GameState, depth: Int, debug: Boolean): Result? {
-        if (depth == 0 || isGameOver(gameState)) {
-            val score = if (isGameOver(gameState)) {
-                val winner = getWinner(gameState)
+        if (depth == 0 || gameState.isGameOver()) {
+            val score = if (gameState.isGameOver()) {
+                val winner = gameState.getWinner()
                 if (debug) println("[TERMINAL] winner=$winner, currentTurn=${gameState.currentTurn}")
                 when (winner) {
                     WHITE -> evalConfig.winningScore
@@ -167,7 +171,7 @@ object TaratiAI {
 
     private fun checkImmediateWin(move: Move, gameState: GameState, isMaximizing: Boolean, debug: Boolean): Result? {
         val newState = applyMove(gameState, move)
-        if (isGameOver(newState) && getWinner(newState) == gameState.currentTurn) {
+        if (newState.isGameOver() && newState.getWinner() == gameState.currentTurn) {
             if (debug) println("[IMMEDIATE WIN] Found winning move: ${move.from}->${move.to}")
             return Result(
                 if (isMaximizing) evalConfig.winningScore else -evalConfig.winningScore,
@@ -199,7 +203,7 @@ object TaratiAI {
         for ((index, move) in moves.withIndex()) {
             // Verificar triple repetición
             val newState = applyMove(gameState, move)
-            if (checkIfWouldCauseRepetition(newState)) {
+            if (newState.checkIfWouldCauseRepetition()) {
                 if (debug) println("  [MOVE $index] ${move.from}->${move.to}: WOULD CAUSE TRIPLE REPETITION")
                 continue
             }
@@ -306,7 +310,7 @@ object TaratiAI {
 
     private fun evaluateMove(move: Move, gameState: GameState): MoveEvaluation {
         val newState = applyMove(gameState, move)
-        val wouldCauseRepetition = checkIfWouldCauseRepetition(newState)
+        val wouldCauseRepetition = newState.checkIfWouldCauseRepetition()
 
         val (rocFlips, cobFlips) = move.countFlipsByType(gameState, newState)
         val quickScore = quickEvaluate(newState)
@@ -314,7 +318,7 @@ object TaratiAI {
         val leadsToUpgrade = move.to in homeBases[gameState.currentTurn.opponent()]!!
         val upgradeBonus = if (leadsToUpgrade) evalConfig.upgradeScore.toDouble() else 0.0
 
-        val isImmediateWin = isGameOver(newState) && getWinner(newState) == gameState.currentTurn
+        val isImmediateWin = newState.isGameOver() && newState.getWinner() == gameState.currentTurn
         val isWinningMove = !isImmediateWin && leadsToWinningPosition(newState, gameState.currentTurn)
 
         val repetitionPenalty =
@@ -339,8 +343,8 @@ object TaratiAI {
     }
 
     private fun leadsToWinningPosition(gameState: GameState, movingPlayer: Color): Boolean {
-        if (getAllPossibleMoves(gameState).isEmpty()) {
-            return getWinner(gameState) == movingPlayer
+        if (gameState.getAllMovesForTurn().isEmpty()) {
+            return gameState.getWinner() == movingPlayer
         }
 
         val score = quickEvaluate(gameState)
@@ -501,56 +505,6 @@ object TaratiAI {
             val enemy = gameState.cobs[it]
             enemy?.color == enemyColor && enemy.isUpgraded
         }
-    }
-
-    // ==================== Estado del Juego ====================
-
-    fun isGameOver(gameState: GameState): Boolean {
-        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
-        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
-
-        return whitePieces == 0 || blackPieces == 0 ||
-                getAllPossibleMoves(gameState).isEmpty() ||
-                hasTripleRepetition(gameState)
-    }
-
-    fun getWinner(gameState: GameState): Color? {
-        if (!isGameOver(gameState)) return null
-
-        if (hasTripleRepetition(gameState)) {
-            return gameState.currentTurn.opponent()
-        }
-
-        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
-        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
-
-        return when {
-            whitePieces == 0 -> BLACK
-            blackPieces == 0 -> WHITE
-            whitePieces > blackPieces -> WHITE
-            blackPieces > whitePieces -> BLACK
-            else -> {
-                // Empate por igualdad de material - considerar movilidad
-                val whiteMoves = getAllPossibleMoves(gameState.copy(currentTurn = WHITE)).size
-                val blackMoves = getAllPossibleMoves(gameState.copy(currentTurn = BLACK)).size
-                return when {
-                    whiteMoves > blackMoves -> WHITE
-                    blackMoves > whiteMoves -> BLACK
-                    else -> null // Empate verdadero
-                }
-            }
-        }
-    }
-
-    fun hasTripleRepetition(gameState: GameState): Boolean {
-        val hash = gameState.hashBoard()
-        return (realGameHistory[hash] ?: 0) >= 3
-    }
-
-    fun checkIfWouldCauseRepetition(gameState: GameState): Boolean {
-        val hash = gameState.hashBoard()
-        val currentCount = realGameHistory[hash] ?: 0
-        return (currentCount + 1) >= 3
     }
 
     // ==================== Aplicar Movimiento ====================

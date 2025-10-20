@@ -4,11 +4,9 @@ import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
-import com.agustin.tarati.game.ai.TaratiAI.isGameOver
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
-import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
@@ -16,6 +14,8 @@ import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.GameStateBuilder
+import com.agustin.tarati.game.logic.getAllMovesForTurn
+import com.agustin.tarati.game.logic.isGameOver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -39,9 +39,7 @@ class AITest {
 
         // applyMoveToBoard DOES NOT toggle the turn; expect same currentTurn
         assertEquals(
-            "applyMoveToBoard should not change currentTurn (App toggles it).",
-            gs.currentTurn,
-            newState.currentTurn
+            "applyMoveToBoard should not change currentTurn (App toggles it).", gs.currentTurn, newState.currentTurn
         )
     }
 
@@ -60,7 +58,7 @@ class AITest {
     fun getAllPossibleMoves_excludesBackwardMove_forNonUpgradedWhite() {
         // Single white cob at C1, turn WHITE
         val state = GameState(mapOf("C1" to Cob(WHITE, false)), currentTurn = WHITE)
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
         // Expect C1 -> C2 NOT to be present (this is 'backward' for WHITE)
         assertFalse(
             "Expected backward move C1 -> C2 to be disallowed for WHITE non-upgraded",
@@ -72,7 +70,7 @@ class AITest {
     fun getAllPossibleMoves_includesForwardMove_forNonUpgradedWhite() {
         // Single white cob at C2, turn WHITE
         val state = GameState(mapOf("C2" to Cob(WHITE, false)), currentTurn = WHITE)
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
 
         // Debug: imprimir todos los movimientos posibles
         println("Movimientos posibles para C2:")
@@ -91,7 +89,7 @@ class AITest {
         val gs = initialGameState(currentTurn = BLACK)
 
         // Debug: verificar movimientos posibles
-        val possibleMoves = getAllPossibleMoves(gs)
+        val possibleMoves = gs.getAllMovesForTurn()
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
@@ -109,15 +107,12 @@ class AITest {
         // Usar el estado inicial completo, no uno minimal
         val gs = GameState(
             mapOf(
-                "C1" to Cob(BLACK, true),
-                "B1" to Cob(BLACK, true),
-                "D2" to Cob(WHITE, true)
-            ),
-            currentTurn = BLACK
+                "C1" to Cob(BLACK, true), "B1" to Cob(BLACK, true), "D2" to Cob(WHITE, true)
+            ), currentTurn = BLACK
         )
 
         // Debug: verificar movimientos posibles
-        val possibleMoves = getAllPossibleMoves(gs)
+        val possibleMoves = gs.getAllMovesForTurn()
         println("Movimientos posibles para BLACK en estado inicial: ${possibleMoves.size}")
         possibleMoves.forEach { println("${it.from} -> ${it.to}") }
 
@@ -141,11 +136,8 @@ class AITest {
     fun evaluateBoard_moreWhitePieces_returnsPositive() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C2" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C2" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
         val score = evaluateBoard(state)
         assertTrue(score > 0)
@@ -155,11 +147,8 @@ class AITest {
     fun evaluateBoard_moreBlackPieces_returnsNegative() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false),
-                "C8" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false), "C8" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
         val score = evaluateBoard(state)
         assertTrue(score < 0)
@@ -168,40 +157,35 @@ class AITest {
     @Test
     fun isGameOver_whiteNoPieces_returnsTrue() {
         val state = GameState(
-            mapOf("C7" to Cob(BLACK, false)),
-            currentTurn = WHITE
+            mapOf("C7" to Cob(BLACK, false)), currentTurn = WHITE
         )
-        assertTrue(isGameOver(state))
+        assertTrue(state.isGameOver())
     }
 
     @Test
     fun isGameOver_blackNoPieces_returnsTrue() {
         val state = GameState(
-            mapOf("C1" to Cob(WHITE, false)),
-            currentTurn = WHITE
+            mapOf("C1" to Cob(WHITE, false)), currentTurn = WHITE
         )
-        assertTrue(isGameOver(state))
+        assertTrue(state.isGameOver())
     }
 
     @Test
     fun isGameOver_bothHavePieces_returnsFalse() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
-        assertFalse(isGameOver(state))
+        assertFalse(state.isGameOver())
     }
 
     @Test
     fun getAllPossibleMoves_includesBackwardMove_forUpgradedWhite() {
         val state = GameState(
-            mapOf("C1" to Cob(WHITE, true)),
-            currentTurn = WHITE
+            mapOf("C1" to Cob(WHITE, true)), currentTurn = WHITE
         )
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
         // Upgraded pieces can move backward
         val hasBackwardMove = moves.any { it.from == "C1" && it.to == "C2" }
         assertTrue("Upgraded white should be able to move backward", hasBackwardMove)
@@ -211,12 +195,10 @@ class AITest {
     fun getAllPossibleMoves_excludesOccupiedVertices() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "B1" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "B1" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
         // Should not include C1 -> B1 because B1 is occupied
         val moveToOccupied = moves.any { it.from == "C1" && it.to == "B1" }
         assertFalse("Should not move to occupied vertex", moveToOccupied)
@@ -226,12 +208,10 @@ class AITest {
     fun getAllPossibleMoves_onlyCurrentTurnPieces() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
         // Should only include moves for white pieces
         val allMovesAreWhite = moves.all { move ->
             state.cobs[move.from]?.color == WHITE
@@ -242,8 +222,7 @@ class AITest {
     @Test
     fun isValidMove_upgradedPiece_canMoveBackward() {
         val state = GameState(
-            mapOf("C1" to Cob(WHITE, true)),
-            currentTurn = WHITE
+            mapOf("C1" to Cob(WHITE, true)), currentTurn = WHITE
         )
         // C1 -> C2 would be backward for white, but should be valid for upgraded
         val isValid = isValidMove(state, "C1", "C2")
@@ -253,8 +232,7 @@ class AITest {
     @Test
     fun isValidMove_nonAdjacent_returnsFalse() {
         val state = GameState(
-            mapOf("C1" to Cob(WHITE, false)),
-            currentTurn = WHITE
+            mapOf("C1" to Cob(WHITE, false)), currentTurn = WHITE
         )
         // C1 and C3 are not adjacent
         val isValid = isValidMove(state, "C1", "C3")
@@ -264,8 +242,7 @@ class AITest {
     @Test
     fun isValidMove_sameFromTo_returnsFalse() {
         val state = GameState(
-            mapOf("C1" to Cob(WHITE, false)),
-            currentTurn = WHITE
+            mapOf("C1" to Cob(WHITE, false)), currentTurn = WHITE
         )
         val isValid = isValidMove(state, "C1", "C1")
         assertFalse("Moving to same position should be invalid", isValid)
@@ -294,11 +271,10 @@ class AITest {
                 "B1" to Cob(BLACK, false),
                 "B6" to Cob(BLACK, false),
                 "C12" to Cob(BLACK, false),
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
-        val possibleMoves = getAllPossibleMoves(stateNoMoves)
+        val possibleMoves = stateNoMoves.getAllMovesForTurn()
 
         // Verificar que no hay movimientos disponibles
         assertTrue("Should have no valid moves", possibleMoves.isNotEmpty())
@@ -313,11 +289,10 @@ class AITest {
                 "C4" to Cob(BLACK, false),
                 "B2" to Cob(BLACK, false),
                 "A1" to Cob(BLACK, false),
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
-        val possibleMoves = getAllPossibleMoves(stateNoMoves)
+        val possibleMoves = stateNoMoves.getAllMovesForTurn()
 
         // Verificar que no hay movimientos disponibles
         assertTrue("Should have no valid moves", possibleMoves.isEmpty())
@@ -327,19 +302,14 @@ class AITest {
     fun evaluateBoard_materialAdvantage() {
         val stateEqual = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
 
         val stateWhiteAdvantage = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C2" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C2" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
 
         val scoreEqual = evaluateBoard(stateEqual)
@@ -354,19 +324,15 @@ class AITest {
     fun evaluateBoard_protectionBonus() {
         val stateIsolated = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
 
         val stateProtected = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C2" to Cob(WHITE, false), // Aliado adyacente
+                "C1" to Cob(WHITE, false), "C2" to Cob(WHITE, false), // Aliado adyacente
                 "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
         val scoreIsolated = evaluateBoard(stateIsolated)
@@ -380,20 +346,14 @@ class AITest {
     fun evaluateBoard_symmetryBetweenColors() {
         val stateWhiteAdvantage = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C2" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "C1" to Cob(WHITE, false), "C2" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
 
         val stateBlackAdvantage = GameState(
             mapOf(
-                "C1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false),
-                "C8" to Cob(BLACK, false)
-            ),
-            currentTurn = BLACK
+                "C1" to Cob(WHITE, false), "C7" to Cob(BLACK, false), "C8" to Cob(BLACK, false)
+            ), currentTurn = BLACK
         )
 
         val scoreWhite = evaluateBoard(stateWhiteAdvantage)
@@ -408,13 +368,11 @@ class AITest {
     @Test
     fun isGameOver_noPiecesForOneColor() {
         val stateWhiteWins = GameState(
-            mapOf("C1" to Cob(WHITE, false)),
-            currentTurn = BLACK
+            mapOf("C1" to Cob(WHITE, false)), currentTurn = BLACK
         )
 
         assertTrue(
-            "Game should be over when one color has no pieces",
-            isGameOver(stateWhiteWins)
+            "Game should be over when one color has no pieces", stateWhiteWins.isGameOver()
         )
     }
 
@@ -423,11 +381,9 @@ class AITest {
         // Escenario: WHITE puede capturar o moverse a espacio vacío
         val state = GameState(
             mapOf(
-                "B1" to Cob(WHITE, true),
-                "A1" to Cob(BLACK, false), // Puede ir hacia A1
+                "B1" to Cob(WHITE, true), "A1" to Cob(BLACK, false), // Puede ir hacia A1
                 "B2" to Cob(BLACK, false)  // O hacia B2
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
         val result = getNextBestMove(state, Difficulty.DEFAULT)
@@ -443,8 +399,7 @@ class AITest {
             mapOf(
                 "B1" to Cob(WHITE, false), // Pieza blanca normal
                 "C1" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
         // WHITE en B1 intentando ir a C1 (hacia abajo = retroceder para WHITE)
@@ -459,8 +414,7 @@ class AITest {
         val state = GameState(
             mapOf(
                 "B1" to Cob(WHITE, true), // Pieza upgraded
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
         // Verificar que puede moverse a posiciones adyacentes
@@ -480,8 +434,7 @@ class AITest {
                 "C2" to Cob(WHITE, false),
                 "C7" to Cob(BLACK, false),
                 "C8" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+            ), currentTurn = WHITE
         )
 
         val startTime = System.currentTimeMillis()
@@ -496,8 +449,7 @@ class AITest {
 
         // Segunda ejecución debería ser más rápida (usa caché)
         assertTrue(
-            "Second run should be faster due to caching",
-            secondRunTime < firstRunTime || secondRunTime < 100
+            "Second run should be faster due to caching", secondRunTime < firstRunTime || secondRunTime < 100
         )
     }
 
@@ -505,22 +457,18 @@ class AITest {
     fun sortMoves_prioritizesGoodMoves() {
         val state = GameState(
             mapOf(
-                "A1" to Cob(WHITE, true),
-                "B1" to Cob(WHITE, false),
-                "C7" to Cob(BLACK, false)
-            ),
-            currentTurn = WHITE
+                "A1" to Cob(WHITE, true), "B1" to Cob(WHITE, false), "C7" to Cob(BLACK, false)
+            ), currentTurn = WHITE
         )
 
-        val moves = getAllPossibleMoves(state)
+        val moves = state.getAllMovesForTurn()
 
         assertTrue("Should have multiple moves", moves.size > 1)
 
         // Verificar que se generan movimientos válidos
         for (move in moves) {
             assertTrue(
-                "Move should be valid",
-                isValidMove(state, move.from, move.to)
+                "Move should be valid", isValidMove(state, move.from, move.to)
             )
         }
     }
@@ -633,8 +581,7 @@ class AITest {
                 setCob("D3", BLACK, false)
                 setCob("D4", BLACK, true)
                 setCob("B1", BLACK, false)
-            }
-        )
+            })
 
         symmetricPositions.forEach { position ->
             val mirror = createMirrorPosition(position)
@@ -808,8 +755,7 @@ class AITest {
                 "C6" to Cob(BLACK, false),
                 "C7" to Cob(BLACK, false),
                 "C8" to Cob(BLACK, false),
-            ),
-            currentTurn = BLACK
+            ), currentTurn = BLACK
         )
 
         // Con profundidad adaptativa (14 en endgame), debería ver el mit
@@ -834,8 +780,7 @@ class AITest {
                 "C6" to Cob(BLACK, false),
                 "C7" to Cob(BLACK, false),
                 "C8" to Cob(BLACK, false),
-            ),
-            currentTurn = BLACK
+            ), currentTurn = BLACK
         )
 
         // Con profundidad adaptativa (14 en endgame), debería ver el mit

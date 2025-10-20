@@ -5,12 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,78 +54,16 @@ fun Board(
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
-    var prevGameState by remember { mutableStateOf<GameState?>(null) }
-    val isAnimating by animationViewModel.isAnimating.collectAsState()
-
-    // Efecto para sincronizar el estado inicial
-    LaunchedEffect(Unit) {
-        animationViewModel.syncState(boardState.gameState)
-        prevGameState = boardState.gameState
-    }
-
-    // Efecto para procesar movimientos
-    LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
-        val lastMove = boardState.lastMove
-        if (lastMove != null && prevGameState != null && !isAnimating) {
-            val currentGameState = boardState.gameState
-
-            // Verificar que el movimiento es válido y diferente del estado anterior
-            if (isValidMoveTransition(prevGameState!!, currentGameState, lastMove)) {
-                val success = animationViewModel.processMove(
-                    move = lastMove,
-                    oldGameState = prevGameState!!,
-                    newGameState = currentGameState
-                )
-
-                if (success) {
-                    prevGameState = currentGameState
-                }
-            }
-        }
-    }
-
-    // Sincronizar estado cuando no hay animaciones y el estado cambió
-    LaunchedEffect(boardState.gameState, isAnimating) {
-        if (!isAnimating && boardState.gameState != prevGameState) {
-            animationViewModel.syncState(boardState.gameState)
-            prevGameState = boardState.gameState
-        }
-    }
-
-    // Efecto para reset
-    LaunchedEffect(boardState.newGame) {
-        if (boardState.newGame) {
-            selectViewModel.resetSelection()
-            animationViewModel.reset()
-            prevGameState = null
-            events.onResetCompleted()
-        }
-    }
-
-    val vmSelectedPiece by selectViewModel.selectedVertexId.collectAsState()
-    val vmValidMoves by selectViewModel.validAdjacentVertexes.collectAsState()
-
-    val visualState by animationViewModel.visualState.collectAsState()
-    val animatedPieces by animationViewModel.animatedPieces.collectAsState()
-    val currentHighlight by animationViewModel.currentHighlight.collectAsState()
-
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
     ) {
         BoardRenderer(
             modifier = Modifier.fillMaxSize(),
-            selectedVertexId = vmSelectedPiece,
-            validAdjacentVertexes = vmValidMoves,
-            boardState = boardState.copy(
-                gameState = GameState(
-                    cobs = visualState.cobs,
-                    currentTurn = visualState.currentTurn ?: boardState.gameState.currentTurn
-                )
-            ),
             playerSide = playerSide,
-            animatedPieces = animatedPieces,
-            currentHighlight = currentHighlight,
+            selectViewModel = selectViewModel,
+            animationViewModel = animationViewModel,
+            boardState = boardState,
             tapEvents = object : TapEvents {
                 override fun onSelected(from: String, valid: List<String>) {
                     selectViewModel.updateSelectedVertex(from)
@@ -157,25 +89,10 @@ fun Board(
                 }
             },
             onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
+            onResetCompleted = events::onResetCompleted,
             debug = debug
         )
     }
-}
-
-private fun isValidMoveTransition(oldState: GameState, newState: GameState, move: Move): Boolean {
-    // Verificar que hay un cambio real en el estado
-    if (oldState.cobs == newState.cobs) return false
-
-    // Verificar que hay cambios consistentes
-    val movedPieceExistsOldState = oldState.cobs.containsKey(move.from)
-    val destinationFreeInOldState = !oldState.cobs.containsKey(move.to)
-    val movedPieceExistsInNewState = newState.cobs.containsKey(move.to)
-    val originFreeInNewState = !newState.cobs.containsKey(move.from)
-
-    return movedPieceExistsInNewState &&
-            originFreeInNewState &&
-            destinationFreeInOldState &&
-            movedPieceExistsOldState
 }
 
 // region Previews

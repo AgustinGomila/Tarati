@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,32 +27,85 @@ import androidx.compose.ui.unit.toSize
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.roundToInt
 
-/**
- * BoardRenderer: fondo + vertices/edges (Canvas) + piezas overlay animadas
-
- * - selectedVertexId / validAdjacentVertexes: piezas y vértices resaltados
- * - boardState: contiene gameState: fuente de verdad
- *        y modificadores visuales y de comportamiento
- * - tapEvents: eventos sobre el tablero
- */
 @Composable
 fun BoardRenderer(
     modifier: Modifier = Modifier,
     playerSide: Color,
-    selectedVertexId: String?,
-    validAdjacentVertexes: List<String>,
+    selectViewModel: BoardSelectionViewModel,
+    animationViewModel: BoardAnimationViewModel,
     boardState: BoardState,
-    animatedPieces: Map<String, AnimatedPiece>,
-    currentHighlight: HighlightAnimation?,
     tapEvents: TapEvents,
     onBoardSizeChange: (Size) -> Unit,
+    onResetCompleted: () -> Unit,
     debug: Boolean = false
 ) {
+    var prevGameState by remember { mutableStateOf<GameState?>(null) }
+
+    val isAnimating by animationViewModel.isAnimating.collectAsState()
+    val selectedVertexId by selectViewModel.selectedVertexId.collectAsState()
+    val validAdjacentVertexes by selectViewModel.validAdjacentVertexes.collectAsState()
+
+    val visualState by animationViewModel.visualState.collectAsState()
+    val animatedPieces by animationViewModel.animatedPieces.collectAsState()
+    val currentHighlight by animationViewModel.currentHighlights.collectAsState()
+
+    val stateChangeDetector = remember { StateChangeDetector() }
+
+    // Efecto para sincronizar el estado inicial
+    LaunchedEffect(Unit) {
+        if (boardState.newGame) {
+            selectViewModel.resetSelection()
+            animationViewModel.reset()
+            prevGameState = null
+            onResetCompleted()
+        } else {
+            animationViewModel.syncState(boardState.gameState)
+            prevGameState = boardState.gameState
+        }
+    }
+
+    // Efecto para procesar movimientos
+    LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
+        val lastMove = boardState.lastMove
+        if (lastMove != null && prevGameState != null && !isAnimating) {
+            val currentGameState = boardState.gameState
+
+            // Verificar que el movimiento es válido y diferente del estado anterior
+            if (stateChangeDetector.shouldAnimateMove(prevGameState!!, currentGameState, lastMove)) {
+                val success = animationViewModel.processMove(
+                    move = lastMove,
+                    oldGameState = prevGameState!!,
+                    newGameState = currentGameState
+                )
+
+                if (success) {
+                    prevGameState = currentGameState
+                }
+            }
+        }
+    }
+
+    // Sincronizar estado cuando no hay animaciones y el estado cambió
+    LaunchedEffect(boardState.gameState, isAnimating) {
+        if (!isAnimating && boardState.gameState != prevGameState) {
+            animationViewModel.syncState(boardState.gameState)
+            prevGameState = boardState.gameState
+        }
+    }
+
+    val boardState = boardState.copy(
+        gameState = GameState(
+            cobs = visualState.cobs,
+            currentTurn = visualState.currentTurn ?: boardState.gameState.currentTurn
+        )
+    )
+
     val colors = getBoardColors()
     val density = LocalDensity.current
     val visualWidth by remember { mutableFloatStateOf(with(density) { 60.dp.toPx() }) }
@@ -93,7 +149,6 @@ fun BoardRenderer(
         Canvas(modifier = Modifier.matchParentSize()) {
             drawRect(color = colors.backgroundColor)
             val size = size
-            //onBoardSizeChange(size)
 
             drawCircle(
                 color = colors.boardBackgroundColor,
@@ -116,7 +171,7 @@ fun BoardRenderer(
                 colors = colors
             )
 
-            currentHighlight?.let { highlight ->
+            currentHighlight.forEach { highlight ->
                 when (highlight) {
                     is HighlightAnimation.Vertex -> {
                         drawVertexHighlight(

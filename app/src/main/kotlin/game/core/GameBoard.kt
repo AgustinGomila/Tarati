@@ -185,29 +185,6 @@ object GameBoard {
         }
     }
 
-    fun getAllPossibleMoves(gameState: GameState): MutableList<Move> {
-        val possibleMoves = mutableListOf<Move>()
-
-        for ((from, cob) in gameState.cobs) {
-            if (cob.color != gameState.currentTurn) continue
-
-            // Obtener movimientos especiales de captura
-            val castlingMove = gameState.getPosibleCastling(from, cob)
-            if (castlingMove != null)
-                possibleMoves.add(castlingMove)
-
-            // Movimientos normales (adyacentes)
-            val connectedVertices = adjacencyMap[from] ?: emptyList()
-            for (to in connectedVertices) {
-                if (isValidMove(gameState, from, to)) {
-                    possibleMoves.add(Move(from, to))
-                }
-            }
-        }
-
-        return possibleMoves
-    }
-
     fun getPosition(vertexId: String, boardSize: Pair<Float, Float>, vWidth: Float): Offset {
         val (width, height) = boardSize
         val centerX = width / 2

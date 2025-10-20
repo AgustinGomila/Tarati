@@ -11,7 +11,6 @@ sealed class AnimationEvent {
     ) : AnimationEvent()
 
     data class HighlightEvent(val highlights: List<HighlightAnimation>) : AnimationEvent()
-    data class ConcurrentHighlightEvent(val highlights: List<HighlightAnimation>) : AnimationEvent()
     object StopHighlights : AnimationEvent()
     object Reset : AnimationEvent()
     object SyncState : AnimationEvent()

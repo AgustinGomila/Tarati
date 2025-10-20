@@ -12,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 data class AnimatedPiece(
@@ -26,10 +25,6 @@ data class AnimatedPiece(
     val isConverting: Boolean = false,
     val targetColor: Color? = null
 )
-
-enum class AnimationState {
-    IDLE, ANIMATING
-}
 
 data class VisualGameState(
     val cobs: Map<String, Cob> = emptyMap(),
@@ -45,18 +40,10 @@ class BoardAnimationViewModel(
     private val upgradeDuration = 70L
     private val animationSteps: Int = 6
 
-    // Mantener el estado actual pero simplificar las dependencias
-    private val _animationState = MutableStateFlow(AnimationState.IDLE)
-    val animationState: StateFlow<AnimationState> = _animationState.asStateFlow()
-
     fun processMove(move: Move, oldGameState: GameState, newGameState: GameState): Boolean {
         viewModelScope.launch {
-            _animationState.value = AnimationState.ANIMATING
-
-            // Usar el detector en lugar de lógica inline
             val conversions = stateChangeDetector.detectConversions(move, oldGameState, newGameState)
             val upgrades = stateChangeDetector.detectUpgrades(oldGameState, newGameState)
-
             animateMoveSequence(move, conversions, upgrades, newGameState)
         }
         return true
@@ -68,20 +55,9 @@ class BoardAnimationViewModel(
         upgrades: List<Pair<String, Cob>>,
         newGameState: GameState
     ) {
-        // Secuencia de animaciones independiente de la lógica del juego
         animateMovement(move, newGameState)
-
-        if (conversions.isNotEmpty()) {
-            delay(100) // Pequeño delay entre animaciones
-            animateDetectedConversions(conversions)
-        }
-
-        if (upgrades.isNotEmpty()) {
-            delay(100)
-            animateDetectedUpgrades(upgrades)
-        }
-
-        _animationState.value = AnimationState.IDLE
+        if (conversions.isNotEmpty()) animateDetectedConversions(conversions)
+        if (upgrades.isNotEmpty()) animateDetectedUpgrades(upgrades)
     }
 
     private suspend fun animateDetectedConversions(conversions: List<Pair<String, Cob>>) {
@@ -143,7 +119,7 @@ class BoardAnimationViewModel(
                     currentPos = vertexId,
                     targetPos = vertexId,
                     animationProgress = 1f,
-                    upgradeProgress = 0f, // Comenzar en 0
+                    upgradeProgress = 0f,
                     conversionProgress = 1f
                 )
 
@@ -204,14 +180,6 @@ class BoardAnimationViewModel(
         }
     }
 
-    fun forceSync() {
-        _isAnimating.value = false
-        _isHighlighting.value = false
-        _animatedPieces.value = emptyMap()
-        _highlightAnimations.value = emptyList()
-        _currentHighlight.value = null
-    }
-
     suspend fun animateMovement(move: Move, newGameState: GameState) {
         val cob = newGameState.cobs[move.to] ?: return
 
@@ -247,78 +215,29 @@ class BoardAnimationViewModel(
 
     // Animación de Resaltados Individuales
 
-    private val _highlightAnimations = MutableStateFlow<List<HighlightAnimation>>(emptyList())
-    val highlightAnimations: StateFlow<List<HighlightAnimation>> = _highlightAnimations.asStateFlow()
+    private val _currentHighlights = MutableStateFlow<List<HighlightAnimation>>(emptyList())
+    val currentHighlights: StateFlow<List<HighlightAnimation>> = _currentHighlights.asStateFlow()
 
-    private val _currentHighlight = MutableStateFlow<HighlightAnimation?>(null)
-    val currentHighlight: StateFlow<HighlightAnimation?> = _currentHighlight.asStateFlow()
-
-    private val _isHighlighting = MutableStateFlow(false)
-    val isHighlighting: StateFlow<Boolean> = _isHighlighting.asStateFlow()
-
-    private val currentAnimations = mutableListOf<Job>()
-
-    fun animate(highlights: List<HighlightAnimation>) {
-        viewModelScope.launch {
-            _isHighlighting.value = true
-            _highlightAnimations.value = highlights
-
-            for (highlight in highlights) {
-                _currentHighlight.value = highlight
-
-                when (highlight) {
-                    is HighlightAnimation.Vertex -> delay(highlight.highlight.duration)
-                    is HighlightAnimation.Edge -> delay(highlight.highlight.duration)
-                    is HighlightAnimation.Pause -> delay(300L) // Pausa más corta para mejor fluidez
-                }
-
-                _currentHighlight.value = null
-                // delay(50) // Pausa mínima entre animaciones
-            }
-
-            _highlightAnimations.value = emptyList()
-            _isHighlighting.value = false
-        }.also { job ->
-            currentAnimations.add(job)
-            job.invokeOnCompletion { currentAnimations.remove(job) }
-        }
-    }
-
-    // Función para animaciones superpuestas
-    fun animateConcurrent(highlights: List<HighlightAnimation>): Job {
+    fun animate(highlights: List<HighlightAnimation>): Job {
         return viewModelScope.launch {
-            _isHighlighting.value = true
+            _currentHighlights.value = highlights
 
-            // Ejecutar todas las animaciones en paralelo
-            val animationJobs = highlights.map { highlight ->
-                launch {
-                    _currentHighlight.value = highlight
-
-                    when (highlight) {
-                        is HighlightAnimation.Vertex -> delay(highlight.highlight.duration)
-                        is HighlightAnimation.Edge -> delay(highlight.highlight.duration)
-                        is HighlightAnimation.Pause -> delay(300L)
-                    }
-
-                    _currentHighlight.value = null
+            val maxDuration = highlights.maxOfOrNull {
+                when (it) {
+                    is HighlightAnimation.Vertex -> it.highlight.duration
+                    is HighlightAnimation.Edge -> it.highlight.duration
+                    is HighlightAnimation.Pause -> 200L
                 }
-            }
+            } ?: 0L
 
-            // Esperar a que todas terminen
-            animationJobs.joinAll()
-
-            _isHighlighting.value = false
-        }.also { job ->
-            currentAnimations.add(job)
-            job.invokeOnCompletion { currentAnimations.remove(job) }
+            delay(maxDuration)
+            _currentHighlights.value = emptyList()
         }
     }
 
     fun stopHighlights() {
         viewModelScope.launch {
-            _highlightAnimations.value = emptyList()
-            _currentHighlight.value = null
-            _isHighlighting.value = false
+            _currentHighlights.value = emptyList()
         }
     }
 
@@ -327,5 +246,11 @@ class BoardAnimationViewModel(
         _animatedPieces.value = emptyMap()
         previousVisualState = null
         _isAnimating.value = false
+    }
+
+    fun forceSync() {
+        _isAnimating.value = false
+        _animatedPieces.value = emptyMap()
+        _currentHighlights.value = emptyList()
     }
 }

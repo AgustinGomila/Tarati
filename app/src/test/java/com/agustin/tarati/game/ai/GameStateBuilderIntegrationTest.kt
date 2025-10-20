@@ -2,9 +2,9 @@ package  com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.GameBoard.getAllPossibleMoves
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.logic.GameStateBuilder
+import com.agustin.tarati.game.logic.getAllMovesForTurn
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -56,14 +56,12 @@ class GameStateBuilderIntegrationTest {
     @Test
     fun builderInTestSetup() {
         // This demonstrates how the builder can be used in test setup
-        val testState = GameStateBuilder()
-            .setTurn(Color.BLACK)
-            .setCob("A1", Color.WHITE, true) // White king in center
+        val testState = GameStateBuilder().setTurn(Color.BLACK).setCob("A1", Color.WHITE, true) // White king in center
             .setCob("C7", Color.BLACK, false) // Black piece nearby
             .build()
 
         // Now test specific functionality with this controlled state
-        val possibleMoves = getAllPossibleMoves(testState)
+        val possibleMoves = testState.getAllMovesForTurn()
 
         // The white king at A1 should have multiple move options
         val kingMoves = possibleMoves.filter { it.from == "C7" }

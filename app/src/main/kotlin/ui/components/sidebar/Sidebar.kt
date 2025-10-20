@@ -51,13 +51,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
-import com.agustin.tarati.game.ai.TaratiAI.getWinner
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
+import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.ui.helpers.customGameState
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
@@ -393,7 +393,7 @@ fun HistorialControls(
 
 @Composable
 fun GameStateIndicator(gameState: GameState, playerSide: Color) {
-    val winner = getWinner(gameState)
+    val winner = gameState.getWinner()
     val relevantSide = winner ?: gameState.currentTurn
 
     val (color, backgroundColor) = when (relevantSide) {
