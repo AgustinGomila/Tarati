@@ -86,8 +86,8 @@ class BoardAnimationViewModel(
                 move.to to animatedPiece.copy(animationProgress = progress)
             )
             delay(stepDelay)
-            if (step == steps - 1) {
-                // Efectos especiales
+            if (step == steps / 2) {
+                // Efectos especiales empiezan al acercar a destino
                 animate(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
             }
         }
@@ -101,8 +101,9 @@ class BoardAnimationViewModel(
     private suspend fun animateDetectedConversions(conversions: List<Pair<String, Cob>>) {
         if (conversions.isEmpty()) return
 
-        val duration = convertDuration
+        val duration = moveDuration
         val steps = animationSteps
+        val stepDelay = duration / steps
 
         conversions.forEach { (vertexId, newCob) ->
             // Crear animated piece para la conversión (pieza en su posición actual)
@@ -129,8 +130,8 @@ class BoardAnimationViewModel(
                 _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
                     put(vertexId, animatedPiece.copy(conversionProgress = progress))
                 }
-                delay(duration / steps)
-                if (step == steps - 1) {
+                delay(stepDelay)
+                if (step == steps / 2) {
                     // Efectos especiales
                     animate(createCaptureHighlight(vertexId))
                 }
@@ -149,8 +150,9 @@ class BoardAnimationViewModel(
     private suspend fun animateDetectedUpgrades(upgrades: List<Pair<String, Cob>>) {
         if (upgrades.isEmpty()) return
 
-        val duration = upgradeDuration
+        val duration = moveDuration
         val steps = animationSteps
+        val stepDelay = duration / steps
 
         upgrades.forEach { (vertexId, newCob) ->
             // Solo animar si la pieza no está actualmente siendo animada por movimiento
@@ -176,12 +178,10 @@ class BoardAnimationViewModel(
                     _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
                         put(vertexId, animatedPiece.copy(upgradeProgress = progress))
                     }
-                    delay(duration / steps)
-                    if (step == steps - 1) {
-                        // Efectos especiales
-                        animate(createUpgradeHighlight(vertexId))
-                    }
+                    delay(stepDelay)
                 }
+
+                animate(createUpgradeHighlight(vertexId))
 
                 // Actualizar estado visual para esta pieza mejorada
                 val currentVisualState = _visualState.value.cobs.toMutableMap()

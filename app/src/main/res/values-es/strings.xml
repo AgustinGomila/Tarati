@@ -112,4 +112,7 @@
     <string name="bridge">Puente</string>
     <string name="circumference">Circunferencia</string>
     <string name="domestic">Zona doméstica</string>
+    <string name="color_palette">Paleta de Colores</string>
+    <string name="select_color_palette">Seleccionar paleta de colores</string>
+    <string name="select_palette">Seleccionar paleta</string>
 </resources>

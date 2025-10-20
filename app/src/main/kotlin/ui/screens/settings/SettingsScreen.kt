@@ -3,6 +3,7 @@ package com.agustin.tarati.ui.screens.settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +13,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -25,6 +29,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +42,7 @@ import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppTheme
+import com.agustin.tarati.ui.theme.availablePalettes
 
 interface SettingsEvents {
     fun onThemeChange(theme: AppTheme)
@@ -42,6 +50,7 @@ interface SettingsEvents {
     fun onLabelsVisibilityChange(visible: Boolean)
     fun onVerticesVisibilityChange(visible: Boolean)
     fun onTutorialButtonVisibilityChange(visible: Boolean)
+    fun onPaletteChange(paletteName: String)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,12 +62,13 @@ fun SettingsScreen(
     val viewModel: SettingsViewModel = viewModel()
     val settingsState by viewModel.settingsState.collectAsState()
 
-    val currLanguage = settingsState.language
-    val currTheme = settingsState.appTheme
+    val language = settingsState.language
+    val theme = settingsState.appTheme
     val boardState = settingsState.boardState
+    val palette = settingsState.palette
 
-    val currLabelsVisibility = boardState.labelsVisibles
-    val currVerticesVisibility = boardState.verticesVisibles
+    val labelsVisibility = boardState.labelsVisibles
+    val verticesVisibility = boardState.verticesVisibles
 
     Scaffold(
         topBar = {
@@ -83,15 +93,21 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            LanguageOption(currLanguage, events::onLanguageChange)
+            LanguageOption(language, events::onLanguageChange)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            ThemeOption(currTheme, events::onThemeChange)
+            ThemeOption(theme, events::onThemeChange)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            PaletteOption(palette) { newPaletteName ->
+                viewModel.setPalette(newPaletteName)
+                events.onPaletteChange(newPaletteName)
+            }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             VisibilityOption(
                 id = R.string.board_labels,
-                visibility = currLabelsVisibility
+                visibility = labelsVisibility
             ) {
                 viewModel.setLabelsVisibility(it)
                 events.onLabelsVisibilityChange(it)
@@ -99,12 +115,82 @@ fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             VisibilityOption(
                 id = R.string.board_vertices,
-                visibility = currVerticesVisibility
+                visibility = verticesVisibility
             ) {
                 viewModel.setVerticesVisibility(it)
                 events.onVerticesVisibilityChange(it)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
+    }
+}
+
+@Composable
+fun PaletteOption(
+    paletteName: String,
+    onPaletteSelected: (String) -> Unit = {}
+) {
+    LocalizedText(
+        id = R.string.color_palette,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+
+    SettingsItem(
+        title = paletteName,
+        subtitle = localizedString(R.string.select_color_palette),
+        trailing = {
+            EnhancedPaletteSelector(
+                currentPaletteName = paletteName,
+                onPaletteSelected = onPaletteSelected
+            )
+        }
+    )
+}
+
+@Composable
+fun EnhancedPaletteSelector(
+    currentPaletteName: String,
+    onPaletteSelected: (String) -> Unit = {}
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            modifier = Modifier
+                .clickable { expanded = true }
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = currentPaletteName,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = localizedString(R.string.select_palette)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            availablePalettes.forEach { palette ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = palette.name,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    onClick = {
+                        onPaletteSelected(palette.name)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }

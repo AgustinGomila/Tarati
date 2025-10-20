@@ -107,7 +107,9 @@ import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
+import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
+import com.agustin.tarati.ui.theme.getBoardColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -151,6 +153,8 @@ fun MainScreen(
     val evalConfig = EvaluationConfig.getByDifficulty(settingsState.difficulty)
     val vmLabelsVisibles = settingsState.boardState.labelsVisibles
     val vmVerticesVisibles = settingsState.boardState.verticesVisibles
+
+    val boardColors = getBoardColors()
 
     var lastMove by remember { mutableStateOf<Move?>(null) }
     var isAIThinking by remember { mutableStateOf(false) }
@@ -224,21 +228,9 @@ fun MainScreen(
             viewModel.updateGameStatus(GameStatus.GAME_OVER)
     }
 
-    // Control del estado de AI
-    LaunchedEffect(vmAIEnabled, vmIsEditing, isTutorialActive, gameStatus, vmGameState.currentTurn) {
-        isAIThinking = when {
-            vmGameState.currentTurn == vmPlayerSide || isTutorialActive || vmIsEditing -> {
-                false
-            }
-
-            else -> {
-                vmAIEnabled && gameStatus == GameStatus.PLAYING
-            }
-        }
-    }
-
     // Lanzadores de pensamiento de IA
     val aiThinkingLauncher = listOf(
+        gameStatus,
         vmGameState.currentTurn,
         vmAIEnabled,
         vmPlayerSide,
@@ -247,6 +239,8 @@ fun MainScreen(
 
     // Lanzador de IA
     LaunchedEffect(aiThinkingLauncher) {
+        isAIThinking = false
+
         if (!vmAIEnabled || vmIsEditing || isTutorialActive || gameStatus != GameStatus.PLAYING) {
             if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus")
             return@LaunchedEffect
@@ -262,6 +256,7 @@ fun MainScreen(
 
         if (!shouldAIPlay) return@LaunchedEffect
 
+        isAIThinking = true
         if (debug) println("DEBUG: AI starting to think...")
 
         val result = try {
@@ -660,6 +655,7 @@ fun MainScreen(
                             override fun onResetCompleted() = Unit
                         },
                         boardAnimationViewModel = animationViewModel,
+                        boardColors = boardColors,
                         tutorialManager = tutorialManager,
                         tutorial = {
                             if (isTutorialActive) {
@@ -681,6 +677,7 @@ fun MainScreen(
                                 modifier = it,
                                 currentTurn = vmGameState.currentTurn,
                                 state = turnState,
+                                boardColors = boardColors,
                                 indicatorEvents = object : IndicatorEvents {
                                     override fun onTouch() {
                                         showNewGameDialog = true
@@ -773,6 +770,7 @@ fun CreateBoard(
     events: BoardEvents,
     boardAnimationViewModel: BoardAnimationViewModel = viewModel(),
     tutorialManager: TutorialManager,
+    boardColors: BoardColors,
     tutorial: @Composable (TutorialManager) -> Unit,
     content: @Composable () -> Unit,
     turnIndicator: @Composable (modifier: Modifier) -> Unit,
@@ -819,6 +817,7 @@ fun CreateBoard(
             playerSide = state.playerSide,
             events = boardEvents,
             debug = debug,
+            boardColors = boardColors,
             animationViewModel = boardAnimationViewModel,
         )
 
@@ -865,6 +864,7 @@ fun EditingModePreviewContent(
 
         // Crear eventos para Board
         val boardEvents = createPreviewBoardEvents(false)
+        val boardColors = getBoardColors()
 
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
@@ -872,6 +872,7 @@ fun EditingModePreviewContent(
                 boardState = boardState,
                 playerSide = playerSide,
                 events = boardEvents,
+                boardColors = boardColors,
             )
 
             EditControlsPreview(
@@ -1441,10 +1442,11 @@ private fun MainScreenPreviewContent(
             labelsVisible = currentLabelsVisible,
             verticesVisible = currentVerticesVisible,
         )
-        val createBoardEvents = createPreviewBoardEvents(config.debug)
 
+        val createBoardEvents = createPreviewBoardEvents(config.debug)
         val indicatorState = TurnIndicatorState.HUMAN_TURN
         val indicatorEvents = createPreviewIndicatorEvents(config.debug)
+        val boardColors = getBoardColors()
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -1492,6 +1494,7 @@ private fun MainScreenPreviewContent(
                             state = createBoardState,
                             events = createBoardEvents,
                             tutorialManager = tutorialManager,
+                            boardColors = boardColors,
                             tutorial = { },
                             content = {
                                 EditControlsPreview(
@@ -1515,6 +1518,7 @@ private fun MainScreenPreviewContent(
                                     modifier = it,
                                     state = indicatorState,
                                     currentTurn = previewGameState.currentTurn,
+                                    boardColors = boardColors,
                                     indicatorEvents = indicatorEvents
                                 )
                             }

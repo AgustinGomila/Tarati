@@ -109,4 +109,7 @@
     <string name="bridge">Bridge</string>
     <string name="circumference">Circumference</string>
     <string name="domestic">Domestic</string>
+    <string name="color_palette">Color Palette</string>
+    <string name="select_color_palette">Select color palette</string>
+    <string name="select_palette">Select palette</string>
 </resources>

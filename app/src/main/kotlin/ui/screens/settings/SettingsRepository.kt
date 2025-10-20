@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
+import com.agustin.tarati.ui.theme.availablePalettes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -15,7 +16,7 @@ interface SettingsRepository {
     val isDarkTheme: Flow<Boolean>
     val difficulty: Flow<Difficulty>
     val language: Flow<AppLanguage>
-
+    val palette: Flow<String>
     val labelsVisibility: Flow<Boolean>
     val tutorialButtonVisibility: Flow<Boolean>
     val verticesVisibility: Flow<Boolean>
@@ -23,7 +24,7 @@ interface SettingsRepository {
     suspend fun setDarkTheme(enabled: Boolean)
     suspend fun setDifficulty(difficulty: Difficulty)
     suspend fun setLanguage(language: AppLanguage)
-
+    suspend fun setPalette(paletteName: String)
     suspend fun setLabelsVisibility(visibility: Boolean)
     suspend fun setTutorialButtonVisibility(visibility: Boolean)
     suspend fun setVerticesVisibility(visibility: Boolean)
@@ -35,7 +36,7 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme_enabled")
         val DIFFICULTY_KEY = intPreferencesKey("difficulty")
         val LANGUAGE_KEY = stringPreferencesKey("app_language")
-
+        val PALETTE_KEY = stringPreferencesKey("app_palette")
         val LABELS_VISIBILITY_KEY = booleanPreferencesKey("labels_visibles")
         val TUTORIAL_BUTTON_VISIBILITY_KEY = booleanPreferencesKey("tutorial_button_visible")
         val VERTICES_VISIBILITY_KEY = booleanPreferencesKey("vertices_visibles")
@@ -57,6 +58,17 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
                 AppLanguage.valueOf(langName)
             } ?: AppLanguage.SPANISH
         }
+
+    override val palette: Flow<String> = dataStore.data
+        .map { preferences ->
+            preferences[PALETTE_KEY] ?: availablePalettes.first().name
+        }
+
+    override suspend fun setPalette(paletteName: String) {
+        dataStore.edit { settings ->
+            settings[PALETTE_KEY] = paletteName
+        }
+    }
 
     override val labelsVisibility: Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[LABELS_VISIBILITY_KEY] == true }

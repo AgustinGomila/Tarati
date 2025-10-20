@@ -1,5 +1,6 @@
 package com.agustin.tarati.ui.components.board
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,9 @@ import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.helpers.endGameState
 import com.agustin.tarati.ui.helpers.initialGameStateWithUpgrades
 import com.agustin.tarati.ui.helpers.midGameState
+import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
+import com.agustin.tarati.ui.theme.getBoardColors
 
 data class BoardState(
     val gameState: GameState,
@@ -27,7 +30,9 @@ data class BoardState(
     val labelsVisible: Boolean = true,
     val verticesVisible: Boolean = true,
     val newGame: Boolean = false,
-    val isEditing: Boolean = false
+    val isEditing: Boolean = false,
+    val showBoardPattern: Boolean = true,
+    val showBoardGlow: Boolean = false,
 )
 
 interface BoardEvents {
@@ -52,12 +57,23 @@ fun Board(
     events: BoardEvents,
     selectViewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
+    boardColors: BoardColors,
     debug: Boolean = false
 ) {
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
     ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawBoardBackground(
+                canvasSize = size,
+                orientation = boardState.boardOrientation,
+                colors = boardColors,
+                showPattern = boardState.showBoardPattern,
+                showGlow = boardState.showBoardGlow
+            )
+        }
+
         BoardRenderer(
             modifier = Modifier.fillMaxSize(),
             playerSide = playerSide,
@@ -90,6 +106,7 @@ fun Board(
             },
             onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
             onResetCompleted = events::onResetCompleted,
+            colors = boardColors,
             debug = debug
         )
     }
@@ -109,6 +126,8 @@ fun BoardPreview(
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
+    val boardColors = getBoardColors()
+
     TaratiTheme {
         Board(
             boardState = BoardState(
@@ -134,6 +153,7 @@ fun BoardPreview(
                 }
             },
             selectViewModel = viewModel,
+            boardColors = boardColors,
             animationViewModel = animationViewModel,
         )
     }

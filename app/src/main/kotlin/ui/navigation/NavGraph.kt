@@ -45,6 +45,10 @@ fun NavGraph(
 
                     override fun onTutorialButtonVisibilityChange(visible: Boolean) =
                         settingsEvents.onTutorialButtonVisibilityChange(visible)
+
+                    override fun onPaletteChange(paletteName: String) {
+                        settingsEvents.onPaletteChange(paletteName)
+                    }
                 },
                 navController = navController
             )

@@ -30,8 +30,9 @@ import com.agustin.tarati.R
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
-import com.agustin.tarati.ui.theme.AppColors.getBoardColors
+import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
+import com.agustin.tarati.ui.theme.getBoardColors
 
 enum class TurnIndicatorState {
     AI_THINKING,
@@ -49,12 +50,11 @@ fun TurnIndicator(
     state: TurnIndicatorState,
     currentTurn: Color,
     size: Dp = 60.dp,
+    boardColors: BoardColors,
     indicatorEvents: IndicatorEvents = object : IndicatorEvents {
         override fun onTouch() {}
     },
 ) {
-    val boardColors = getBoardColors()
-
     // Determinar color, icono y comportamiento según el estado
     val color = when (currentTurn) {
         Color.WHITE -> boardColors.whitePieceColor
@@ -170,6 +170,8 @@ fun DrawNewGameIcon(size: Dp = 60.dp, contentDescription: String) {
 @Preview(showBackground = true)
 @Composable
 fun TurnIndicatorPreview_AllStates() {
+    val boardColors = getBoardColors()
+
     TaratiTheme {
         Column(
             modifier = Modifier
@@ -184,7 +186,8 @@ fun TurnIndicatorPreview_AllStates() {
             TurnIndicator(
                 state = TurnIndicatorState.AI_THINKING,
                 currentTurn = Color.BLACK,
-                size = 80.dp
+                size = 80.dp,
+                boardColors = boardColors,
             )
 
             LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
@@ -192,7 +195,8 @@ fun TurnIndicatorPreview_AllStates() {
             TurnIndicator(
                 state = TurnIndicatorState.HUMAN_TURN,
                 currentTurn = Color.WHITE,
-                size = 80.dp
+                size = 80.dp,
+                boardColors = boardColors,
             )
 
             LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
@@ -200,7 +204,8 @@ fun TurnIndicatorPreview_AllStates() {
             TurnIndicator(
                 state = TurnIndicatorState.HUMAN_TURN,
                 currentTurn = Color.BLACK,
-                size = 80.dp
+                size = 80.dp,
+                boardColors = boardColors,
             )
 
             LocalizedText(R.string.new_game, style = MaterialTheme.typography.titleMedium)
@@ -208,7 +213,8 @@ fun TurnIndicatorPreview_AllStates() {
             TurnIndicator(
                 state = TurnIndicatorState.NEUTRAL,
                 currentTurn = Color.BLACK,
-                size = 80.dp
+                size = 80.dp,
+                boardColors = boardColors,
             )
         }
     }

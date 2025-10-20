@@ -74,6 +74,48 @@ object GameBoard {
         BLACK to listOf("C7", "C8", "D3", "D4")
     )
 
+    // Definición de las regiones del tablero
+    fun getCentralRegions(): List<BoardRegion> {
+        return listOf(
+            // Regiones centrales -6 triángulos-
+            BoardRegion(listOf("A1", "B1", "B2")),
+            BoardRegion(listOf("A1", "B2", "B3")),
+            BoardRegion(listOf("A1", "B3", "B4")),
+            BoardRegion(listOf("A1", "B4", "B5")),
+            BoardRegion(listOf("A1", "B5", "B6")),
+            BoardRegion(listOf("A1", "B6", "B1")),
+        )
+    }
+
+    fun getCircumferenceRegions(): List<BoardRegion> {
+        return listOf(
+            // Regiones de circunferencia (6 triángulos y 6 cuadrados)
+            BoardRegion(listOf("B1", "C1", "C2")),
+            BoardRegion(listOf("B1", "C2", "C3", "B2")),
+            BoardRegion(listOf("B2", "C3", "C4")),
+            BoardRegion(listOf("B2", "C4", "C5", "B3")),
+            BoardRegion(listOf("B3", "C5", "C6")),
+            BoardRegion(listOf("B3", "C6", "C7", "B4")),
+            BoardRegion(listOf("B4", "C7", "C8")),
+            BoardRegion(listOf("B4", "C8", "C9", "B5")),
+            BoardRegion(listOf("B5", "C9", "C10")),
+            BoardRegion(listOf("B5", "C10", "C11", "B6")),
+            BoardRegion(listOf("B6", "C11", "C12")),
+            BoardRegion(listOf("B6", "C12", "C1", "B1")),
+        )
+    }
+
+    fun getDomesticRegions(): List<BoardRegion> {
+        return listOf(
+            // Regiones domésticas -2 cuadrados-
+            BoardRegion(listOf("C1", "C2", "D2", "D1")),
+            BoardRegion(listOf("C7", "C8", "D4", "D3")),
+        )
+    }
+
+    // Regiones del tablero
+    data class BoardRegion(val vertices: List<String>)
+
     // Mapa de adyacencia optimizado
     val adjacencyMap: Map<String, List<String>> by lazy {
         val map = mutableMapOf<String, MutableList<String>>()

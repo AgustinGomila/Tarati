@@ -16,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -29,7 +28,6 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.ui.theme.AppColors.getBoardColors
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.roundToInt
 
@@ -43,6 +41,7 @@ fun BoardRenderer(
     tapEvents: TapEvents,
     onBoardSizeChange: (Size) -> Unit,
     onResetCompleted: () -> Unit,
+    colors: BoardColors,
     debug: Boolean = false
 ) {
     var prevGameState by remember { mutableStateOf<GameState?>(null) }
@@ -76,7 +75,6 @@ fun BoardRenderer(
         if (lastMove != null && prevGameState != null && !isAnimating) {
             val currentGameState = boardState.gameState
 
-            // Verificar que el movimiento es válido y diferente del estado anterior
             if (stateChangeDetector.shouldAnimateMove(prevGameState!!, currentGameState, lastMove)) {
                 val success = animationViewModel.processMove(
                     move = lastMove,
@@ -99,14 +97,13 @@ fun BoardRenderer(
         }
     }
 
-    val boardState = boardState.copy(
+    val currentBoardState = boardState.copy(
         gameState = GameState(
             cobs = visualState.cobs,
             currentTurn = visualState.currentTurn ?: boardState.gameState.currentTurn
         )
     )
 
-    val colors = getBoardColors()
     val density = LocalDensity.current
     val visualWidth by remember { mutableFloatStateOf(with(density) { 60.dp.toPx() }) }
 
@@ -120,9 +117,10 @@ fun BoardRenderer(
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { coords ->
+                val newSize = coords.size.toSize()
                 containerWidthPx = coords.size.width
                 containerHeightPx = coords.size.height
-                onBoardSizeChange(coords.size.toSize())
+                onBoardSizeChange(newSize)
             }
             .pointerInput(
                 visualWidth,
@@ -146,19 +144,11 @@ fun BoardRenderer(
                 )
             }
     ) {
+        // Canvas dinámico - se redibuja frecuentemente
         Canvas(modifier = Modifier.matchParentSize()) {
-            drawRect(color = colors.backgroundColor)
-            val size = size
-
-            drawCircle(
-                color = colors.boardBackgroundColor,
-                radius = minOf(size.width, size.height) * 0.8f / 2,
-                center = Offset(size.width / 2, size.height / 2)
-            )
-
             drawEdges(
                 canvasSize = size,
-                orientation = orientation,
+                orientation = boardState.boardOrientation,
                 colors = colors
             )
 
@@ -167,7 +157,7 @@ fun BoardRenderer(
                 vWidth = visualWidth,
                 selectedVertexId = selectedVertexId,
                 adjacentVertexes = validAdjacentVertexes,
-                boardState = boardState,
+                boardState = currentBoardState,
                 colors = colors
             )
 
@@ -177,8 +167,7 @@ fun BoardRenderer(
                         drawVertexHighlight(
                             highlight = highlight.highlight,
                             canvasSize = size,
-                            orientation = orientation,
-                            colors = colors
+                            orientation = boardState.boardOrientation,
                         )
                     }
 
@@ -186,8 +175,7 @@ fun BoardRenderer(
                         drawEdgeHighlight(
                             highlight = highlight.highlight,
                             canvasSize = size,
-                            orientation = orientation,
-                            colors = colors
+                            orientation = boardState.boardOrientation,
                         )
                     }
 
@@ -198,7 +186,7 @@ fun BoardRenderer(
             }
         }
 
-        // Dibujar piezas estáticas (excluyendo las que están siendo animadas)
+        // Piezas estáticas (excluyendo las que están siendo animadas)
         boardState.gameState.cobs.forEach { (vertexId, cob) ->
             if (!animatedPieces.containsKey(vertexId)) {
                 key(vertexId) {
@@ -207,7 +195,7 @@ fun BoardRenderer(
                         cob = cob,
                         containerWidth = containerWidthPx,
                         containerHeight = containerHeightPx,
-                        orientation = orientation,
+                        orientation = boardState.boardOrientation,
                         selectedPiece = selectedVertexId,
                         colors = colors
                     )
@@ -215,7 +203,7 @@ fun BoardRenderer(
             }
         }
 
-        // Dibujar piezas animadas
+        // Piezas animadas
         animatedPieces.values.forEach { animatedPiece ->
             key(
                 animatedPiece.vertexId + animatedPiece.animationProgress +
@@ -225,7 +213,7 @@ fun BoardRenderer(
                     animatedPiece = animatedPiece,
                     containerWidth = containerWidthPx,
                     containerHeight = containerHeightPx,
-                    orientation = orientation,
+                    orientation = boardState.boardOrientation,
                     selectedPiece = selectedVertexId,
                     colors = colors
                 )
@@ -247,7 +235,6 @@ fun AnimatedPieceComposable(
     val piecePx = with(density) { (60.dp.toPx() / 5f) }
     val pieceDp = with(density) { piecePx.toDp() }
 
-    // Usar animación inmediata para mejor rendimiento
     val currentPos = getVisualPosition(
         animatedPiece.currentPos,
         containerWidth.toFloat(),

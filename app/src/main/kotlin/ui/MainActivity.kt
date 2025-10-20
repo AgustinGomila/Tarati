@@ -18,7 +18,10 @@ import com.agustin.tarati.ui.navigation.NavGraph
 import com.agustin.tarati.ui.screens.settings.SettingsEvents
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
+import com.agustin.tarati.ui.theme.PaletteManager
 import com.agustin.tarati.ui.theme.TaratiTheme
+import com.agustin.tarati.ui.theme.availablePalettes
+import com.agustin.tarati.ui.theme.changePalette
 import org.koin.core.context.GlobalContext.get
 import java.util.*
 
@@ -39,13 +42,17 @@ class MainActivity : ComponentActivity() {
         // This app draws behind the system bars, so we want to handle fitting system windows
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // ViewModel que guarda estado, historial y dificultad
         val viewModel: SettingsViewModel by lazy { get().get() }
 
         setContent {
             LanguageAwareApp {
 
                 val settings = viewModel.settingsState.collectAsState()
+
+                val currentPalette = availablePalettes.find { it.name == settings.value.palette }
+                    ?: availablePalettes.first()
+                PaletteManager.setPalette(currentPalette)
+
                 val useDarkTheme = when (settings.value.appTheme) {
                     AppTheme.MODE_AUTO -> isSystemInDarkTheme()
                     AppTheme.MODE_DAY -> false
@@ -77,6 +84,10 @@ class MainActivity : ComponentActivity() {
 
                                 override fun onTutorialButtonVisibilityChange(visible: Boolean) {
                                     viewModel.setTutorialButtonVisibility(visible)
+                                }
+
+                                override fun onPaletteChange(paletteName: String) {
+                                    changePalette(paletteName)
                                 }
                             },
                         )
