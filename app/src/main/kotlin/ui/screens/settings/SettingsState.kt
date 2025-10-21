@@ -8,6 +8,8 @@ import com.agustin.tarati.ui.theme.availablePalettes
 data class BoardState(
     val labelsVisibles: Boolean = false,
     val verticesVisibles: Boolean = true,
+    val edgesVisibles: Boolean = false,
+    val animateEffects: Boolean = true,
 )
 
 data class SettingsState(

@@ -8,6 +8,7 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.modifyCob
+import com.agustin.tarati.game.logic.moveCob
 import com.agustin.tarati.game.logic.withTurn
 import com.agustin.tarati.game.tutorial.TutorialManager
 
@@ -16,18 +17,20 @@ import com.agustin.tarati.game.tutorial.TutorialManager
  */
 fun initialGameStateWithUpgrades(): GameState {
     return initialGameState()
+        // Mover algunas piezas
+        .moveCob("C2", "B3")
+        .moveCob("C7", "B4")
         .modifyCob("C2", WHITE, true)
-        .modifyCob("C8", BLACK, true)
 }
 
 fun midGameState(): GameState {
     return createGameState {
         setTurn(BLACK)
         // Mover algunas piezas
-        moveCob("C1", "B1")
+        moveCob("C2", "B3")
         moveCob("C7", "B4")
         // Crear piezas mejoradas
-        setCob("C2", WHITE, true)
+        setCob("B3", WHITE, true)
         setCob("C8", BLACK, true)
     }
 }
@@ -59,6 +62,7 @@ data class PreviewConfig(
     val isTutorialActive: Boolean = false,
     val labelsVisible: Boolean = true,
     val verticesVisible: Boolean = true,
+    val edgesVisible: Boolean = true,
     val tutorialManager: TutorialManager = TutorialManager(),
     val debug: Boolean = false
 )

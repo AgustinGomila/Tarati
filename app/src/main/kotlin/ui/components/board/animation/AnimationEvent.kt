@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.animation
 
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move

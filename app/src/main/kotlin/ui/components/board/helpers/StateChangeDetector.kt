@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.helpers
 
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap

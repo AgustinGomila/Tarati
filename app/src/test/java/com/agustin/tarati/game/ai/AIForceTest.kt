@@ -708,8 +708,8 @@ class AIForceTest {
 
         // En final de juego, priorizar supervivencia sobre riesgo
         val newState = applyMoveToBoard(initialState, whiteMove.move!!.from, whiteMove.move.to)
-        val whitePiecesAfter = newState.cobs.values.count { it.color == WHITE }
-        assertEquals("White should not lose its piece", 1, whitePiecesAfter)
+        val whiteCobsAfter = newState.cobs.values.count { it.color == WHITE }
+        assertEquals("White should not lose its piece", 1, whiteCobsAfter)
     }
 
     @Test

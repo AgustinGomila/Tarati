@@ -43,12 +43,16 @@ fun NavGraph(
                     override fun onVerticesVisibilityChange(visible: Boolean) =
                         settingsEvents.onVerticesVisibilityChange(visible)
 
+                    override fun onEdgesVisibilityChange(visible: Boolean) =
+                        settingsEvents.onEdgesVisibilityChange(visible)
+
+                    override fun onAnimateEffectsChange(animate: Boolean) =
+                        settingsEvents.onAnimateEffectsChange(animate)
+
                     override fun onTutorialButtonVisibilityChange(visible: Boolean) =
                         settingsEvents.onTutorialButtonVisibilityChange(visible)
 
-                    override fun onPaletteChange(paletteName: String) {
-                        settingsEvents.onPaletteChange(paletteName)
-                    }
+                    override fun onPaletteChange(paletteName: String) = settingsEvents.onPaletteChange(paletteName)
                 },
                 navController = navController
             )

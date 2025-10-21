@@ -18,6 +18,8 @@ private data class SettingsFlows(
     val language: AppLanguage,
     val labelsVisibility: Boolean,
     val verticesVisibility: Boolean,
+    val edgesVisibility: Boolean,
+    val animateEffects: Boolean,
     val tutorialButtonVisibility: Boolean,
     val palette: String
 )
@@ -39,6 +41,8 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                 sr.language,
                 sr.labelsVisibility,
                 sr.verticesVisibility,
+                sr.edgesVisibility,
+                sr.animateEffects,
                 sr.tutorialButtonVisibility,
                 sr.palette
             )
@@ -51,8 +55,10 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                     language = values[2] as AppLanguage,
                     labelsVisibility = values[3] as Boolean,
                     verticesVisibility = values[4] as Boolean,
-                    tutorialButtonVisibility = values[5] as Boolean,
-                    palette = values[6] as String
+                    edgesVisibility = values[5] as Boolean,
+                    animateEffects = values[6] as Boolean,
+                    tutorialButtonVisibility = values[7] as Boolean,
+                    palette = values[8] as String
                 )
             }.collect { flows ->
                 _settingsState.value = SettingsState(
@@ -63,6 +69,8 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                     boardState = BoardState(
                         labelsVisibles = flows.labelsVisibility,
                         verticesVisibles = flows.verticesVisibility,
+                        edgesVisibles = flows.edgesVisibility,
+                        animateEffects = flows.animateEffects,
                     ),
                     palette = flows.palette
                 )
@@ -103,6 +111,18 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
     fun setVerticesVisibility(visible: Boolean) {
         viewModelScope.launch {
             sr.setVerticesVisibility(visible)
+        }
+    }
+
+    fun setEdgesVisibility(visible: Boolean) {
+        viewModelScope.launch {
+            sr.setEdgesVisibility(visible)
+        }
+    }
+
+    fun setAnimateEffects(animate: Boolean) {
+        viewModelScope.launch {
+            sr.setAnimateEffects(animate)
         }
     }
 

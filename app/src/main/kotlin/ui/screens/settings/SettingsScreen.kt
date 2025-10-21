@@ -49,6 +49,8 @@ interface SettingsEvents {
     fun onLanguageChange(language: AppLanguage)
     fun onLabelsVisibilityChange(visible: Boolean)
     fun onVerticesVisibilityChange(visible: Boolean)
+    fun onEdgesVisibilityChange(visible: Boolean)
+    fun onAnimateEffectsChange(animate: Boolean)
     fun onTutorialButtonVisibilityChange(visible: Boolean)
     fun onPaletteChange(paletteName: String)
 }
@@ -69,6 +71,8 @@ fun SettingsScreen(
 
     val labelsVisibility = boardState.labelsVisibles
     val verticesVisibility = boardState.verticesVisibles
+    val edgesVisibility = boardState.edgesVisibles
+    val animateEffects = boardState.animateEffects
 
     Scaffold(
         topBar = {
@@ -113,12 +117,31 @@ fun SettingsScreen(
                 events.onLabelsVisibilityChange(it)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             VisibilityOption(
                 id = R.string.board_vertices,
                 visibility = verticesVisibility
             ) {
                 viewModel.setVerticesVisibility(it)
                 events.onVerticesVisibilityChange(it)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            VisibilityOption(
+                id = R.string.board_edges,
+                visibility = edgesVisibility
+            ) {
+                viewModel.setEdgesVisibility(it)
+                events.onEdgesVisibilityChange(it)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            VisibilityOption(
+                id = R.string.animate_effects,
+                visibility = animateEffects
+            ) {
+                viewModel.setAnimateEffects(it)
+                events.onAnimateEffectsChange(it)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }

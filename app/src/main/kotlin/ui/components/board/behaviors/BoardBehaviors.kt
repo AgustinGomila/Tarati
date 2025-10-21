@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.behaviors
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.PointerInputScope
@@ -8,6 +8,7 @@ import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.getValidVertex
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.ui.components.board.TapEvents
 
 
 suspend fun PointerInputScope.tapGestures(

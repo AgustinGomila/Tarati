@@ -5,8 +5,8 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import com.agustin.tarati.ui.components.board.BoardAnimationViewModel
-import com.agustin.tarati.ui.components.board.BoardSelectionViewModel
+import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.board.behaviors.BoardSelectionViewModel
 import com.agustin.tarati.ui.screens.main.MainViewModel
 import com.agustin.tarati.ui.screens.settings.SettingsRepository
 import com.agustin.tarati.ui.screens.settings.SettingsRepositoryImpl

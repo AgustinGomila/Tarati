@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.animation
 
 import androidx.compose.ui.geometry.Size
 import androidx.lifecycle.ViewModel
@@ -8,6 +8,7 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getValidVertex
+import com.agustin.tarati.ui.components.board.helpers.StateChangeDetector
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class AnimatedPiece(
+data class AnimatedCob(
     val vertexId: String,
     val cob: Cob,
     val currentPos: String,
@@ -64,7 +65,7 @@ class BoardAnimationViewModel(
     suspend fun animateMovement(move: Move, newGameState: GameState) {
         val cob = newGameState.cobs[move.to] ?: return
 
-        val animatedPiece = AnimatedPiece(
+        val animatedCob = AnimatedCob(
             vertexId = move.to,
             cob = cob,
             currentPos = move.from,
@@ -74,7 +75,7 @@ class BoardAnimationViewModel(
             conversionProgress = 1f
         )
 
-        _animatedPieces.value = mapOf(move.to to animatedPiece)
+        _animatedPieces.value = mapOf(move.to to animatedCob)
 
         val duration = moveDuration
         val steps = animationSteps
@@ -83,31 +84,33 @@ class BoardAnimationViewModel(
         repeat(steps) { step ->
             val progress = (step + 1) / steps.toFloat()
             _animatedPieces.value = mapOf(
-                move.to to animatedPiece.copy(animationProgress = progress)
+                move.to to animatedCob.copy(animationProgress = progress)
             )
             delay(stepDelay)
-            if (step == steps / 2) {
-                // Efectos especiales empiezan al acercar a destino
-                animate(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
+            if (_animateEffects.value) {
+                if (step == steps / 2) {
+                    // Efectos especiales empiezan al acercar a destino
+                    animate(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
+                }
             }
         }
 
         // Completar movimiento
         _animatedPieces.value = mapOf(
-            move.to to animatedPiece.copy(animationProgress = 1f)
+            move.to to animatedCob.copy(animationProgress = 1f)
         )
     }
 
     private suspend fun animateDetectedConversions(conversions: List<Pair<String, Cob>>) {
         if (conversions.isEmpty()) return
 
-        val duration = moveDuration
+        val duration = convertDuration
         val steps = animationSteps
         val stepDelay = duration / steps
 
         conversions.forEach { (vertexId, newCob) ->
             // Crear animated piece para la conversión (pieza en su posición actual)
-            val animatedPiece = AnimatedPiece(
+            val animatedCob = AnimatedCob(
                 vertexId = vertexId,
                 cob = newCob,
                 currentPos = vertexId,
@@ -121,19 +124,21 @@ class BoardAnimationViewModel(
 
             // Agregar a piezas animadas
             _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
-                put(vertexId, animatedPiece)
+                put(vertexId, animatedCob)
             }
 
             // Animar progreso de conversión
             repeat(steps) { step ->
                 val progress = (step + 1) / steps.toFloat()
                 _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
-                    put(vertexId, animatedPiece.copy(conversionProgress = progress))
+                    put(vertexId, animatedCob.copy(conversionProgress = progress))
                 }
                 delay(stepDelay)
-                if (step == steps / 2) {
-                    // Efectos especiales
-                    animate(createCaptureHighlight(vertexId))
+                if (_animateEffects.value) {
+                    if (step == steps / 2) {
+                        // Efectos especiales
+                        animate(createCaptureHighlight(vertexId))
+                    }
                 }
             }
 
@@ -150,14 +155,14 @@ class BoardAnimationViewModel(
     private suspend fun animateDetectedUpgrades(upgrades: List<Pair<String, Cob>>) {
         if (upgrades.isEmpty()) return
 
-        val duration = moveDuration
+        val duration = upgradeDuration
         val steps = animationSteps
         val stepDelay = duration / steps
 
         upgrades.forEach { (vertexId, newCob) ->
             // Solo animar si la pieza no está actualmente siendo animada por movimiento
             if (!_animatedPieces.value.containsKey(vertexId)) {
-                val animatedPiece = AnimatedPiece(
+                val animatedCob = AnimatedCob(
                     vertexId = vertexId,
                     cob = newCob,
                     currentPos = vertexId,
@@ -169,19 +174,21 @@ class BoardAnimationViewModel(
 
                 // Agregar a piezas animadas
                 _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
-                    put(vertexId, animatedPiece)
+                    put(vertexId, animatedCob)
                 }
 
                 // Animar progreso de upgrade
                 repeat(steps) { step ->
                     val progress = (step + 1) / steps.toFloat()
                     _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
-                        put(vertexId, animatedPiece.copy(upgradeProgress = progress))
+                        put(vertexId, animatedCob.copy(upgradeProgress = progress))
                     }
                     delay(stepDelay)
                 }
 
-                animate(createUpgradeHighlight(vertexId))
+                if (_animateEffects.value) {
+                    animate(createUpgradeHighlight(vertexId))
+                }
 
                 // Actualizar estado visual para esta pieza mejorada
                 val currentVisualState = _visualState.value.cobs.toMutableMap()
@@ -202,8 +209,13 @@ class BoardAnimationViewModel(
     private val _visualState = MutableStateFlow(VisualGameState())
     val visualState: StateFlow<VisualGameState> = _visualState.asStateFlow()
 
-    private val _animatedPieces = MutableStateFlow<Map<String, AnimatedPiece>>(emptyMap())
-    val animatedPieces: StateFlow<Map<String, AnimatedPiece>> = _animatedPieces.asStateFlow()
+    private val _animatedPieces = MutableStateFlow<Map<String, AnimatedCob>>(emptyMap())
+    val animatedPieces: StateFlow<Map<String, AnimatedCob>> = _animatedPieces.asStateFlow()
+
+    private val _animateEffects = MutableStateFlow(false)
+    fun updateAnimateEffects(animate: Boolean) {
+        _animateEffects.value = animate
+    }
 
     private val _isAnimating = MutableStateFlow(false)
     val isAnimating: StateFlow<Boolean> = _isAnimating.asStateFlow()

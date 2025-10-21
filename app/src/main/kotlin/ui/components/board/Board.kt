@@ -15,13 +15,21 @@ import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.createGameState
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.board.behaviors.BoardSelectionViewModel
+import com.agustin.tarati.ui.components.board.draw.BoardRenderer
+import com.agustin.tarati.ui.components.board.draw.drawBoardBackground
 import com.agustin.tarati.ui.helpers.endGameState
-import com.agustin.tarati.ui.helpers.initialGameStateWithUpgrades
 import com.agustin.tarati.ui.helpers.midGameState
 import com.agustin.tarati.ui.theme.BoardColors
+import com.agustin.tarati.ui.theme.ClassicPalette
+import com.agustin.tarati.ui.theme.DarkPalette
+import com.agustin.tarati.ui.theme.NaturePalette
+import com.agustin.tarati.ui.theme.PaletteManager
 import com.agustin.tarati.ui.theme.TaratiTheme
-import com.agustin.tarati.ui.theme.getBoardColors
+import com.agustin.tarati.ui.theme.rememberBoardColors
 
 data class BoardState(
     val gameState: GameState,
@@ -29,6 +37,7 @@ data class BoardState(
     val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
     val labelsVisible: Boolean = true,
     val verticesVisible: Boolean = true,
+    val edgesVisible: Boolean = true,
     val newGame: Boolean = false,
     val isEditing: Boolean = false,
     val showBoardPattern: Boolean = true,
@@ -114,31 +123,38 @@ fun Board(
 
 // region Previews
 
+data class BoardPreviewConfig(
+    val gameState: GameState,
+    val playerSide: Color = WHITE,
+    val orientation: BoardOrientation,
+    val labelsVisible: Boolean = true,
+    val verticesVisible: Boolean = true,
+    val edgesVisible: Boolean = true,
+    val isEditing: Boolean = false,
+    val darkTheme: Boolean = false,
+    val boardColors: BoardColors,
+    val debug: Boolean = false
+)
+
 @Composable
 fun BoardPreview(
-    orientation: BoardOrientation,
-    gameState: GameState,
-    playerSide: Color,
-    labelsVisible: Boolean = true,
-    verticesVisible: Boolean = true,
-    isEditing: Boolean = false,
+    previewConfig: BoardPreviewConfig,
     viewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     debug: Boolean = false
 ) {
-    val boardColors = getBoardColors()
-
     TaratiTheme {
         Board(
             boardState = BoardState(
-                gameState = gameState,
+                gameState = previewConfig.gameState,
                 lastMove = null,
-                boardOrientation = orientation,
-                labelsVisible = labelsVisible,
-                verticesVisible = verticesVisible,
-                isEditing = isEditing,
+                boardOrientation = previewConfig.orientation,
+                labelsVisible = previewConfig.labelsVisible,
+                verticesVisible = previewConfig.verticesVisible,
+                edgesVisible = previewConfig.edgesVisible,
+                isEditing = previewConfig.isEditing,
             ),
-            playerSide = playerSide,
+            playerSide = previewConfig.playerSide,
             events = object : BoardEvents {
                 override fun onMove(from: String, to: String) {
                     if (debug) println("Move from $from to $to")
@@ -153,7 +169,7 @@ fun BoardPreview(
                 }
             },
             selectViewModel = viewModel,
-            boardColors = boardColors,
+            boardColors = rememberBoardColors(),
             animationViewModel = animationViewModel,
         )
     }
@@ -162,33 +178,56 @@ fun BoardPreview(
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitWhite() {
+    PaletteManager.setPalette(DarkPalette)
+
     BoardPreview(
-        BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades(),
-        playerSide = BLACK,
+        BoardPreviewConfig(
+            orientation = BoardOrientation.PORTRAIT_WHITE,
+            gameState = initialGameState(BLACK),
+            playerSide = BLACK,
+            edgesVisible = false,
+            verticesVisible = false,
+            boardColors = rememberBoardColors(),
+        )
     )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_PortraitBlack() {
+    PaletteManager.setPalette(ClassicPalette)
+
     BoardPreview(
-        BoardOrientation.PORTRAIT_WHITE, initialGameStateWithUpgrades(),
-        playerSide = WHITE,
+        BoardPreviewConfig(
+            orientation = BoardOrientation.PORTRAIT_WHITE,
+            gameState = initialGameState(WHITE),
+            playerSide = WHITE,
+            boardColors = rememberBoardColors(),
+        )
     )
 }
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_LandscapeBlack() {
+    PaletteManager.setPalette(NaturePalette)
+
     BoardPreview(
-        BoardOrientation.LANDSCAPE_BLACK, midGameState(),
-        playerSide = BLACK,
+        BoardPreviewConfig(
+            orientation = BoardOrientation.LANDSCAPE_BLACK,
+            gameState = midGameState(),
+            playerSide = BLACK,
+            edgesVisible = false,
+            boardColors = rememberBoardColors(),
+        )
     )
 }
 
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_Custom() {
+    PaletteManager.setPalette(DarkPalette)
+
     val exampleGameState = createGameState {
         setTurn(WHITE)
         setCob("C2", WHITE, true)
@@ -205,16 +244,22 @@ fun BoardPreview_Custom() {
         updateValidAdjacentVertexes(listOf("B2", "A1", "B6"))
     }
     BoardPreview(
-        orientation = BoardOrientation.LANDSCAPE_WHITE,
-        gameState = exampleGameState,
-        playerSide = WHITE,
-        viewModel = vm
+        BoardPreviewConfig(
+            orientation = BoardOrientation.LANDSCAPE_WHITE,
+            gameState = exampleGameState,
+            playerSide = WHITE,
+            verticesVisible = false,
+            boardColors = rememberBoardColors()
+        ),
+        viewModel = vm,
     )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun BoardPreview_BlackPlayer() {
+    PaletteManager.setPalette(ClassicPalette)
+
     TaratiTheme(true) {
         val exampleGameState = endGameState(BLACK)
         val vm = viewModel<BoardSelectionViewModel>().apply {
@@ -222,11 +267,16 @@ fun BoardPreview_BlackPlayer() {
             updateValidAdjacentVertexes(listOf("B1", "B2", "B3", "B4", "B5", "B6"))
         }
         BoardPreview(
-            orientation = BoardOrientation.PORTRAIT_BLACK,
-            gameState = exampleGameState,
-            playerSide = BLACK,
-            labelsVisible = false,
-            viewModel = vm
+            BoardPreviewConfig(
+                orientation = BoardOrientation.PORTRAIT_BLACK,
+                gameState = exampleGameState,
+                playerSide = BLACK,
+                labelsVisible = false,
+                edgesVisible = false,
+                verticesVisible = false,
+                boardColors = rememberBoardColors()
+            ),
+            viewModel = vm,
         )
     }
 }
@@ -234,6 +284,8 @@ fun BoardPreview_BlackPlayer() {
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_Landscape_BlackPlayer() {
+    PaletteManager.setPalette(DarkPalette)
+
     TaratiTheme {
         val exampleGameState = createGameState { setTurn(BLACK) }
         val vm = viewModel<BoardSelectionViewModel>().apply {
@@ -241,11 +293,15 @@ fun BoardPreview_Landscape_BlackPlayer() {
             updateValidAdjacentVertexes(listOf("C9", "B4", "B5"))
         }
         BoardPreview(
-            orientation = BoardOrientation.LANDSCAPE_BLACK,
-            gameState = exampleGameState,
-            labelsVisible = false,
-            playerSide = WHITE,
-            viewModel = vm
+            BoardPreviewConfig(
+                orientation = BoardOrientation.LANDSCAPE_BLACK,
+                gameState = exampleGameState,
+                labelsVisible = false,
+                playerSide = WHITE,
+                edgesVisible = false,
+                boardColors = rememberBoardColors()
+            ),
+            viewModel = vm,
         )
     }
 }
@@ -253,6 +309,8 @@ fun BoardPreview_Landscape_BlackPlayer() {
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_Landscape() {
+    PaletteManager.setPalette(NaturePalette)
+
     TaratiTheme(true) {
         val exampleGameState = createGameState {}
         val vm = viewModel<BoardSelectionViewModel>().apply {
@@ -260,10 +318,13 @@ fun BoardPreview_Landscape() {
             updateValidAdjacentVertexes(listOf("C3", "B2", "B1"))
         }
         BoardPreview(
-            orientation = BoardOrientation.LANDSCAPE_WHITE,
-            gameState = exampleGameState,
-            playerSide = BLACK,
-            viewModel = vm
+            BoardPreviewConfig(
+                orientation = BoardOrientation.LANDSCAPE_WHITE,
+                gameState = exampleGameState,
+                playerSide = BLACK,
+                boardColors = rememberBoardColors()
+            ),
+            viewModel = vm,
         )
     }
 }
@@ -271,18 +332,24 @@ fun BoardPreview_Landscape() {
 @Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
 fun BoardPreview_Landscape_Editing() {
+    PaletteManager.setPalette(ClassicPalette)
+
     TaratiTheme(true) {
-        val exampleGameState = createGameState {}
+        val exampleGameState = initialGameState()
         val vm = viewModel<BoardSelectionViewModel>().apply {
             updateSelectedVertex("C2")
             updateValidAdjacentVertexes(listOf("C3", "B2", "B1"))
         }
         BoardPreview(
-            orientation = BoardOrientation.LANDSCAPE_WHITE,
-            gameState = exampleGameState,
-            isEditing = true,
-            playerSide = BLACK,
-            viewModel = vm
+            BoardPreviewConfig(
+                orientation = BoardOrientation.LANDSCAPE_WHITE,
+                gameState = exampleGameState,
+                isEditing = true,
+                playerSide = BLACK,
+                edgesVisible = false,
+                boardColors = rememberBoardColors()
+            ),
+            viewModel = vm,
         )
     }
 }

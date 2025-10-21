@@ -23,7 +23,7 @@ fun GameState.modifyCob(position: String, color: Color? = null, isUpgraded: Bool
         newCobs.remove(position)
     } else {
         val currentCob = newCobs[position]
-        val newColor = color ?: currentCob?.color ?: Color.WHITE
+        val newColor = color ?: currentCob?.color ?: WHITE
         val newUpgraded = isUpgraded ?: currentCob?.isUpgraded ?: false
 
         newCobs[position] = Cob(newColor, newUpgraded)
@@ -64,10 +64,10 @@ fun GameState.hashBoard(): String {
 // ==================== Estado del Juego ====================
 
 fun GameState.isGameOver(): Boolean {
-    val whitePieces = this.cobs.values.count { it.color == WHITE }
-    val blackPieces = this.cobs.values.count { it.color == BLACK }
+    val whiteCobs = this.cobs.values.count { it.color == WHITE }
+    val blackCobs = this.cobs.values.count { it.color == BLACK }
 
-    return whitePieces == 0 || blackPieces == 0 ||
+    return whiteCobs == 0 || blackCobs == 0 ||
             this.getAllMovesForTurn().isEmpty() ||
             this.hasTripleRepetition()
 }
@@ -77,8 +77,8 @@ fun GameState.getWinner(): Color? {
 }
 
 fun GameState.getMatchState(): MatchState {
-    val whitePieces = this.cobs.values.count { it.color == WHITE }
-    val blackPieces = this.cobs.values.count { it.color == BLACK }
+    val whiteCobs = this.cobs.values.count { it.color == WHITE }
+    val blackCobs = this.cobs.values.count { it.color == BLACK }
 
     var matchState = MatchState(this, GameResult.PLAYING, null, realGameHistory)
 
@@ -90,11 +90,11 @@ fun GameState.getMatchState(): MatchState {
     }
 
     matchState = when {
-        whitePieces == 0 -> {
+        whiteCobs == 0 -> {
             matchState.copy(winner = BLACK, gameResult = GameResult.MIT)
         }
 
-        blackPieces == 0 -> {
+        blackCobs == 0 -> {
             matchState.copy(winner = WHITE, gameResult = GameResult.MIT)
         }
 

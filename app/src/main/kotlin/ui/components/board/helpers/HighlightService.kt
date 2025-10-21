@@ -1,6 +1,12 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.helpers
 
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
+import com.agustin.tarati.ui.components.board.animation.createCaptureHighlight
+import com.agustin.tarati.ui.components.board.animation.createMoveHighlight
+import com.agustin.tarati.ui.components.board.animation.createUpgradeHighlight
+import com.agustin.tarati.ui.components.board.animation.createValidMovesHighlights
 
 class HighlightService(private val animationViewModel: BoardAnimationViewModel) {
 

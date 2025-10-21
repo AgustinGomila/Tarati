@@ -57,8 +57,8 @@ fun TurnIndicator(
 ) {
     // Determinar color, icono y comportamiento según el estado
     val color = when (currentTurn) {
-        Color.WHITE -> boardColors.whitePieceColor
-        Color.BLACK -> boardColors.blackPieceColor
+        Color.WHITE -> boardColors.whiteCobColor
+        Color.BLACK -> boardColors.blackCobColor
     }
 
     val (indicatorColor, isClickable, contentDescription) = when (state) {

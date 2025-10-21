@@ -370,13 +370,13 @@ class TaratiChampionDiagnosticTest {
 
     private fun printBoardState(gameState: GameState) {
         println("\nBoard state:")
-        val whitePieces = gameState.cobs.values.count { it.color == WHITE }
-        val blackPieces = gameState.cobs.values.count { it.color == BLACK }
+        val whiteCobs = gameState.cobs.values.count { it.color == WHITE }
+        val blackCobs = gameState.cobs.values.count { it.color == BLACK }
         val whiteUpgraded = gameState.cobs.values.count { it.color == WHITE && it.isUpgraded }
         val blackUpgraded = gameState.cobs.values.count { it.color == BLACK && it.isUpgraded }
 
-        println("  White: $whitePieces pieces ($whiteUpgraded upgraded)")
-        println("  Black: $blackPieces pieces ($blackUpgraded upgraded)")
+        println("  White: $whiteCobs pieces ($whiteUpgraded upgraded)")
+        println("  Black: $blackCobs pieces ($blackUpgraded upgraded)")
 
         val whitesInCenter = gameState.cobs.entries.count {
             it.key in centerVertices && it.value.color == WHITE

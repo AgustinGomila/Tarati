@@ -204,4 +204,188 @@ class SettingsRepositoryTest {
             mockDataStore.updateData(any())
         }
     }
+
+    // Añadir estos tests a la clase SettingsRepositoryTest
+
+    @Test
+    fun tutorialButtonVisibility_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.tutorialButtonVisibility.take(1).toList()[0]
+
+        assertTrue("Tutorial button should be visible", result)
+    }
+
+    @Test
+    fun tutorialButtonVisibility_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.tutorialButtonVisibility.take(1).toList()[0]
+
+        assertFalse("Tutorial button should be hidden by default", result)
+    }
+
+    @Test
+    fun verticesVisibility_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.VERTICES_VISIBILITY_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.verticesVisibility.take(1).toList()[0]
+
+        assertTrue("Vertices should be visible", result)
+    }
+
+    @Test
+    fun verticesVisibility_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.VERTICES_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.verticesVisibility.take(1).toList()[0]
+
+        assertFalse("Vertices should be hidden by default", result)
+    }
+
+    @Test
+    fun edgesVisibility_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.EDGES_VISIBILITY_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.edgesVisibility.take(1).toList()[0]
+
+        assertTrue("Edges should be visible", result)
+    }
+
+    @Test
+    fun edgesVisibility_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.EDGES_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.edgesVisibility.take(1).toList()[0]
+
+        assertFalse("Edges should be hidden by default", result)
+    }
+
+    @Test
+    fun animateEffects_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.ANIMATE_EFFECTS_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.animateEffects.take(1).toList()[0]
+
+        assertTrue("Animate effects should be enabled", result)
+    }
+
+    @Test
+    fun animateEffects_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.ANIMATE_EFFECTS_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.animateEffects.take(1).toList()[0]
+
+        assertFalse("Animate effects should be disabled by default", result)
+    }
+
+// Tests de escritura para las nuevas propiedades
+
+    @Test
+    fun setTutorialButtonVisibility_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setTutorialButtonVisibility(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
+
+    @Test
+    fun setVerticesVisibility_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.VERTICES_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setVerticesVisibility(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
+
+    @Test
+    fun setEdgesVisibility_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.EDGES_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setEdgesVisibility(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
+
+    @Test
+    fun setAnimateEffects_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.ANIMATE_EFFECTS_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setAnimateEffects(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
 }

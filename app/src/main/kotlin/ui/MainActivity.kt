@@ -82,6 +82,14 @@ class MainActivity : ComponentActivity() {
                                     viewModel.setVerticesVisibility(visible)
                                 }
 
+                                override fun onEdgesVisibilityChange(visible: Boolean) {
+                                    viewModel.setEdgesVisibility(visible)
+                                }
+
+                                override fun onAnimateEffectsChange(animate: Boolean) {
+                                    viewModel.setAnimateEffects(animate)
+                                }
+
                                 override fun onTutorialButtonVisibilityChange(visible: Boolean) {
                                     viewModel.setTutorialButtonVisibility(visible)
                                 }

@@ -1,12 +1,17 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.agustin.tarati.ui.screens.settings
 
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
+import com.agustin.tarati.ui.theme.ClassicPalette
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -34,6 +39,10 @@ class SettingsViewModelTest {
         coEvery { mockSettingsRepository.language } returns MutableStateFlow(AppLanguage.SPANISH)
         coEvery { mockSettingsRepository.labelsVisibility } returns MutableStateFlow(false)
         coEvery { mockSettingsRepository.verticesVisibility } returns MutableStateFlow(true)
+        coEvery { mockSettingsRepository.edgesVisibility } returns MutableStateFlow(false)
+        coEvery { mockSettingsRepository.tutorialButtonVisibility } returns MutableStateFlow(false)
+        coEvery { mockSettingsRepository.animateEffects } returns MutableStateFlow(true)
+        coEvery { mockSettingsRepository.palette } returns MutableStateFlow(ClassicPalette.name)
 
         startKoin {
             modules(module {
@@ -48,15 +57,22 @@ class SettingsViewModelTest {
         stopKoin()
     }
 
+    // También necesitamos actualizar el test initialState_hasDefaultValues para reflejar los valores reales por defecto
     @Test
     fun initialState_hasDefaultValues() = runTest {
+        // Esperar a que el `combine` se procese
+        advanceTimeBy(100)
+
         val state = viewModel.settingsState.value
 
         assertEquals("Initial theme should be AUTO", AppTheme.MODE_AUTO, state.appTheme)
         assertEquals("Initial difficulty should be DEFAULT", Difficulty.DEFAULT, state.difficulty)
         assertEquals("Initial language should be SPANISH", AppLanguage.SPANISH, state.language)
         assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
-        assertTrue("Initial vertices should be visibles", state.boardState.verticesVisibles)
+        assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
+        assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
+        assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
+        assertFalse("Initial tutorial button should be hidden", state.tutorialButtonVisible)
     }
 
     @Test
@@ -151,6 +167,73 @@ class SettingsViewModelTest {
         coVerify { mockSettingsRepository.setDarkTheme(false) }
         coVerify { mockSettingsRepository.setLanguage(AppLanguage.ENGLISH) }
         coVerify { mockSettingsRepository.setLanguage(AppLanguage.SPANISH) }
+    }
+
+    // Añadir estos tests a la clase SettingsViewModelTest
+
+    @Test
+    fun setTutorialButtonVisibility_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setTutorialButtonVisibility(any()) } returns Unit
+
+        viewModel.setTutorialButtonVisibility(true)
+
+        coVerify { mockSettingsRepository.setTutorialButtonVisibility(true) }
+    }
+
+    @Test
+    fun setVerticesVisibility_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setVerticesVisibility(any()) } returns Unit
+
+        viewModel.setVerticesVisibility(true)
+
+        coVerify { mockSettingsRepository.setVerticesVisibility(true) }
+    }
+
+    @Test
+    fun setEdgesVisibility_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setEdgesVisibility(any()) } returns Unit
+
+        viewModel.setEdgesVisibility(true)
+
+        coVerify { mockSettingsRepository.setEdgesVisibility(true) }
+    }
+
+    @Test
+    fun setAnimateEffects_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setAnimateEffects(any()) } returns Unit
+
+        viewModel.setAnimateEffects(true)
+
+        coVerify { mockSettingsRepository.setAnimateEffects(true) }
+    }
+
+    @Test
+    fun initialState_includesAllBoardStateProperties() = runTest {
+        val state = viewModel.settingsState.value
+
+        // Verificar todas las propiedades del BoardState
+        assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
+        assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
+        assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
+        assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
+    }
+
+    @Test
+    fun multipleVisibilityChanges_triggerRepositoryCalls() = runTest {
+        coEvery { mockSettingsRepository.setTutorialButtonVisibility(any()) } returns Unit
+        coEvery { mockSettingsRepository.setVerticesVisibility(any()) } returns Unit
+        coEvery { mockSettingsRepository.setEdgesVisibility(any()) } returns Unit
+        coEvery { mockSettingsRepository.setAnimateEffects(any()) } returns Unit
+
+        viewModel.setTutorialButtonVisibility(true)
+        viewModel.setVerticesVisibility(false)
+        viewModel.setEdgesVisibility(true)
+        viewModel.setAnimateEffects(false)
+
+        coVerify { mockSettingsRepository.setTutorialButtonVisibility(true) }
+        coVerify { mockSettingsRepository.setVerticesVisibility(false) }
+        coVerify { mockSettingsRepository.setEdgesVisibility(true) }
+        coVerify { mockSettingsRepository.setAnimateEffects(false) }
     }
 }
 

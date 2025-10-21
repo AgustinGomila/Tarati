@@ -115,4 +115,6 @@
     <string name="color_palette">Paleta de Colores</string>
     <string name="select_color_palette">Seleccionar paleta de colores</string>
     <string name="select_palette">Seleccionar paleta</string>
+    <string name="animate_effects">Efectos animados</string>
+    <string name="board_edges">Aristas</string>
 </resources>

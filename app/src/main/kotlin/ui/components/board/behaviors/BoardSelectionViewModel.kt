@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.behaviors
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

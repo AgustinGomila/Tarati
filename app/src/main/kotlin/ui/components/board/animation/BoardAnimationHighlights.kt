@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.animation
 
 import androidx.compose.ui.graphics.Color
 

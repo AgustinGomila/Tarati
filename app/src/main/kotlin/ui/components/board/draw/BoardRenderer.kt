@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.components.board
+package com.agustin.tarati.ui.components.board.draw
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -28,6 +28,14 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.ui.components.board.BoardState
+import com.agustin.tarati.ui.components.board.TapEvents
+import com.agustin.tarati.ui.components.board.animation.AnimatedCob
+import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
+import com.agustin.tarati.ui.components.board.behaviors.BoardSelectionViewModel
+import com.agustin.tarati.ui.components.board.behaviors.tapGestures
+import com.agustin.tarati.ui.components.board.helpers.StateChangeDetector
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.roundToInt
 
@@ -149,6 +157,7 @@ fun BoardRenderer(
             drawEdges(
                 canvasSize = size,
                 orientation = boardState.boardOrientation,
+                boardState = currentBoardState,
                 colors = colors
             )
 
@@ -210,7 +219,7 @@ fun BoardRenderer(
                         animatedPiece.upgradeProgress + animatedPiece.conversionProgress
             ) {
                 AnimatedPieceComposable(
-                    animatedPiece = animatedPiece,
+                    animatedCob = animatedPiece,
                     containerWidth = containerWidthPx,
                     containerHeight = containerHeightPx,
                     orientation = boardState.boardOrientation,
@@ -224,7 +233,7 @@ fun BoardRenderer(
 
 @Composable
 fun AnimatedPieceComposable(
-    animatedPiece: AnimatedPiece,
+    animatedCob: AnimatedCob,
     containerWidth: Int,
     containerHeight: Int,
     orientation: BoardOrientation,
@@ -236,20 +245,20 @@ fun AnimatedPieceComposable(
     val pieceDp = with(density) { piecePx.toDp() }
 
     val currentPos = getVisualPosition(
-        animatedPiece.currentPos,
+        animatedCob.currentPos,
         containerWidth.toFloat(),
         containerHeight.toFloat(),
         orientation
     )
     val targetPos = getVisualPosition(
-        animatedPiece.targetPos,
+        animatedCob.targetPos,
         containerWidth.toFloat(),
         containerHeight.toFloat(),
         orientation
     )
 
-    val currentX = currentPos.x + (targetPos.x - currentPos.x) * animatedPiece.animationProgress
-    val currentY = currentPos.y + (targetPos.y - currentPos.y) * animatedPiece.animationProgress
+    val currentX = currentPos.x + (targetPos.x - currentPos.x) * animatedCob.animationProgress
+    val currentY = currentPos.y + (targetPos.y - currentPos.y) * animatedCob.animationProgress
 
     val offset = IntOffset(
         (currentX - piecePx).roundToInt(),
@@ -262,10 +271,10 @@ fun AnimatedPieceComposable(
             .size(pieceDp * 2f)
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            drawAnimatedPiece(
+            drawAnimatedCob(
                 selectedVertexId = selectedPiece,
-                vertexId = animatedPiece.vertexId,
-                animatedPiece = animatedPiece,
+                vertexId = animatedCob.vertexId,
+                animatedCob = animatedCob,
                 colors = colors
             )
         }
@@ -304,7 +313,7 @@ fun StaticPieceComposable(
             .size(pieceDp * 2f)
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            drawPiece(
+            drawCob(
                 selectedVertexId = selectedPiece,
                 vertexId = vertexId,
                 cob = cob,
