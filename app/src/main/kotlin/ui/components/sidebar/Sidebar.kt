@@ -65,7 +65,7 @@ import com.agustin.tarati.ui.localization.localizedString
 data class SidebarGameState(
     val gameState: GameState,
     val playerSide: Color,
-    val currentMoveIndex: Int,
+    val moveIndex: Int,
     val moveHistory: List<Move>,
     val difficulty: Difficulty,
     val isAIEnabled: Boolean,
@@ -149,7 +149,7 @@ fun Sidebar(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HistorialControls(
-                currentMoveIndex = sidebarState.currentMoveIndex,
+                currentMoveIndex = sidebarState.moveIndex,
                 moveHistory = sidebarState.moveHistory,
                 onUndo = events::onUndo,
                 onRedo = events::onRedo,
@@ -580,7 +580,7 @@ fun SidebarPreview() {
         val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = WHITE,
-            currentMoveIndex = 2,
+            moveIndex = 2,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,
@@ -609,7 +609,7 @@ fun SidebarPreview_Dark() {
         val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = BLACK,
-            currentMoveIndex = 1,
+            moveIndex = 1,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.HARD,
             isAIEnabled = false,
@@ -636,7 +636,7 @@ fun SidebarPreview_ExpandedDropdown() {
         val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = WHITE,
-            currentMoveIndex = 1,
+            moveIndex = 1,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,

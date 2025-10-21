@@ -220,15 +220,26 @@ fun MainScreen(
         val newBoardState = applyMoveToBoard(gameState, from, to)
         val nextState = newBoardState.copy(currentTurn = gameState.currentTurn.opponent())
 
+        // Actualizar historial
+        val newEntry = Pair(move, nextState)
+        val truncated =
+            if (moveIndex < history.size - 1) {
+                history.take(moveIndex + 1)
+            } else history
+
+        val newMoveHistory = truncated + newEntry
+        viewModel.updateMoveIndex(newMoveHistory.size - 1)
+        viewModel.updateHistory(newMoveHistory)
+
+        // Animar Highlights separados
+        if (animateEffects) {
+            highlightService.animateHighlights(highlightService.createMoveHighlights(move))
+        }
+
         // Usar el coordinador
         animationCoordinator.handleEvent(
             AnimationEvent.MoveEvent(move, gameState, nextState)
         )
-
-        // Highlights separados
-        if (animateEffects) {
-            highlightService.animateHighlights(highlightService.createMoveHighlights(move))
-        }
 
         // Actualizar estado del juego
         viewModel.updateGameState(nextState)
@@ -592,7 +603,7 @@ fun MainScreen(
             val sidebarGameState = SidebarGameState(
                 gameState = gameState,
                 playerSide = playerSide,
-                currentMoveIndex = moveIndex,
+                moveIndex = moveIndex,
                 moveHistory = history.map { it.first },
                 difficulty = evalConfig.difficulty,
                 isAIEnabled = aiEnabled,
@@ -1433,7 +1444,7 @@ private fun MainScreenPreviewContent(
         val sidebarGameState = SidebarGameState(
             gameState = gameState,
             playerSide = playerSide,
-            currentMoveIndex = 2,
+            moveIndex = 2,
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,
