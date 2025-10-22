@@ -16,7 +16,7 @@ data class SettingsState(
     val appTheme: AppTheme = AppTheme.MODE_AUTO,
     val difficulty: Difficulty = Difficulty.DEFAULT,
     val language: AppLanguage = AppLanguage.SPANISH,
-    val tutorialButtonVisible: Boolean = false,
+    val tutorialButtonVisible: Boolean = true,
     val boardState: BoardState = BoardState(),
     val palette: String = availablePalettes.first().name
 )

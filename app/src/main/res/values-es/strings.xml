@@ -78,43 +78,58 @@
     <string name="you_lost">Perdiste con %1$s</string>
     <string name="game_over_triple_repetition">¡Juego Terminado! ¡%1$s gana por triple repetición!</string>
     <string name="show_tutorial">Ver tutorial</string>
-    <string name="tutorial">Tutorial</string>
     <string name="next">Siguiente</string>
     <string name="skip_tutorial">Saltar tutorial</string>
     <string name="repeat_explanation">Repetir explicación</string>
     <string name="board_vertices">Vértices</string>
-    <string name="welcome_to_tarati">"Bienvenido a Tarati"</string>
-    <string name="tarati_description">"Tarati es un juego de estrategia creado por George Spencer Brown. Aprende los
-        movimientos básicos."
-    </string>
-    <string name="board_title">"El Tablero"</string>
-    <string name="board_description">"El tablero tiene vértices conectados. Las piezas o Cobs se mueven entre vértices
-        adyacentes."
-    </string>
-    <string name="center">"Centro"</string>
-    <string name="white_base">"Base Blanca"</string>
-    <string name="black_base">"Base Negra"</string>
-    <string name="basic_moves_title">"Movimientos Básicos"</string>
-    <string name="basic_moves_description">"Las piezas se mueven hacia adelante o a vértices adyacentes. Toca una pieza
-        para ver los movimientos válidos."
-    </string>
-    <string name="capture_title">"Captura de Piezas"</string>
-    <string name="capture_description">"Al moverte junto a una pieza enemiga, la capturas y cambia a tu color."</string>
-    <string name="upgrade_title">"Mejora de Piezas"</string>
-    <string name="upgrade_description">"Al llegar a la base enemiga, tu Cob se convierte en Roc, que puede moverse en
-        cualquier dirección."
-    </string>
-    <string name="castling_title">"Movimiento de Enroque"</string>
-    <string name="castling_description">"En las bases, puedes realizar un movimiento especial de enroque que captura
-        piezas enemigas en posiciones clave."
-    </string>
-    <string name="absolute_center">Centro absoluto</string>
-    <string name="bridge">Puente</string>
-    <string name="circumference">Circunferencia</string>
-    <string name="domestic">Zona doméstica</string>
     <string name="color_palette">Paleta de Colores</string>
     <string name="select_color_palette">Seleccionar paleta de colores</string>
     <string name="select_palette">Seleccionar paleta</string>
     <string name="animate_effects">Efectos animados</string>
     <string name="board_edges">Aristas</string>
+    <string name="tutorial_introduction_title">Bienvenido a Tarati</string>
+    <string name="tutorial_introduction_description">Tarati es un juego estratégico de captura y movimiento. Aprende las
+        reglas básicas para comenzar a jugar.
+    </string>
+    <string name="tutorial_center_title">El Centro del Tablero</string>
+    <string name="tutorial_center_description">El vértice A1 es el centro absoluto, conectado a los 6 vértices del
+        bridge (B1-B6).
+    </string>
+    <string name="tutorial_bridge_title">El Bridge</string>
+    <string name="tutorial_bridge_description">Los 6 vértices del bridge forman un anillo alrededor del centro. Conectan
+        el centro con la circunferencia exterior. Cada vértice de puente tiene 5 aristas.
+    </string>
+    <string name="tutorial_circumference_title">La Circunferencia</string>
+    <string name="tutorial_circumference_description">12 vértices forman el anillo exterior. Cada vértice tiene una
+        sola conexión con el Bridge.
+    </string>
+    <string name="tutorial_domestic_bases_title">Bases Domésticas</string>
+    <string name="tutorial_domestic_bases_description">Cada jugador tiene 4 vértices en su base. Aquí comienzan las
+        piezas.
+    </string>
+    <string name="tutorial_cobs_title">Las Piezas (Cobs)</string>
+    <string name="tutorial_cobs_description">Cada jugador tiene 4 Cobs. Pueden moverse hacia adelante a vértices
+        adyacentes. Al llegar a la base enemiga se convierten en Rocs.
+    </string>
+    <string name="tutorial_basic_moves_title">Movimientos Básicos</string>
+    <string name="tutorial_basic_moves_description">Los Cobs se mueven a vértices adyacentes vacíos. Solo pueden avanzar
+        hacia la base enemiga, a menos que estén mejorados.
+    </string>
+    <string name="tutorial_captures_title">Captura de Piezas</string>
+    <string name="tutorial_captures_description">Al moverte a un vértice adyacente a una pieza enemiga, la capturas y
+        cambia a tu color. Las capturas son clave para ganar.
+    </string>
+    <string name="tutorial_upgrade_title">Mejora a Roc</string>
+    <string name="tutorial_upgrade_description">Cuando un Cob llega a cualquier vértice de la base enemiga, se convierte
+        en Roc. Los Rocs pueden moverse en cualquier dirección.
+    </string>
+    <string name="tutorial_castling_title">Movimiento Especial: Enroque</string>
+    <string name="tutorial_castling_description">En las bases, si un Cob tiene la salida al Bridge boqueada por una
+        pieza enemiga, puede moverse al vértice libre de su base, capturando la pieza del oponente.
+    </string>
+    <string name="perform_the_indicated_move">%1$s\n\nRealiza el movimiento indicado.</string>
+    <string name="tutorial_completed_title">Instructivo completado</string>
+    <string name="tutorial_completed_description">Haz completa el curso básico de Tarati, ahora prueba juegar una
+        partida.
+    </string>
 </resources>

@@ -84,8 +84,8 @@ object NaturePalette : BoardPalette {
     override val boardEdgeColor = Color(0xFF704F45)
     override val boardBackground = Color(0xFF5C8498)
     override val boardPatternColor1 = Color(0xFF4C6432)
-    override val boardPatternColor2 = Color(0xFF759A59)
-    override val boardPatternColor3 = Color(0xFFADBD9B)
+    override val boardPatternColor2 = Color(0xFFADBD9B)
+    override val boardPatternColor3 = Color(0xFF759A59)
     override val boardPatternBorderColor = Color(0xFF325921)
     override val boardGlowColor = Color(0xFF48754D)
 }

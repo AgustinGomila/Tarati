@@ -13,8 +13,13 @@ import com.agustin.tarati.game.core.MatchState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getPosibleCastling
 import com.agustin.tarati.game.core.opponent
+import com.agustin.tarati.ui.screens.main.PieceCounts
 
 // Función de extensión para modificar piezas
+fun GameState.modifyCob(position: String, cob: Cob?): GameState {
+    return this.modifyCob(position, cob?.color, cob?.isUpgraded)
+}
+
 fun GameState.modifyCob(position: String, color: Color? = null, isUpgraded: Boolean? = null): GameState {
     val newCobs = cobs.toMutableMap()
 
@@ -142,4 +147,10 @@ fun GameState.getAllMovesForTurn(): MutableList<Move> {
     }
 
     return possibleMoves
+}
+
+fun GameState.getPieceCounts(): PieceCounts {
+    val whiteCount = this.cobs.values.count { it.color == WHITE }
+    val blackCount = this.cobs.values.count { it.color == BLACK }
+    return PieceCounts(whiteCount, blackCount)
 }

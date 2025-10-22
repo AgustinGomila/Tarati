@@ -251,7 +251,7 @@ class BoardAnimationViewModel(
                 when (it) {
                     is HighlightAnimation.Vertex -> it.highlight.duration
                     is HighlightAnimation.Edge -> it.highlight.duration
-                    is HighlightAnimation.Pause -> 200L
+                    is HighlightAnimation.Pause -> it.duration
                 }
             } ?: 0L
 

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,11 +39,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.agustin.tarati.R
+import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.TaratiTheme
 
 enum class BubblePosition {
     TOP_LEFT, TOP_CENTER, TOP_RIGHT,
-    CENTER_LEFT, CENTER_RIGHT,
+    CENTER_LEFT, CENTER_CENTER, CENTER_RIGHT,
     BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT,
     VERTEX_SPECIFIC
 }
@@ -93,6 +96,7 @@ fun TutorialBubble(
             BubblePosition.TOP_CENTER -> Alignment.TopCenter
             BubblePosition.TOP_RIGHT -> Alignment.TopEnd
             BubblePosition.CENTER_LEFT -> Alignment.CenterStart
+            BubblePosition.CENTER_CENTER -> Alignment.Center
             BubblePosition.CENTER_RIGHT -> Alignment.CenterEnd
             BubblePosition.BOTTOM_LEFT -> Alignment.BottomStart
             BubblePosition.BOTTOM_CENTER -> Alignment.BottomCenter
@@ -127,6 +131,7 @@ private fun BubbleContent(
     val description = bubbleState.description
     val canGoBack = bubbleState.canGoBack
     val canGoForward = bubbleState.canGoForward
+    val lastStep = currentStep == totalSteps
 
     Surface(
         modifier = modifier
@@ -215,20 +220,22 @@ private fun BubbleContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
-                    onClick = bubbleEvents::onPrevious,
-                    enabled = canGoBack,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = stringResource(R.string.back)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.back))
+                if (currentStep > 1) {
+                    Button(
+                        onClick = bubbleEvents::onPrevious,
+                        enabled = canGoBack,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.back))
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -238,12 +245,21 @@ private fun BubbleContent(
                     enabled = canGoForward,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.next))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = stringResource(R.string.next)
-                    )
+                    if (lastStep) {
+                        LocalizedText(R.string.start)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = stringResource(R.string.start)
+                        )
+                    } else {
+                        LocalizedText(R.string.next)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = stringResource(R.string.next)
+                        )
+                    }
                 }
             }
         }
@@ -282,7 +298,7 @@ fun QuickTutorialBubblePreview() {
                             canGoBack = true,
                             canGoForward = true,
                             currentStep = 3,
-                            totalSteps = 6,
+                            totalSteps = 11,
                         ),
                         config = BubbleConfig(BubblePosition.BOTTOM_CENTER),
                     ),
@@ -307,14 +323,14 @@ fun QuickMultipleBubblesPreview() {
         ) {
             // Burbuja en esquina superior izquierda
             TutorialBubble(
-                title = "Introducción",
+                title = localizedString(R.string.tutorial_introduction_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Breve introducción al juego.",
+                        description = localizedString(R.string.tutorial_introduction_description),
                         canGoBack = false,
                         canGoForward = true,
                         currentStep = 1,
-                        totalSteps = 6,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(
                         BubblePosition.TOP_LEFT,
@@ -327,14 +343,14 @@ fun QuickMultipleBubblesPreview() {
 
             // Burbuja en esquina inferior derecha
             TutorialBubble(
-                title = "Conclusión",
+                title = localizedString(R.string.tutorial_completed_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Resumen de lo aprendido.",
+                        description = localizedString(R.string.tutorial_completed_description),
                         canGoBack = true,
                         canGoForward = false,
-                        currentStep = 6,
-                        totalSteps = 6,
+                        currentStep = 11,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(
                         BubblePosition.BOTTOM_RIGHT,
@@ -358,14 +374,14 @@ fun TutorialBubblePreview_BottomCenter() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "Movimientos Básicos",
+                title = localizedString(R.string.tutorial_basic_moves_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Las piezas Cob se mueven hacia adelante o a vértices adyacentes. Toca una pieza para ver los movimientos válidos.",
+                        description = localizedString(R.string.tutorial_basic_moves_description),
                         canGoBack = true,
                         canGoForward = true,
                         currentStep = 2,
-                        totalSteps = 6,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(BubblePosition.BOTTOM_CENTER),
                 ),
@@ -386,14 +402,14 @@ fun TutorialBubblePreview_TopRight() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "El Tablero",
+                title = localizedString(R.string.tutorial_center_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "El tablero tiene vértices conectados por líneas.",
-                        canGoBack = false,
+                        description = localizedString(R.string.tutorial_center_description),
+                        canGoBack = true,
                         canGoForward = true,
-                        currentStep = 1,
-                        totalSteps = 6,
+                        currentStep = 4,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(
                         BubblePosition.TOP_RIGHT,
@@ -417,14 +433,14 @@ fun TutorialBubblePreview_CenterLeft() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "Captura de Piezas",
+                title = localizedString(R.string.tutorial_captures_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Al moverte junto a una pieza enemiga, la capturas y cambia a tu color.",
+                        description = localizedString(R.string.tutorial_captures_description),
                         canGoBack = true,
                         canGoForward = true,
-                        currentStep = 3,
-                        totalSteps = 6,
+                        currentStep = 6,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(
                         BubblePosition.CENTER_LEFT,
@@ -448,14 +464,14 @@ fun TutorialBubblePreview_NoBack() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "Introducción",
+                title = localizedString(R.string.tutorial_bridge_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Bienvenido al tutorial de Tarati.",
-                        canGoBack = false,
+                        description = localizedString(R.string.tutorial_bridge_description),
+                        canGoBack = true,
                         canGoForward = true,
                         currentStep = 1,
-                        totalSteps = 6,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(BubblePosition.TOP_CENTER),
                 ),
@@ -476,14 +492,14 @@ fun TutorialBubblePreview_LastStep() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "¡Completado!",
+                title = localizedString(R.string.tutorial_circumference_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "Has completado el tutorial. ¡Ahora puedes jugar una partida completa!",
+                        description = localizedString(R.string.tutorial_circumference_description),
                         canGoBack = true,
                         canGoForward = false,
                         currentStep = 6,
-                        totalSteps = 6,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(BubblePosition.BOTTOM_CENTER),
                 ),
@@ -504,14 +520,14 @@ fun TutorialBubblePreview_LongText() {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             TutorialBubble(
-                title = "Movimiento Especial de Enroque",
+                title = localizedString(R.string.tutorial_castling_title),
                 bubbleState = TutorialBubbleState(
                     contentState = TutorialBubbleContentState(
-                        description = "En las bases, puedes realizar un movimiento especial llamado enroque. Este movimiento te permite intercambiar posiciones con otra pieza de tu color y capturar piezas enemigas en posiciones estratégicas. Es una jugada muy poderosa que puede cambiar el curso del juego.",
+                        description = localizedString(R.string.tutorial_castling_description),
                         canGoBack = true,
                         canGoForward = true,
-                        currentStep = 5,
-                        totalSteps = 6,
+                        currentStep = 9,
+                        totalSteps = 11,
                     ),
                     config = BubbleConfig(
                         BubblePosition.CENTER_RIGHT

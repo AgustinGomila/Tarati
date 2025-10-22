@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset
@@ -44,30 +46,44 @@ object GameBoard {
     val centerVertices: List<String> = listOf(ABSOLUTE_CENTER).union(bridgeVertices).toList()
     val vertices: List<String> = centerVertices + circumferenceVertices + domesticVertices
 
-    val edges: List<Pair<String, String>> = listOf(
-        // Home base White
-        "D1" to "D2", "D1" to "C1", "D2" to "C2",
-        // Home base Black
-        "D3" to "D4", "D3" to "C7", "D4" to "C8",
-        // C circumference
+    // D domestic White
+    val whiteDomesticEdges = listOf("D1" to "D2", "D1" to "C1", "D2" to "C2")
+
+    // D domestic Black
+    val blackDomesticEdges = listOf("D3" to "D4", "D3" to "C7", "D4" to "C8")
+
+    // B boundary
+    val bridgeEdges = listOf(
+        "B1" to "B2", "B2" to "B3", "B3" to "B4",
+        "B4" to "B5", "B5" to "B6", "B6" to "B1"
+    )
+
+    // C circumference
+    val circumferenceEdges = listOf(
         "C1" to "C2", "C2" to "C3", "C3" to "C4",
         "C4" to "C5", "C5" to "C6", "C6" to "C7",
         "C7" to "C8", "C8" to "C9", "C9" to "C10",
         "C10" to "C11", "C11" to "C12", "C12" to "C1",
-        // B boundary
-        "B1" to "B2", "B2" to "B3", "B3" to "B4",
-        "B4" to "B5", "B5" to "B6", "B6" to "B1",
-        // C to B
+    )
+
+    // C to B
+    val bridgeToCircumferenceEdges = listOf(
         "C1" to "B1", "C2" to "B1",
         "C3" to "B2", "C4" to "B2",
         "C5" to "B3", "C6" to "B3",
         "C7" to "B4", "C8" to "B4",
         "C9" to "B5", "C10" to "B5",
         "C11" to "B6", "C12" to "B6",
-        // B to A (absolute Middle)
+    )
+
+    // B to A (absolute Middle)
+    val absoluteCenterToBridgeEdges = listOf(
         "B1" to "A1", "B2" to "A1", "B3" to "A1",
         "B4" to "A1", "B5" to "A1", "B6" to "A1"
     )
+
+    val edges: List<Pair<String, String>> =
+        whiteDomesticEdges + blackDomesticEdges + bridgeEdges + circumferenceEdges + bridgeToCircumferenceEdges + absoluteCenterToBridgeEdges
 
     val homeBases: Map<Color, List<String>> = mapOf(
         WHITE to listOf("C1", "C2", "D1", "D2"),

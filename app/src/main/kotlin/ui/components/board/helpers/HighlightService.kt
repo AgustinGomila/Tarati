@@ -3,27 +3,12 @@ package com.agustin.tarati.ui.components.board.helpers
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
-import com.agustin.tarati.ui.components.board.animation.createCaptureHighlight
 import com.agustin.tarati.ui.components.board.animation.createMoveHighlight
-import com.agustin.tarati.ui.components.board.animation.createUpgradeHighlight
-import com.agustin.tarati.ui.components.board.animation.createValidMovesHighlights
 
 class HighlightService(private val animationViewModel: BoardAnimationViewModel) {
 
     fun createMoveHighlights(move: Move): List<HighlightAnimation> {
         return createMoveHighlight(move.from, move.to)
-    }
-
-    fun createValidMoveHighlights(validMoves: List<String>): List<HighlightAnimation> {
-        return createValidMovesHighlights(validMoves)
-    }
-
-    fun createCaptureHighlights(capturedPieces: List<String>): List<HighlightAnimation> {
-        return capturedPieces.flatMap { createCaptureHighlight(it) }
-    }
-
-    fun createUpgradeHighlights(upgradedPieces: List<String>): List<HighlightAnimation> {
-        return upgradedPieces.flatMap { createUpgradeHighlight(it) }
     }
 
     fun animateHighlights(highlights: List<HighlightAnimation>) {
