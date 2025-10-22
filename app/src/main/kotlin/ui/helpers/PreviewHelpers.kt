@@ -10,7 +10,6 @@ import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.modifyCob
 import com.agustin.tarati.game.logic.moveCob
 import com.agustin.tarati.game.logic.withTurn
-import com.agustin.tarati.game.tutorial.TutorialManager
 
 /**
  * Estados de juego predefinidos para previews
@@ -63,6 +62,5 @@ data class PreviewConfig(
     val labelsVisible: Boolean = true,
     val verticesVisible: Boolean = true,
     val edgesVisible: Boolean = true,
-    val tutorialManager: TutorialManager = TutorialManager(),
     val debug: Boolean = false
 )

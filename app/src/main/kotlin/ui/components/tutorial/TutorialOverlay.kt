@@ -4,25 +4,35 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.agustin.tarati.R
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
-import com.agustin.tarati.game.tutorial.BasicMoveStep
-import com.agustin.tarati.game.tutorial.BoardLayoutStep
-import com.agustin.tarati.game.tutorial.CaptureStep
+import com.agustin.tarati.game.tutorial.BasicMovesStep
+import com.agustin.tarati.game.tutorial.BridgeStep
+import com.agustin.tarati.game.tutorial.CapturesStep
 import com.agustin.tarati.game.tutorial.CastlingStep
+import com.agustin.tarati.game.tutorial.CenterStep
+import com.agustin.tarati.game.tutorial.CircumferenceStep
+import com.agustin.tarati.game.tutorial.CobsStep
+import com.agustin.tarati.game.tutorial.CompletedStep
+import com.agustin.tarati.game.tutorial.DomesticBasesStep
 import com.agustin.tarati.game.tutorial.IntroductionStep
-import com.agustin.tarati.game.tutorial.TutorialManager
 import com.agustin.tarati.game.tutorial.TutorialState
 import com.agustin.tarati.game.tutorial.TutorialStep
 import com.agustin.tarati.game.tutorial.UpgradeStep
+import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
 import com.agustin.tarati.ui.localization.localizedString
 import kotlinx.coroutines.delay
 
 @Composable
 fun TutorialOverlay(
-    tutorialManager: TutorialManager,
+    viewModel: TutorialViewModel,
+    onCompleted: () -> Unit,
     updateGameState: (GameState) -> Unit,
     boardWidth: Float,
     boardHeight: Float,
@@ -33,76 +43,109 @@ fun TutorialOverlay(
         TutorialCoordinateMapper(boardWidth, boardHeight, boardOrientation)
     }
 
-    // Manejar auto-advance
-    LaunchedEffect(tutorialManager.getCurrentStep()) {
-        if (tutorialManager.shouldAutoAdvance()) {
-            delay(tutorialManager.getCurrentStepDuration())
-            tutorialManager.nextStep()
+    val state by viewModel.tutorialState.collectAsState()
+
+    LaunchedEffect(state) {
+        when (state) {
+            is TutorialState.ShowingStep -> {
+                if (viewModel.shouldAutoAdvance()) {
+                    delay(viewModel.getCurrentStepDuration())
+                    viewModel.nextStep()
+                }
+            }
+
+            else -> {
+                // No auto-advance para otros estados
+            }
         }
     }
 
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        when (val state = tutorialManager.tutorialState) {
-            is TutorialState.ShowingStep -> {
-                val step = state.step
-                val progress = tutorialManager.progress
-
-                val bubbleConfig = if (step.highlights.isNotEmpty()) {
-                    // Si hay highlights, posicionar cerca del primer vértice destacado
-                    val targetVertex = step.highlights.first().vertexId
-                    coordinateMapper.getBubblePositionForVertex(targetVertex)
-                } else {
-                    // Si no hay vértice específico, usar posición por defecto basada en el paso
-                    getDefaultBubbleConfigForStep(step)
+    Box(modifier = modifier.fillMaxSize()) {
+        when (state) {
+            is TutorialState.ShowingStep,
+            is TutorialState.WaitingForInteraction,
+            is TutorialState.WaitingForMove -> {
+                val step = when (state) {
+                    is TutorialState.ShowingStep -> (state as TutorialState.ShowingStep).step
+                    is TutorialState.WaitingForInteraction -> (state as TutorialState.WaitingForInteraction).step
+                    is TutorialState.WaitingForMove -> (state as TutorialState.WaitingForMove).step
+                    else -> null
                 }
 
-                TutorialBubble(
-                    title = localizedString(step.titleResId),
-                    bubbleState = TutorialBubbleState(
-                        contentState = TutorialBubbleContentState(
-                            description = localizedString(step.descriptionResId),
-                            canGoBack = progress.currentStepIndex > 1,
-                            canGoForward = true,
-                            currentStep = progress.currentStepIndex,
-                            totalSteps = progress.totalSteps,
+                if (step != null) {
+                    val progress = viewModel.progress
+
+                    // Extraer vertex objetivo de las animaciones para posicionar burbuja
+                    val targetVertex = step.animations
+                        .filterIsInstance<HighlightAnimation.Vertex>()
+                        .firstOrNull()
+                        ?.highlight
+                        ?.vertexId
+
+                    val bubbleConfig = if (targetVertex != null) {
+                        coordinateMapper.getBubblePositionForVertex(targetVertex)
+                    } else {
+                        getDefaultBubbleConfigForStep(step)
+                    }
+
+                    // Determinar si estamos esperando interacción del usuario
+                    val isWaitingForMove = state is TutorialState.WaitingForMove
+
+                    TutorialBubble(
+                        title = localizedString(step.titleResId),
+                        bubbleState = TutorialBubbleState(
+                            contentState = TutorialBubbleContentState(
+                                description = if (isWaitingForMove) {
+                                    stringResource(
+                                        R.string.perform_the_indicated_move,
+                                        localizedString(step.descriptionResId)
+                                    )
+                                } else {
+                                    localizedString(step.descriptionResId)
+                                },
+                                canGoBack = progress.currentStepIndex > 1,
+                                canGoForward = !isWaitingForMove,
+                                currentStep = progress.currentStepIndex,
+                                totalSteps = progress.totalSteps,
+                            ),
+                            config = bubbleConfig
                         ),
-                        config = bubbleConfig
-                    ),
-                    bubbleEvents = object : TutorialBubbleEvents {
-                        override fun onNext() = tutorialManager.nextStep()
-                        override fun onPrevious() = tutorialManager.previousStep()
-                        override fun onSkip() = tutorialManager.skipTutorial()
-                        override fun onRepeat() {
-                            // Repetir: restaurar el estado del paso actual
-                            tutorialManager.repeatCurrentStep()
-                            val tutorialState = tutorialManager.getCurrentGameState()
-                            if (tutorialState != null) {
-                                updateGameState(tutorialState)
+                        bubbleEvents = object : TutorialBubbleEvents {
+                            override fun onNext() = viewModel.nextStep()
+                            override fun onPrevious() = viewModel.previousStep()
+                            override fun onSkip() = viewModel.skipTutorial()
+                            override fun onRepeat() {
+                                viewModel.repeatCurrentStep()
+                                val tutorialState = viewModel.getCurrentGameState()
+                                if (tutorialState != null) {
+                                    updateGameState(tutorialState)
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
-            // No mostrar nada para otros estados
+
             is TutorialState.Idle -> {}
-            is TutorialState.Completed -> {}
-            is TutorialState.WaitingForInteraction -> {}
+            is TutorialState.Completed -> onCompleted()
         }
     }
 }
 
-private fun getDefaultBubbleConfigForStep(step: TutorialStep): BubbleConfig {
-    // Asignar posiciones por defecto basadas en el tipo de paso
+fun getDefaultBubbleConfigForStep(step: TutorialStep): BubbleConfig {
     return when (step) {
-        is IntroductionStep -> BubbleConfig(BubblePosition.TOP_CENTER)
-        is BoardLayoutStep -> BubbleConfig(BubblePosition.TOP_CENTER)
-        is BasicMoveStep -> BubbleConfig(BubblePosition.BOTTOM_LEFT)
-        is CaptureStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is UpgradeStep -> BubbleConfig(BubblePosition.BOTTOM_RIGHT)
-        is CastlingStep -> BubbleConfig(BubblePosition.TOP_RIGHT)
-        else -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is IntroductionStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+        is CompletedStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+        is CenterStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is BridgeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is CircumferenceStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is DomesticBasesStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+        is CobsStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is BasicMovesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is CapturesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is UpgradeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+        is CastlingStep -> BubbleConfig(BubblePosition.TOP_CENTER)
+        else -> BubbleConfig(BubblePosition.TOP_CENTER)
     }
 }

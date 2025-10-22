@@ -73,45 +73,56 @@
     <string name="you_lost">You lost with %1$s</string>
     <string name="game_over_triple_repetition">Game over: %1$s wins by triple repetition!</string>
     <string name="show_tutorial">Show tutorial</string>
-    <string name="tutorial">Tutorial</string>
     <string name="next">Next</string>
     <string name="skip_tutorial">Skip tutorial</string>
     <string name="repeat_explanation">Repeat explanation</string>
     <string name="board_vertices">Vertices</string>
-    <string name="welcome_to_tarati">"Welcome to Tarati"</string>
-    <string name="tarati_description">"Tarati is a strategy game created by George Spencer Brown. Learn the basic
-        moves."
-    </string>
-    <string name="board_title">"The Board"</string>
-    <string name="board_description">"The board has connected vertices. Pieces or Cobs move between adjacent
-        vertices."
-    </string>
-    <string name="center">"Center"</string>
-    <string name="white_base">"White Base"</string>
-    <string name="black_base">"Black Base"</string>
-    <string name="basic_moves_title">"Basic Moves"</string>
-    <string name="basic_moves_description">"Pieces move forward or to adjacent vertices. Tap a piece to see valid
-        moves."
-    </string>
-    <string name="capture_title">"Piece Capture"</string>
-    <string name="capture_description">"When moving next to an enemy piece, you capture it and it changes to your
-        color."
-    </string>
-    <string name="upgrade_title">"Piece Upgrade"</string>
-    <string name="upgrade_description">"When reaching the enemy base, your Cob becomes a Roc, which can move in any
-        direction."
-    </string>
-    <string name="castling_title">"Castling Move"</string>
-    <string name="castling_description">"In the bases, you can perform a special castling move that captures enemy
-        pieces in key positions."
-    </string>
-    <string name="absolute_center">Absolute center</string>
-    <string name="bridge">Bridge</string>
-    <string name="circumference">Circumference</string>
-    <string name="domestic">Domestic</string>
     <string name="color_palette">Color Palette</string>
     <string name="select_color_palette">Select color palette</string>
     <string name="select_palette">Select palette</string>
     <string name="animate_effects">Board effects</string>
-    <string name="board_edges">Aristas</string>
+    <string name="board_edges">Edges</string>
+    <string name="tutorial_introduction_title">Welcome to Tarati</string>
+    <string name="tutorial_introduction_description">Tarati is a strategic capture and movement game. Learn the basic
+        rules to start playing.
+    </string>
+    <string name="tutorial_center_title">The Center of the Board</string>
+    <string name="tutorial_center_description">Vertex A1 is the absolute center, connected to the 6 bridge vertices
+        (B1-B6).
+    </string>
+    <string name="tutorial_bridge_title">The Bridge</string>
+    <string name="tutorial_bridge_description">The 6 bridge vertices form a ring around the center. They connect the
+        center to the outer circumference. Each bridge vertex has 5 edges.
+    </string>
+    <string name="tutorial_circumference_title">The Circumference</string>
+    <string name="tutorial_circumference_description">12 vertices form the outer ring. Each vertex has a single
+        connection to the Bridge.
+    </string>
+    <string name="tutorial_domestic_bases_title">Domestic Bases</string>
+    <string name="tutorial_domestic_bases_description">Each player has 4 vertices in their base. Pieces start here.
+    </string>
+    <string name="tutorial_cobs_title">The Pieces (Cobs)</string>
+    <string name="tutorial_cobs_description">Each player has 4 Cobs. They can move forward to adjacent vertices. Upon
+        reaching the enemy base, they become Rocs.
+    </string>
+    <string name="tutorial_basic_moves_title">Basic Moves</string>
+    <string name="tutorial_basic_moves_description">Cobs move to adjacent empty vertices. They can only advance toward
+        the enemy base unless upgraded.
+    </string>
+    <string name="tutorial_captures_title">Piece Capture</string>
+    <string name="tutorial_captures_description">When moving to a vertex adjacent to an enemy piece, you capture it and
+        it changes to your color. Captures are key to winning.
+    </string>
+    <string name="tutorial_upgrade_title">Upgrade to Roc</string>
+    <string name="tutorial_upgrade_description">When a Cob reaches any vertex of the enemy base, it becomes a Roc. Rocs
+        can move in any direction.
+    </string>
+    <string name="tutorial_castling_title">Special Move: Castling</string>
+    <string name="tutorial_castling_description">In the bases, if a Cob has the exit to the Bridge blocked by an enemy
+        piece, it can move to the free vertex in its base, capturing the piece that was blocking the exit.
+    </string>
+    <string name="perform_the_indicated_move">%1$s\n\nPerform the indicated move.</string>
+    <string name="tutorial_completed_title">Instruction completed</string>
+    <string name="tutorial_completed_description">You have completed the Tarati basic course, now try playing a game.
+    </string>
 </resources>
