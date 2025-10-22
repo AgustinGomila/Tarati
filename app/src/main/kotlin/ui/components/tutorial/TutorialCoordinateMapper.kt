@@ -44,7 +44,7 @@ class TutorialCoordinateMapper(
         val screenCenterX = boardWidth / 2
         val screenCenterY = boardHeight / 2
 
-        // Definir umbrales para considerar "cerca del centro"
+        // Umbrales para considerar proximidad al centro de la pantalla
         val centerThresholdX = boardWidth * 0.3f
         val centerThresholdY = boardHeight * 0.3f
 

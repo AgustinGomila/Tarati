@@ -8,7 +8,8 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getValidVertex
-import com.agustin.tarati.ui.components.board.helpers.StateChangeDetector
+import com.agustin.tarati.game.logic.detectConversions
+import com.agustin.tarati.game.logic.detectUpgrades
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,9 +34,7 @@ data class VisualGameState(
     val currentTurn: Color? = null
 )
 
-class BoardAnimationViewModel(
-    private val stateChangeDetector: StateChangeDetector = StateChangeDetector()
-) : ViewModel() {
+class BoardAnimationViewModel : ViewModel() {
 
     private val moveDuration = 100L
     private val convertDuration = 70L
@@ -44,8 +43,8 @@ class BoardAnimationViewModel(
 
     fun processMove(move: Move, oldGameState: GameState, newGameState: GameState): Boolean {
         viewModelScope.launch {
-            val conversions = stateChangeDetector.detectConversions(move, oldGameState, newGameState)
-            val upgrades = stateChangeDetector.detectUpgrades(oldGameState, newGameState)
+            val conversions = oldGameState.detectConversions(move, newGameState)
+            val upgrades = oldGameState.detectUpgrades(newGameState)
             animateMoveSequence(move, conversions, upgrades, newGameState)
         }
         return true

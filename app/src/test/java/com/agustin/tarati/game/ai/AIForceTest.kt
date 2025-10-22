@@ -7,13 +7,13 @@ import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.sortMoves
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard.centerVertices
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.logic.getAllMovesForTurn
 import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.game.logic.isGameOver
@@ -82,30 +82,6 @@ class AIForceTest {
 
         // Ambos movimientos deberían ser válidos, ninguno gana inmediatamente
         assertEquals(2, moves.size)
-    }
-
-    // Helper para crear estados de juego personalizados
-    class GameStateBuilder {
-        private val cobs = mutableMapOf<String, Cob>()
-        private var currentTurn: Color = WHITE
-
-        fun setTurn(turn: Color) {
-            currentTurn = turn
-        }
-
-        fun setCob(vertexId: String, color: Color, isUpgraded: Boolean) {
-            cobs[vertexId] = Cob(color, isUpgraded)
-        }
-
-        fun build(): GameState {
-            return GameState(cobs = cobs, currentTurn = currentTurn)
-        }
-    }
-
-    private fun createGameState(block: GameStateBuilder.() -> Unit): GameState {
-        val builder = GameStateBuilder()
-        builder.block()
-        return builder.build()
     }
 
     @Test

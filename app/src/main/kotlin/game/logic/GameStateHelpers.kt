@@ -154,3 +154,46 @@ fun GameState.getPieceCounts(): PieceCounts {
     val blackCount = this.cobs.values.count { it.color == BLACK }
     return PieceCounts(whiteCount, blackCount)
 }
+
+fun GameState.shouldAnimateMove(newState: GameState, move: Move): Boolean {
+    return this.cobs.containsKey(move.from) &&
+            !this.cobs.containsKey(move.to) &&
+            newState.cobs.containsKey(move.to) &&
+            !newState.cobs.containsKey(move.from)
+}
+
+fun GameState.detectConversions(move: Move, newState: GameState): List<Pair<String, Cob>> {
+    val adjacentVertices = adjacencyMap[move.to] ?: emptyList()
+    val conversions = mutableListOf<Pair<String, Cob>>()
+
+    adjacentVertices.forEach { vertexId ->
+        val oldCob = this.cobs[vertexId]
+        val newCob = newState.cobs[vertexId]
+
+        if (oldCob != null && newCob != null && oldCob.color != newCob.color) {
+            conversions.add(vertexId to newCob)
+        }
+    }
+
+    return conversions
+}
+
+fun GameState.detectUpgrades(newState: GameState): List<Pair<String, Cob>> {
+    val upgrades = mutableListOf<Pair<String, Cob>>()
+
+    newState.cobs.forEach { (vertexId, newCob) ->
+        val oldCob = this.cobs[vertexId]
+
+        val wasUpgraded = when {
+            oldCob != null && !oldCob.isUpgraded && newCob.isUpgraded -> true
+            oldCob == null && newCob.isUpgraded -> true
+            else -> false
+        }
+
+        if (wasUpgraded) {
+            upgrades.add(vertexId to newCob)
+        }
+    }
+
+    return upgrades
+}

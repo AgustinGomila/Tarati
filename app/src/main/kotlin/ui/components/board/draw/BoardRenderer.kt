@@ -28,6 +28,7 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.shouldAnimateMove
 import com.agustin.tarati.ui.components.board.BoardState
 import com.agustin.tarati.ui.components.board.TapEvents
 import com.agustin.tarati.ui.components.board.animation.AnimatedCob
@@ -35,7 +36,6 @@ import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
 import com.agustin.tarati.ui.components.board.behaviors.BoardSelectionViewModel
 import com.agustin.tarati.ui.components.board.behaviors.tapGestures
-import com.agustin.tarati.ui.components.board.helpers.StateChangeDetector
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.roundToInt
 
@@ -62,8 +62,6 @@ fun BoardRenderer(
     val animatedPieces by animationViewModel.animatedPieces.collectAsState()
     val currentHighlight by animationViewModel.currentHighlights.collectAsState()
 
-    val stateChangeDetector = remember { StateChangeDetector() }
-
     // Efecto para sincronizar el estado inicial
     LaunchedEffect(Unit) {
         if (boardState.newGame) {
@@ -81,17 +79,18 @@ fun BoardRenderer(
     LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
         val lastMove = boardState.lastMove
         if (lastMove != null && prevGameState != null && !isAnimating) {
-            val currentGameState = boardState.gameState
+            val newState = boardState.gameState
+            val lastState = prevGameState ?: return@LaunchedEffect
 
-            if (stateChangeDetector.shouldAnimateMove(prevGameState!!, currentGameState, lastMove)) {
+            if (lastState.shouldAnimateMove(newState, lastMove)) {
                 val success = animationViewModel.processMove(
                     move = lastMove,
-                    oldGameState = prevGameState!!,
-                    newGameState = currentGameState
+                    oldGameState = lastState,
+                    newGameState = newState
                 )
 
                 if (success) {
-                    prevGameState = currentGameState
+                    prevGameState = newState
                 }
             }
         }
