@@ -125,7 +125,7 @@
     </string>
     <string name="tutorial_castling_title">Movimiento Especial: Enroque</string>
     <string name="tutorial_castling_description">En las bases, si un Cob tiene la salida al Bridge boqueada por una
-        pieza enemiga, puede moverse al vértice libre de su base, convirtiendo la pieza que bloqueaba la salida.
+        pieza enemiga, puede moverse al vértice libre de su base, capturando la pieza del oponente.
     </string>
     <string name="perform_the_indicated_move">%1$s\n\nRealiza el movimiento indicado.</string>
     <string name="tutorial_completed_title">Instructivo completado</string>

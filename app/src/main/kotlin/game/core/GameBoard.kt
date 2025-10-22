@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset

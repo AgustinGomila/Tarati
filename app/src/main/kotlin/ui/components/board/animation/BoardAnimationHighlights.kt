@@ -84,36 +84,3 @@ fun createValidMovesHighlights(validMoves: List<String>): List<HighlightAnimatio
         )
     }
 }
-
-fun createTutorialSequence(): List<HighlightAnimation> {
-    return listOf(
-        HighlightAnimation.Vertex(
-            VertexHighlight(
-                vertexId = "C2",
-                color = Color.Yellow,
-                pulse = true,
-                duration = 1500L,
-                messageResId = null
-            )
-        ),
-        HighlightAnimation.Pause(800L), // Pausa más larga entre elementos
-        HighlightAnimation.Edge(
-            EdgeHighlight(
-                from = "C2",
-                to = "B1",
-                color = Color.Yellow,
-                pulse = true,
-                duration = 1500L
-            )
-        ),
-        HighlightAnimation.Pause(800L),
-        HighlightAnimation.Vertex(
-            VertexHighlight(
-                vertexId = "B1",
-                color = Color.Yellow,
-                pulse = true,
-                duration = 1500L
-            )
-        )
-    )
-}

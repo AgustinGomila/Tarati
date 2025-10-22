@@ -202,7 +202,11 @@ fun MainScreen(
     LaunchedEffect(tutorialState) {
         isTutorialActive.value = tutorialState != TutorialState.Idle && tutorialState != TutorialState.Completed
         if (!isTutorialActive.value || tutorialViewModel.tutorialGameState == null) return@LaunchedEffect
-
+        if (isTutorialActive.value && drawerState.isOpen) {
+            scope.launch {
+                drawerState.close()
+            }
+        }
         val gs = tutorialViewModel.tutorialGameState ?: return@LaunchedEffect
         viewModel.updateGameState(gs)
     }
@@ -360,6 +364,12 @@ fun MainScreen(
         viewModel.updateGameStatus(GameStatus.NO_PLAYING)
 
         tutorialViewModel.endTutorial()
+    }
+
+    LaunchedEffect(drawerState.currentValue) {
+        if (drawerState.isOpen && isTutorialActive.value) {
+            endTutorial()
+        }
     }
 
     fun undoMove() {
@@ -613,7 +623,6 @@ fun MainScreen(
                 }
 
                 override fun onTutorial() {
-                    scope.launch { drawerState.close() }
                     startTutorial()
                 }
             }

@@ -119,7 +119,7 @@
     </string>
     <string name="tutorial_castling_title">Special Move: Castling</string>
     <string name="tutorial_castling_description">In the bases, if a Cob has the exit to the Bridge blocked by an enemy
-        piece, it can move to the free vertex in its base, capturing the piece that was blocking the exit.
+        piece, it can move to the free vertex in its base, capturing the opponent piece.
     </string>
     <string name="perform_the_indicated_move">%1$s\n\nPerform the indicated move.</string>
     <string name="tutorial_completed_title">Instruction completed</string>

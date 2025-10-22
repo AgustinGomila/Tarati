@@ -321,9 +321,13 @@ private fun createUpgradeAnimations(): List<HighlightAnimation> {
         HighlightAnimation.Vertex(VertexHighlight("B4", Color.Yellow, true, 1500L)),
         HighlightAnimation.Pause(),
         HighlightAnimation.Edge(EdgeHighlight("B4", "C7", Color(0xFF2196F3), true, 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF2196F3), true, 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF348DD2), true, 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF9C27B0), true, 2000L))
+        HighlightAnimation.Edge(EdgeHighlight("B4", "C8", Color(0xFFF32194), true, 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFFF321E9), true, 2000L)),
+        HighlightAnimation.Pause(),
+        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF9C27B0), true, 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFF9C27B0), true, 2000L))
     )
 }
 

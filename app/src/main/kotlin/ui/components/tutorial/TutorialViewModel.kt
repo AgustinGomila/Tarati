@@ -46,8 +46,6 @@ class TutorialViewModel(val tutorialManager: TutorialManager) : ViewModel() {
     fun getCurrentStepDuration(): Long = tutorialManager.getCurrentStepDuration()
     fun requestUserInteraction(moves: List<Move>) = tutorialManager.requestUserInteraction(moves)
     fun endTutorial() = tutorialManager.reset()
-    fun isWaitingForUserInteraction(): Boolean = tutorialManager.isWaitingForUserInteraction()
-    fun getExpectedMoves(): List<Move> = tutorialManager.getExpectedMoves()
 
     fun startTutorial() {
         viewModelScope.launch {
