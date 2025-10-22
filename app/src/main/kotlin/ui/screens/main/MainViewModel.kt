@@ -11,6 +11,7 @@ import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.getPieceCounts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,17 +64,7 @@ class MainViewModel() : ViewModel() {
         _playerSide.value = newSide
     }
 
-    // Tutorial
-    private val _isTutorialActive = MutableStateFlow(false)
-    val isTutorialActive: StateFlow<Boolean> = _isTutorialActive.asStateFlow()
-
-    fun endTutorial() {
-        _isTutorialActive.value = false
-    }
-
-    fun startTutorial() {
-        _isTutorialActive.value = true
-    }
+    // region EDIT BOARD
 
     // Edición de tablero
     private val _isEditing = MutableStateFlow(false)
@@ -133,7 +124,7 @@ class MainViewModel() : ViewModel() {
         val currentCob = currentState.cobs[vertexId]
         val mutableCobs = currentState.cobs.toMutableMap()
 
-        val pieceCounts = getPieceCounts(currentState)
+        val pieceCounts = currentState.getPieceCounts()
 
         when {
             // Caso 1: No hay pieza - colocar nueva (si no excedemos 8 piezas y la distribución es válida)
@@ -159,12 +150,6 @@ class MainViewModel() : ViewModel() {
         }
 
         _gameState.value = currentState.copy(cobs = mutableCobs.toMap())
-    }
-
-    private fun getPieceCounts(state: GameState): PieceCounts {
-        val whiteCount = state.cobs.values.count { it.color == Color.WHITE }
-        val blackCount = state.cobs.values.count { it.color == Color.BLACK }
-        return PieceCounts(whiteCount, blackCount)
     }
 
     private fun canPlacePiece(color: Color, currentCounts: PieceCounts): Boolean {
@@ -211,7 +196,7 @@ class MainViewModel() : ViewModel() {
     fun startGameFromEditedState() {
         val currentState = _gameState.value
         // Validar que la distribución final sea válida
-        val pieceCounts = getPieceCounts(currentState)
+        val pieceCounts = currentState.getPieceCounts()
         if (!isValidDistribution(pieceCounts.white, pieceCounts.black)) {
             // Si no es válida, no salir del modo edición
             return
@@ -223,4 +208,6 @@ class MainViewModel() : ViewModel() {
         updateMoveIndex(-1)
         updateGameState(currentState.copy(currentTurn = _editTurn.value))
     }
+
+    // endregion EDIT BOARD
 }

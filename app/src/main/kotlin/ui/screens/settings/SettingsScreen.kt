@@ -68,7 +68,7 @@ fun SettingsScreen(
     val theme = settingsState.appTheme
     val boardState = settingsState.boardState
     val palette = settingsState.palette
-
+    val tutorialButtonVisible = settingsState.tutorialButtonVisible
     val labelsVisibility = boardState.labelsVisibles
     val verticesVisibility = boardState.verticesVisibles
     val edgesVisibility = boardState.edgesVisibles
@@ -142,6 +142,15 @@ fun SettingsScreen(
             ) {
                 viewModel.setAnimateEffects(it)
                 events.onAnimateEffectsChange(it)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            VisibilityOption(
+                id = R.string.show_tutorial,
+                visibility = tutorialButtonVisible
+            ) {
+                viewModel.setTutorialButtonVisibility(it)
+                events.onTutorialButtonVisibilityChange(it)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }

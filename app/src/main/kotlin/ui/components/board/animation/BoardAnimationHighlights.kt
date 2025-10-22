@@ -21,7 +21,7 @@ data class EdgeHighlight(
 sealed class HighlightAnimation {
     data class Vertex(val highlight: VertexHighlight) : HighlightAnimation()
     data class Edge(val highlight: EdgeHighlight) : HighlightAnimation()
-    object Pause : HighlightAnimation()
+    data class Pause(val duration: Long = 500L) : HighlightAnimation()
 }
 
 fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
@@ -96,7 +96,7 @@ fun createTutorialSequence(): List<HighlightAnimation> {
                 messageResId = null
             )
         ),
-        HighlightAnimation.Pause,
+        HighlightAnimation.Pause(800L), // Pausa más larga entre elementos
         HighlightAnimation.Edge(
             EdgeHighlight(
                 from = "C2",
@@ -106,7 +106,7 @@ fun createTutorialSequence(): List<HighlightAnimation> {
                 duration = 1500L
             )
         ),
-        HighlightAnimation.Pause,
+        HighlightAnimation.Pause(800L),
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = "B1",
