@@ -92,16 +92,16 @@
         reglas básicas para comenzar a jugar.
     </string>
     <string name="tutorial_center_title">El Centro del Tablero</string>
-    <string name="tutorial_center_description">El vértice A1 es el centro absoluto, conectado a los 6 vértices del
-        bridge (B1-B6).
+    <string name="tutorial_center_description">El vértice A1 es el Centro Absoluto, conectado a los 6 vértices del
+        puente (B1-B6).
     </string>
-    <string name="tutorial_bridge_title">El Bridge</string>
-    <string name="tutorial_bridge_description">Los 6 vértices del bridge forman un anillo alrededor del centro. Conectan
-        el centro con la circunferencia exterior. Cada vértice de puente tiene 5 aristas.
+    <string name="tutorial_bridge_title">El Puente</string>
+    <string name="tutorial_bridge_description">Los 6 vértices del Puente forman un anillo alrededor del centro. Conectan
+        el centro con la circunferencia exterior. Cada vértice del puente conecta 5 aristas.
     </string>
     <string name="tutorial_circumference_title">La Circunferencia</string>
     <string name="tutorial_circumference_description">12 vértices forman el anillo exterior. Cada vértice tiene una
-        sola conexión con el Bridge.
+        sola arista que lo conecta con el puente.
     </string>
     <string name="tutorial_domestic_bases_title">Bases Domésticas</string>
     <string name="tutorial_domestic_bases_description">Cada jugador tiene 4 vértices en su base. Aquí comienzan las
@@ -124,7 +124,7 @@
         en Roc. Los Rocs pueden moverse en cualquier dirección.
     </string>
     <string name="tutorial_castling_title">Movimiento Especial: Enroque</string>
-    <string name="tutorial_castling_description">En las bases, si un Cob tiene la salida al Bridge boqueada por una
+    <string name="tutorial_castling_description">En las bases, si un Cob tiene la salida al Puente boqueada por una
         pieza enemiga, puede moverse al vértice libre de su base, capturando la pieza del oponente.
     </string>
     <string name="perform_the_indicated_move">%1$s\n\nRealiza el movimiento indicado.</string>

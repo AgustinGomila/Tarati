@@ -87,12 +87,12 @@
         rules to start playing.
     </string>
     <string name="tutorial_center_title">The Center of the Board</string>
-    <string name="tutorial_center_description">Vertex A1 is the absolute center, connected to the 6 bridge vertices
+    <string name="tutorial_center_description">Vertex A1 is the Absolute Center, connected to the 6 bridge vertices
         (B1-B6).
     </string>
     <string name="tutorial_bridge_title">The Bridge</string>
     <string name="tutorial_bridge_description">The 6 bridge vertices form a ring around the center. They connect the
-        center to the outer circumference. Each bridge vertex has 5 edges.
+        center to the outer circumference. Each bridge vertex connect 5 edges.
     </string>
     <string name="tutorial_circumference_title">The Circumference</string>
     <string name="tutorial_circumference_description">12 vertices form the outer ring. Each vertex has a single
