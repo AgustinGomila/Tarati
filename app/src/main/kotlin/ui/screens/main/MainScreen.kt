@@ -199,7 +199,6 @@ fun MainScreen(
             highlightService = highlightService,
             viewModel = viewModel,
             tutorialViewModel = tutorialViewModel,
-            settingsViewModel = settingsViewModel,
             onShowNewGameDialog = { showNewGameDialog = true },
         ) { showAboutDialog = true }
     }

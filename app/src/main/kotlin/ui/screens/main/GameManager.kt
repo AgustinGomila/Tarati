@@ -43,6 +43,7 @@ class GameManager {
 
         _history.value = newHistory + newEntry
         _moveIndex.value = newHistory.size // Índice apunta al nuevo estado
+
         updateGameState(nextState)
     }
 

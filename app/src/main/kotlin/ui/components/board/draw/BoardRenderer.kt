@@ -200,6 +200,14 @@ fun BoardRenderer(
                         )
                     }
 
+                    is HighlightAnimation.Region -> {
+                        drawRegionHighlight(
+                            highlight = highlight.highlight,
+                            canvasSize = size,
+                            orientation = boardState.boardOrientation,
+                        )
+                    }
+
                     is HighlightAnimation.Pause -> {
                         // No dibujar nada durante pausas
                     }

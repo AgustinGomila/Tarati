@@ -73,9 +73,9 @@ class MainViewModelTest {
             currentTurn = Color.BLACK
         )
 
-        viewModel.updateGameState(newState)
+        viewModel.gameManager.updateGameState(newState)
 
-        assertEquals("Game state should be updated", newState, viewModel.gameState.value)
+        assertEquals("Game state should be updated", newState, viewModel.gameManager.gameState.value)
     }
 
     @Test
@@ -84,16 +84,9 @@ class MainViewModelTest {
         val gameState = initialGameState()
         val history = listOf(Pair(move, gameState))
 
-        viewModel.addMove(move, gameState)
+        viewModel.gameManager.addMove(move, gameState)
 
-        assertEquals("History should be updated", history, viewModel.history.value)
-    }
-
-    @Test
-    fun updateMoveIndex_changesIndex() {
-        viewModel.updateMoveIndex(5)
-
-        assertEquals("Move index should be 5", 5, viewModel.moveIndex.value)
+        assertEquals("History should be updated", history, viewModel.gameManager.history.value)
     }
 
     @Test
@@ -114,11 +107,11 @@ class MainViewModelTest {
     fun initialState_hasDefaultValues() {
         assertEquals(
             "Initial game state should match factory",
-            initialGameState(), viewModel.gameState.value
+            initialGameState(), viewModel.gameManager.gameState.value
         )
-        assertTrue("Initial history should be empty", viewModel.history.value.isEmpty())
+        assertTrue("Initial history should be empty", viewModel.gameManager.history.value.isEmpty())
 
-        assertEquals("Initial move index should be -1", -1, viewModel.moveIndex.value)
+        assertEquals("Initial move index should be -1", -1, viewModel.gameManager.moveIndex.value)
         assertTrue("Initial AI should be enabled", viewModel.aIEnabled.value)
         assertEquals(
             "Initial player side should be WHITE",

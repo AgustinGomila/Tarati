@@ -129,10 +129,20 @@ object GameBoard {
         )
     }
 
+    val vertexToRegions: Map<String, List<BoardRegion>> by lazy {
+        getAllRegions()
+            .flatMap { region -> region.vertices.map { vertex -> vertex to region } }
+            .groupBy({ it.first }, { it.second })
+    }
+
+    fun getAllRegions(): List<BoardRegion> {
+        return getDomesticRegions() + getCentralRegions() + getCircumferenceRegions()
+    }
+
     // Regiones del tablero
     data class BoardRegion(val vertices: List<String>)
 
-    // Mapa de adyacencia optimizado
+    // Mapa de adyacencia
     val adjacencyMap: Map<String, List<String>> by lazy {
         val map = mutableMapOf<String, MutableList<String>>()
 

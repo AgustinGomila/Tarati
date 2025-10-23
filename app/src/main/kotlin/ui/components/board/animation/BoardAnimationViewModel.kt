@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameBoard.BoardRegion
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getValidVertex
 import com.agustin.tarati.game.logic.detectConversions
 import com.agustin.tarati.game.logic.detectUpgrades
+import com.agustin.tarati.game.logic.findClosedRegion
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,11 +96,25 @@ class BoardAnimationViewModel : ViewModel() {
             _animatedPieces.value = mapOf(
                 move.to to animatedCob.copy(animationProgress = progress)
             )
+            // Efecto de estela en el movimiento
+            if (_animateEffects.value) {
+                if (step == steps / 2) {
+                    animateSimul(createMoveHighlight(move.from, move.to))
+                }
+            }
             delay(stepDelay)
         }
+
         if (_animateEffects.value) {
-            // Efectos especiales cuando llega a destino
-            animateSimul(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
+            // Efectos especiales sobre casillas libres amenazadas cuando llega a destino
+            val highlights = createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)).toMutableList()
+
+            // Efecto sobre regiones cerradas
+            newGameState.findClosedRegion(move.to, cob.color)?.let {
+                highlights.add(createRegionHighlight(it))
+            }
+
+            animateSimul(highlights)
         }
 
         // Completar movimiento
@@ -139,13 +155,14 @@ class BoardAnimationViewModel : ViewModel() {
                 _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
                     put(vertexId, animatedCob.copy(conversionProgress = progress))
                 }
-                delay(stepDelay)
+                // Efecto sobre piezas capturadas
                 if (_animateEffects.value) {
                     if (step == steps / 2) {
                         // Efectos especiales
                         animateSimul(createCaptureHighlight(vertexId))
                     }
                 }
+                delay(stepDelay)
             }
 
             // Actualizar estado visual para esta pieza convertida
@@ -189,11 +206,13 @@ class BoardAnimationViewModel : ViewModel() {
                     _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
                         put(vertexId, animatedCob.copy(upgradeProgress = progress))
                     }
+                    if (step == steps / 3) {
+                        // Efectos sobre piezas mejoradas
+                        if (_animateEffects.value) {
+                            animateSimul(createUpgradeHighlight(vertexId))
+                        }
+                    }
                     delay(stepDelay)
-                }
-
-                if (_animateEffects.value) {
-                    animateSimul(createUpgradeHighlight(vertexId))
                 }
 
                 // Actualizar estado visual para esta pieza mejorada
@@ -220,6 +239,7 @@ class BoardAnimationViewModel : ViewModel() {
                 when (it) {
                     is HighlightAnimation.Vertex -> it.highlight.duration
                     is HighlightAnimation.Edge -> it.highlight.duration
+                    is HighlightAnimation.Region -> it.highlight.duration
                     is HighlightAnimation.Pause -> it.duration
                 }
             } ?: 0L
@@ -300,6 +320,9 @@ class BoardAnimationViewModel : ViewModel() {
                 is HighlightAnimation.Edge if existing is HighlightAnimation.Edge ->
                     areEdgeHighlightsEqual(new.highlight, existing.highlight)
 
+                is HighlightAnimation.Region if existing is HighlightAnimation.Region ->
+                    areRegionHighlightsEqual(new.highlight, existing.highlight)
+
                 is HighlightAnimation.Pause if existing is HighlightAnimation.Pause ->
                     new.duration == existing.duration
 
@@ -323,12 +346,19 @@ class BoardAnimationViewModel : ViewModel() {
                 a.duration == b.duration
     }
 
+    private fun areRegionHighlightsEqual(a: RegionHighlight, b: RegionHighlight): Boolean {
+        return a.region == b.region &&
+                a.color == b.color &&
+                a.pulse == b.pulse &&
+                a.duration == b.duration
+    }
+
     fun animate(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
         return viewModelScope.launch {
             val newGroup = AnimationGroup(
                 highlights = highlights,
                 source = source,
-                timestamp = System.currentTimeMillis() // Incluir timestamp
+                timestamp = System.currentTimeMillis()
             )
 
             if (!shouldAddToQueue(newGroup)) {
@@ -388,32 +418,28 @@ class BoardAnimationViewModel : ViewModel() {
     }
 
     private suspend fun executeAnimationGroup(group: AnimationGroup) {
-        // Ejecutar todas las animaciones del grupo simultáneamente
         val jobs = group.highlights.map { highlight ->
             viewModelScope.launch {
                 when (highlight) {
                     is HighlightAnimation.Vertex -> animateVertex(highlight.highlight)
                     is HighlightAnimation.Edge -> animateEdge(highlight.highlight)
+                    is HighlightAnimation.Region -> animateRegion(highlight.highlight)
                     is HighlightAnimation.Pause -> delay(highlight.duration)
                 }
             }
         }
-
-        // Esperar a que todas las animaciones del grupo terminen
         jobs.joinAll()
 
-        // Encontrar el postDelay máximo del grupo (si alguno lo tiene)
         val maxPostDelay = group.highlights.maxOfOrNull {
             when (it) {
                 is HighlightAnimation.Vertex -> it.highlight.postDelay
                 is HighlightAnimation.Edge -> it.highlight.postDelay
+                is HighlightAnimation.Region -> it.highlight.postDelay
                 is HighlightAnimation.Pause -> 0L
             }
         } ?: 0L
 
-        if (maxPostDelay > 0) {
-            delay(maxPostDelay)
-        }
+        if (maxPostDelay > 0) delay(maxPostDelay)
     }
 
     private suspend fun animateVertex(highlight: VertexHighlight) {
@@ -456,6 +482,23 @@ class BoardAnimationViewModel : ViewModel() {
         }
     }
 
+    private suspend fun animateRegion(highlight: RegionHighlight) {
+        if (highlight.startDelay > 0) {
+            delay(highlight.startDelay)
+        }
+
+        _currentHighlights.value += HighlightAnimation.Region(highlight)
+        delay(highlight.duration)
+
+        if (!highlight.persistent) {
+            _currentHighlights.value -= HighlightAnimation.Region(highlight)
+        }
+
+        if (highlight.postDelay > 0) {
+            delay(highlight.postDelay)
+        }
+    }
+
     fun clearQueue() {
         viewModelScope.launch {
             animationQueue.clear()
@@ -471,13 +514,15 @@ class BoardAnimationViewModel : ViewModel() {
     @Suppress("unused")
     fun clearSpecificHighlights(
         vertexIds: List<String> = emptyList(),
-        edges: List<Pair<String, String>> = emptyList()
+        edges: List<Pair<String, String>> = emptyList(),
+        regions: List<BoardRegion> = emptyList(),
     ) {
         viewModelScope.launch {
             _currentHighlights.value = _currentHighlights.value.filterNot { highlight ->
                 when (highlight) {
                     is HighlightAnimation.Vertex -> vertexIds.contains(highlight.highlight.vertexId)
                     is HighlightAnimation.Edge -> edges.any { it.first == highlight.highlight.from && it.second == highlight.highlight.to }
+                    is HighlightAnimation.Region -> regions.any { it == highlight.highlight.region }
                     is HighlightAnimation.Pause -> false
                 }
             }

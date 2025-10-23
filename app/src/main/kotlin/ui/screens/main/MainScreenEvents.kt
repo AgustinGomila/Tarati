@@ -13,7 +13,6 @@ import com.agustin.tarati.ui.components.board.animation.AnimationCoordinator
 import com.agustin.tarati.ui.components.board.animation.AnimationEvent
 import com.agustin.tarati.ui.components.board.helpers.HighlightService
 import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
-import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 
 class MainScreenEvents(
@@ -23,7 +22,6 @@ class MainScreenEvents(
     private val highlightService: HighlightService,
     private val viewModel: MainViewModel,
     private val tutorialViewModel: TutorialViewModel,
-    private val settingsViewModel: SettingsViewModel,
     private val onShowNewGameDialog: () -> Unit,
     private val onShowAboutDialog: () -> Unit,
 ) {
@@ -32,11 +30,6 @@ class MainScreenEvents(
         val move = Move(from, to)
         val newBoardState = applyMoveToBoard(gameState, from, to)
         val nextState = newBoardState.copy(currentTurn = gameState.currentTurn.opponent())
-
-        // Animar highlights
-        if (settingsViewModel.settingsState.value.boardState.animateEffects) {
-            highlightService.animateHighlights(highlightService.createMoveHighlights(move))
-        }
 
         animationCoordinator.handleEvent(AnimationEvent.MoveEvent(move, gameState, nextState))
 

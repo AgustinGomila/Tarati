@@ -5,8 +5,10 @@ import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.BoardRegion
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.isValidMove
+import com.agustin.tarati.game.core.GameBoard.vertexToRegions
 import com.agustin.tarati.game.core.GameResult
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.MatchState
@@ -207,6 +209,8 @@ fun GameState.isInitialState(playerSide: Color): Boolean {
     return this == initialGameState(playerSide)
 }
 
-fun GameState.requireRedraw(): Boolean {
-    return initialGameState().cobs == this.cobs || isEmptyBoard()
+fun GameState.findClosedRegion(to: String, color: Color): BoardRegion? {
+    return vertexToRegions[to]?.firstOrNull { region ->
+        region.vertices.all { vertex -> cobs[vertex]?.color == color }
+    }
 }
