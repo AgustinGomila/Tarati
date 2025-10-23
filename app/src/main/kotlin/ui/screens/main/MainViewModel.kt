@@ -115,7 +115,7 @@ class MainViewModel() : ViewModel() {
         _playerSide.value = _playerSide.value.opponent()
     }
 
-    fun clearBoard() {
+    fun clearEditBoard() {
         _gameState.value = cleanGameState(_editTurn.value)
     }
 
@@ -184,13 +184,20 @@ class MainViewModel() : ViewModel() {
         }
     }
 
-    fun startGame(playerSide: Color) {
-        endEditing()
-
-        updatePlayerSide(playerSide)
+    fun clearHistory() {
         updateHistory(emptyList())
         updateMoveIndex(-1)
-        updateGameState(initialGameState())
+    }
+
+    fun setGame(gameState: GameState) {
+        clearHistory()
+        updateGameState(gameState)
+    }
+
+    fun startGame(playerSide: Color) {
+        endEditing()
+        updatePlayerSide(playerSide)
+        setGame(initialGameState())
     }
 
     fun startGameFromEditedState() {
@@ -203,10 +210,7 @@ class MainViewModel() : ViewModel() {
         }
 
         endEditing()
-
-        updateHistory(emptyList())
-        updateMoveIndex(-1)
-        updateGameState(currentState.copy(currentTurn = _editTurn.value))
+        setGame(currentState.copy(currentTurn = _editTurn.value))
     }
 
     // endregion EDIT BOARD

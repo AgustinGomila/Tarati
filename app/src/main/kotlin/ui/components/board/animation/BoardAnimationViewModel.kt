@@ -15,7 +15,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import java.util.*
 
 data class AnimatedCob(
     val vertexId: String,
@@ -32,6 +34,13 @@ data class AnimatedCob(
 data class VisualGameState(
     val cobs: Map<String, Cob> = emptyMap(),
     val currentTurn: Color? = null
+)
+
+private data class AnimationGroup(
+    val highlights: List<HighlightAnimation>,
+    val groupId: String = UUID.randomUUID().toString(),
+    val source: String = "unknown",
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 class BoardAnimationViewModel : ViewModel() {
@@ -86,12 +95,10 @@ class BoardAnimationViewModel : ViewModel() {
                 move.to to animatedCob.copy(animationProgress = progress)
             )
             delay(stepDelay)
-            if (_animateEffects.value) {
-                if (step == steps / 2) {
-                    // Efectos especiales empiezan al acercar a destino
-                    animate(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
-                }
-            }
+        }
+        if (_animateEffects.value) {
+            // Efectos especiales cuando llega a destino
+            animateSimul(createValidMovesHighlights(newGameState.getValidVertex(move.to, cob)))
         }
 
         // Completar movimiento
@@ -136,7 +143,7 @@ class BoardAnimationViewModel : ViewModel() {
                 if (_animateEffects.value) {
                     if (step == steps / 2) {
                         // Efectos especiales
-                        animate(createCaptureHighlight(vertexId))
+                        animateSimul(createCaptureHighlight(vertexId))
                     }
                 }
             }
@@ -186,7 +193,7 @@ class BoardAnimationViewModel : ViewModel() {
                 }
 
                 if (_animateEffects.value) {
-                    animate(createUpgradeHighlight(vertexId))
+                    animateSimul(createUpgradeHighlight(vertexId))
                 }
 
                 // Actualizar estado visual para esta pieza mejorada
@@ -202,6 +209,23 @@ class BoardAnimationViewModel : ViewModel() {
                 currentVisualState[vertexId] = newCob
                 _visualState.value = _visualState.value.copy(cobs = currentVisualState)
             }
+        }
+    }
+
+    fun animateSimul(highlights: List<HighlightAnimation>): Job {
+        return viewModelScope.launch {
+            _currentHighlights.value = highlights
+
+            val maxDuration = highlights.maxOfOrNull {
+                when (it) {
+                    is HighlightAnimation.Vertex -> it.highlight.duration
+                    is HighlightAnimation.Edge -> it.highlight.duration
+                    is HighlightAnimation.Pause -> it.duration
+                }
+            } ?: 0L
+
+            delay(maxDuration)
+            _currentHighlights.value = emptyList()
         }
     }
 
@@ -242,23 +266,6 @@ class BoardAnimationViewModel : ViewModel() {
     private val _currentHighlights = MutableStateFlow<List<HighlightAnimation>>(emptyList())
     val currentHighlights: StateFlow<List<HighlightAnimation>> = _currentHighlights.asStateFlow()
 
-    fun animate(highlights: List<HighlightAnimation>): Job {
-        return viewModelScope.launch {
-            _currentHighlights.value = highlights
-
-            val maxDuration = highlights.maxOfOrNull {
-                when (it) {
-                    is HighlightAnimation.Vertex -> it.highlight.duration
-                    is HighlightAnimation.Edge -> it.highlight.duration
-                    is HighlightAnimation.Pause -> it.duration
-                }
-            } ?: 0L
-
-            delay(maxDuration)
-            _currentHighlights.value = emptyList()
-        }
-    }
-
     fun stopHighlights() {
         viewModelScope.launch {
             _currentHighlights.value = emptyList()
@@ -266,15 +273,229 @@ class BoardAnimationViewModel : ViewModel() {
     }
 
     fun reset() {
+        forceSync()
         _visualState.value = VisualGameState()
-        _animatedPieces.value = emptyMap()
         previousVisualState = null
-        _isAnimating.value = false
     }
 
     fun forceSync() {
+        clearQueue()
+        stopHighlights()
         _isAnimating.value = false
         _animatedPieces.value = emptyMap()
-        _currentHighlights.value = emptyList()
+    }
+
+    private val animationQueue = mutableListOf<AnimationGroup>()
+    private var isProcessingQueue = false
+    private var currentAnimationJob: Job? = null
+
+    private data class AnimationGroup(
+        val highlights: List<HighlightAnimation>,
+        val groupId: String = UUID.randomUUID().toString(),
+        val source: String = "unknown",
+        val timestamp: Long = System.currentTimeMillis() // Agregar timestamp aquí
+    )
+
+    private fun isDuplicateGroup(newGroup: AnimationGroup, existingGroup: AnimationGroup): Boolean {
+        if (newGroup.highlights.size != existingGroup.highlights.size) return false
+
+        return newGroup.highlights.zip(existingGroup.highlights).all { (new, existing) ->
+            when (new) {
+                is HighlightAnimation.Vertex if existing is HighlightAnimation.Vertex ->
+                    areVertexHighlightsEqual(new.highlight, existing.highlight)
+
+                is HighlightAnimation.Edge if existing is HighlightAnimation.Edge ->
+                    areEdgeHighlightsEqual(new.highlight, existing.highlight)
+
+                is HighlightAnimation.Pause if existing is HighlightAnimation.Pause ->
+                    new.duration == existing.duration
+
+                else -> false
+            }
+        }
+    }
+
+    private fun areVertexHighlightsEqual(a: VertexHighlight, b: VertexHighlight): Boolean {
+        return a.vertexId == b.vertexId &&
+                a.color == b.color &&
+                a.pulse == b.pulse &&
+                a.duration == b.duration
+    }
+
+    private fun areEdgeHighlightsEqual(a: EdgeHighlight, b: EdgeHighlight): Boolean {
+        return a.from == b.from &&
+                a.to == b.to &&
+                a.color == b.color &&
+                a.pulse == b.pulse &&
+                a.duration == b.duration
+    }
+
+    fun animate(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
+        return viewModelScope.launch {
+            val newGroup = AnimationGroup(
+                highlights = highlights,
+                source = source,
+                timestamp = System.currentTimeMillis() // Incluir timestamp
+            )
+
+            if (!shouldAddToQueue(newGroup)) {
+                return@launch
+            }
+
+            animationQueue.add(newGroup)
+            processQueue()
+        }
+    }
+
+    fun clearQueueAndAdd(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
+        return viewModelScope.launch {
+            clearQueue()
+            val newGroup = AnimationGroup(
+                highlights = highlights,
+                source = source,
+                timestamp = System.currentTimeMillis()
+            )
+            animationQueue.add(newGroup)
+            processQueue()
+        }
+    }
+
+    private fun shouldAddToQueue(newGroup: AnimationGroup): Boolean {
+        // Si la cola está vacía, siempre agregar
+        if (animationQueue.isEmpty()) return true
+
+        // Verificar si el último grupo en la cola es idéntico
+        val lastGroup = animationQueue.last()
+        if (isDuplicateGroup(newGroup, lastGroup)) {
+            println("Filtering duplicate animation group from source: ${newGroup.source}")
+            return false
+        }
+
+        // Opcional: verificar contra todos los grupos en la cola
+        // WARNING: Esto podría ser costoso para colas muy largas.
+        val hasExactDuplicate = animationQueue.any { existingGroup ->
+            isDuplicateGroup(newGroup, existingGroup)
+        }
+
+        return !hasExactDuplicate
+    }
+
+    private fun processQueue() {
+        if (isProcessingQueue || animationQueue.isEmpty()) return
+
+        isProcessingQueue = true
+        currentAnimationJob = viewModelScope.launch {
+            while (animationQueue.isNotEmpty()) {
+                val group = animationQueue.removeAt(0)
+                executeAnimationGroup(group)
+            }
+            isProcessingQueue = false
+        }
+    }
+
+    private suspend fun executeAnimationGroup(group: AnimationGroup) {
+        // Ejecutar todas las animaciones del grupo simultáneamente
+        val jobs = group.highlights.map { highlight ->
+            viewModelScope.launch {
+                when (highlight) {
+                    is HighlightAnimation.Vertex -> animateVertex(highlight.highlight)
+                    is HighlightAnimation.Edge -> animateEdge(highlight.highlight)
+                    is HighlightAnimation.Pause -> delay(highlight.duration)
+                }
+            }
+        }
+
+        // Esperar a que todas las animaciones del grupo terminen
+        jobs.joinAll()
+
+        // Encontrar el postDelay máximo del grupo (si alguno lo tiene)
+        val maxPostDelay = group.highlights.maxOfOrNull {
+            when (it) {
+                is HighlightAnimation.Vertex -> it.highlight.postDelay
+                is HighlightAnimation.Edge -> it.highlight.postDelay
+                is HighlightAnimation.Pause -> 0L
+            }
+        } ?: 0L
+
+        if (maxPostDelay > 0) {
+            delay(maxPostDelay)
+        }
+    }
+
+    private suspend fun animateVertex(highlight: VertexHighlight) {
+        // Delay inicial si existe
+        if (highlight.startDelay > 0) {
+            delay(highlight.startDelay)
+        }
+
+        // Agregar a highlights activos
+        _currentHighlights.value += HighlightAnimation.Vertex(highlight)
+
+        // Esperar la duración de la animación
+        delay(highlight.duration)
+
+        // Remover del estado (a menos que sea persistente)
+        if (!highlight.persistent) {
+            _currentHighlights.value -= HighlightAnimation.Vertex(highlight)
+        }
+
+        // Post-delay si existe
+        if (highlight.postDelay > 0) {
+            delay(highlight.postDelay)
+        }
+    }
+
+    private suspend fun animateEdge(highlight: EdgeHighlight) {
+        if (highlight.startDelay > 0) {
+            delay(highlight.startDelay)
+        }
+
+        _currentHighlights.value += HighlightAnimation.Edge(highlight)
+        delay(highlight.duration)
+
+        if (!highlight.persistent) {
+            _currentHighlights.value -= HighlightAnimation.Edge(highlight)
+        }
+
+        if (highlight.postDelay > 0) {
+            delay(highlight.postDelay)
+        }
+    }
+
+    fun clearSpecificHighlights(
+        vertexIds: List<String> = emptyList(),
+        edges: List<Pair<String, String>> = emptyList()
+    ) {
+        viewModelScope.launch {
+            _currentHighlights.value = _currentHighlights.value.filterNot { highlight ->
+                when (highlight) {
+                    is HighlightAnimation.Vertex -> vertexIds.contains(highlight.highlight.vertexId)
+                    is HighlightAnimation.Edge -> edges.any { it.first == highlight.highlight.from && it.second == highlight.highlight.to }
+                    is HighlightAnimation.Pause -> false
+                }
+            }
+        }
+    }
+
+    fun clearQueue() {
+        viewModelScope.launch {
+            animationQueue.clear()
+            currentAnimationJob?.cancel()
+            isProcessingQueue = false
+        }
+    }
+
+    fun isAnimating(): Boolean {
+        return isProcessingQueue || animationQueue.isNotEmpty()
+    }
+
+    fun loadTutorialSequence(sequences: List<List<HighlightAnimation>>) {
+        viewModelScope.launch {
+            clearQueue()
+            sequences.forEach { sequence ->
+                animationQueue.add(AnimationGroup(sequence))
+            }
+            processQueue()
+        }
     }
 }

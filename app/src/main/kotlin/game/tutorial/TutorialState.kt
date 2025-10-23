@@ -5,7 +5,6 @@ import com.agustin.tarati.game.core.Move
 sealed class TutorialState {
     object Idle : TutorialState()
     data class ShowingStep(val step: TutorialStep) : TutorialState()
-    data class WaitingForInteraction(val step: TutorialStep) : TutorialState()
     data class WaitingForMove(val step: TutorialStep, val expectedMove: List<Move> = listOf()) : TutorialState()
     object Completed : TutorialState()
 }

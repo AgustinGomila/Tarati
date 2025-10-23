@@ -212,7 +212,7 @@ fun MainScreen(
     }
 
     // Efecto para resetear estados cuando comienza nuevo juego
-    LaunchedEffect(gameStatus) {
+    LaunchedEffect(gameStatus, tutorialState) {
         if (isEditing || isTutorialActive.value) return@LaunchedEffect
         if (gameStatus == GameStatus.NEW_GAME) return@LaunchedEffect
         when {
@@ -328,7 +328,7 @@ fun MainScreen(
         lastMove = null
 
         resetDialogs()
-        tutorialViewModel.endTutorial()
+        tutorialViewModel.skipTutorial()
 
         scope.launch {
             drawerState.close()
@@ -354,16 +354,23 @@ fun MainScreen(
         tutorialViewModel.startTutorial()
     }
 
-    fun endTutorial() {
+    fun clearBoard() {
         clearAIHistory()
         lastMove = null
         resetDialogs()
 
-        viewModel.clearBoard()
-        viewModel.updateGameState(initialGameState())
+        viewModel.setGame(initialGameState())
         viewModel.updateGameStatus(GameStatus.NO_PLAYING)
+    }
 
+    fun endTutorial() {
         tutorialViewModel.endTutorial()
+        clearBoard()
+    }
+
+    fun skipTutorial() {
+        tutorialViewModel.skipTutorial()
+        clearBoard()
     }
 
     LaunchedEffect(drawerState.currentValue) {
@@ -546,7 +553,7 @@ fun MainScreen(
                     events = ActionControlsEvents(
                         onRotate = { viewModel.rotateEditBoard() },
                         onStartGame = { viewModel.startGameFromEditedState() },
-                        onClearBoard = { viewModel.clearBoard() }
+                        onClearBoard = { viewModel.clearEditBoard() }
                     )
                 )
             }
@@ -579,7 +586,7 @@ fun MainScreen(
                     events = ActionControlsEvents(
                         onRotate = { viewModel.rotateEditBoard() },
                         onStartGame = { viewModel.startGameFromEditedState() },
-                        onClearBoard = { viewModel.clearBoard() }
+                        onClearBoard = { viewModel.clearEditBoard() }
                     )
                 )
             }
@@ -710,8 +717,15 @@ fun MainScreen(
                                     viewModel = tutorialViewModel,
                                     boardSize = boardSize,
                                     boardOrientation = editBoardOrientation,
-                                    onEndTutorial = ::endTutorial,
-                                    updateGameState = { newState -> viewModel.updateGameState(newState) },
+                                    tutorialEvents = TutorialEvents(
+                                        onSkipTutorial = ::skipTutorial,
+                                        onFinishTutorial = ::endTutorial
+                                    ),
+                                    updateGameState = { newState ->
+                                        if (isTutorialActive.value) {
+                                            viewModel.updateGameState(newState)
+                                        }
+                                    },
                                 )
                             }
                         },
@@ -737,19 +751,24 @@ fun MainScreen(
     }
 }
 
+data class TutorialEvents(
+    val onFinishTutorial: () -> Unit = { },
+    val onSkipTutorial: () -> Unit = { },
+)
+
 @Composable
 fun CreateTutorialOverlay(
     viewModel: TutorialViewModel,
     boardSize: Size,
     boardOrientation: BoardOrientation,
-    onEndTutorial: () -> Unit,
+    tutorialEvents: TutorialEvents,
     updateGameState: (GameState) -> Unit,
 ) {
     if (boardSize == Size.Zero) return
 
     TutorialOverlay(
         viewModel = viewModel,
-        onCompleted = onEndTutorial,
+        tutorialEvents = tutorialEvents,
         updateGameState = { updateGameState(it) },
         boardWidth = boardSize.width,
         boardHeight = boardSize.height,

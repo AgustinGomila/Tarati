@@ -6,7 +6,10 @@ data class VertexHighlight(
     val vertexId: String,
     val color: Color,
     val pulse: Boolean = false,
+    val startDelay: Long = 0L,
     val duration: Long = 500L,
+    val postDelay: Long = 0L,
+    val persistent: Boolean = false,
     val messageResId: Int? = null
 )
 
@@ -15,7 +18,10 @@ data class EdgeHighlight(
     val to: String,
     val color: Color,
     val pulse: Boolean = false,
-    val duration: Long = 500L
+    val startDelay: Long = 0L,
+    val duration: Long = 500L,
+    val postDelay: Long = 0L,
+    val persistent: Boolean = false
 )
 
 sealed class HighlightAnimation {

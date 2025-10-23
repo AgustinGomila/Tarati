@@ -5,6 +5,7 @@ import com.agustin.tarati.R
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.GameBoard.absoluteCenterToBridgeEdges
 import com.agustin.tarati.game.core.GameBoard.bridgeEdges
 import com.agustin.tarati.game.core.GameBoard.bridgeVertices
 import com.agustin.tarati.game.core.GameBoard.circumferenceEdges
@@ -12,6 +13,7 @@ import com.agustin.tarati.game.core.GameBoard.circumferenceVertices
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.createGameState
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.ui.components.board.animation.EdgeHighlight
 import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
 import com.agustin.tarati.ui.components.board.animation.VertexHighlight
@@ -22,7 +24,6 @@ abstract class TutorialStep(
     val animations: List<HighlightAnimation> = emptyList(),
     val gameState: GameState,
     val autoAdvanceDelay: Long? = null,
-    val interactionRequired: Boolean = false,
     val onStepStart: (() -> Unit)? = null
 )
 
@@ -39,7 +40,6 @@ abstract class InteractiveTutorialStep(
     descriptionResId = descriptionResId,
     animations = animations,
     gameState = gameState,
-    interactionRequired = true,
     onStepStart = onStepStart
 ) {
     fun isExpectedMove(move: Move): Boolean {
@@ -65,7 +65,7 @@ class CompletedStep : TutorialStep(
     titleResId = R.string.tutorial_completed_title,
     descriptionResId = R.string.tutorial_completed_description,
     animations = emptyList(),
-    gameState = createGameState { },
+    gameState = createGameState { initialGameState() },
     autoAdvanceDelay = 4000L
 )
 
@@ -76,7 +76,7 @@ class CenterStep : TutorialStep(
     gameState = createGameState {
         clearCobs()
     },
-    autoAdvanceDelay = 8000L
+    autoAdvanceDelay = 6000L
 )
 
 class BridgeStep : TutorialStep(
@@ -86,7 +86,7 @@ class BridgeStep : TutorialStep(
     gameState = createGameState {
         clearCobs()
     },
-    autoAdvanceDelay = 10000L
+    autoAdvanceDelay = 6000L
 )
 
 class CircumferenceStep : TutorialStep(
@@ -96,7 +96,7 @@ class CircumferenceStep : TutorialStep(
     gameState = createGameState {
         clearCobs()
     },
-    autoAdvanceDelay = 12000L
+    autoAdvanceDelay = 6000L
 )
 
 class DomesticBasesStep : TutorialStep(
@@ -182,16 +182,31 @@ class CastlingStep : InteractiveTutorialStep(
 )
 
 private fun createCenterAnimations(): List<HighlightAnimation> {
-    return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("A1", Color.Green, true, 2000L)),
-        HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B1", Color.Yellow, true, 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B2", Color.Yellow, true, 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B3", Color.Yellow, true, 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B4", Color.Yellow, true, 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B5", Color.Yellow, true, 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("A1", "B6", Color.Yellow, true, 1500L))
+    val animations = mutableListOf<HighlightAnimation>()
+    // Centro Absoluto A
+    animations.add(
+        HighlightAnimation.Vertex(VertexHighlight("A1", Color.Green, true, 500L, persistent = true))
     )
+    animations.add(HighlightAnimation.Pause())
+    // Fase 1: Iluminar aristas centrales en secuencia
+    absoluteCenterToBridgeEdges.forEachIndexed { index, (from, to) ->
+        animations.add(
+            HighlightAnimation.Edge(
+                EdgeHighlight(from, to, Color.Yellow, true, (index * 400).toLong())
+            )
+        )
+        animations.add(HighlightAnimation.Pause())
+    }
+    animations.add(HighlightAnimation.Pause())
+    // Fase 2: Iluminar vértices del puente en secuencia
+    bridgeVertices.forEachIndexed { index, vertex ->
+        animations.add(
+            HighlightAnimation.Vertex(
+                VertexHighlight(vertex, Color.Blue, true, (index * 400).toLong(), 500L)
+            )
+        )
+    }
+    return animations
 }
 
 private fun createBridgeAnimations(): List<HighlightAnimation> {

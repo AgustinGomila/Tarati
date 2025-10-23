@@ -27,12 +27,13 @@ import com.agustin.tarati.game.tutorial.TutorialStep
 import com.agustin.tarati.game.tutorial.UpgradeStep
 import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
 import com.agustin.tarati.ui.localization.localizedString
+import com.agustin.tarati.ui.screens.main.TutorialEvents
 import kotlinx.coroutines.delay
 
 @Composable
 fun TutorialOverlay(
     viewModel: TutorialViewModel,
-    onCompleted: () -> Unit,
+    tutorialEvents: TutorialEvents,
     updateGameState: (GameState) -> Unit,
     boardWidth: Float,
     boardHeight: Float,
@@ -63,11 +64,9 @@ fun TutorialOverlay(
     Box(modifier = modifier.fillMaxSize()) {
         when (state) {
             is TutorialState.ShowingStep,
-            is TutorialState.WaitingForInteraction,
             is TutorialState.WaitingForMove -> {
                 val step = when (state) {
                     is TutorialState.ShowingStep -> (state as TutorialState.ShowingStep).step
-                    is TutorialState.WaitingForInteraction -> (state as TutorialState.WaitingForInteraction).step
                     is TutorialState.WaitingForMove -> (state as TutorialState.WaitingForMove).step
                     else -> null
                 }
@@ -113,7 +112,8 @@ fun TutorialOverlay(
                         bubbleEvents = object : TutorialBubbleEvents {
                             override fun onNext() = viewModel.nextStep()
                             override fun onPrevious() = viewModel.previousStep()
-                            override fun onSkip() = viewModel.skipTutorial()
+                            override fun onSkip() = tutorialEvents.onSkipTutorial()
+
                             override fun onRepeat() {
                                 viewModel.repeatCurrentStep()
                                 val tutorialState = viewModel.getCurrentGameState()
@@ -128,7 +128,7 @@ fun TutorialOverlay(
             }
 
             is TutorialState.Idle -> {}
-            is TutorialState.Completed -> onCompleted()
+            is TutorialState.Completed -> tutorialEvents.onFinishTutorial()
         }
     }
 }

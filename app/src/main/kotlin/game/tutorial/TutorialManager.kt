@@ -81,16 +81,18 @@ class TutorialManager(
         }
     }
 
-    fun skipTutorial() {
-        stopCurrentAnimations()
-        autoAdvanceJob?.cancel()
-        completeTutorial()
-    }
-
     fun repeatCurrentStep() {
         stopCurrentAnimations()
         autoAdvanceJob?.cancel()
-        showStep(_steps.value[_currentStepIndex.value])
+
+        // Limpiar la cola completamente antes de repetir
+        animationCoordinator.handleEvent(AnimationEvent.ClearQueue)
+
+        // Pequeño delay para asegurar que la cola se limpió
+        coroutineScope.launch {
+            delay(50)
+            showStep(_steps.value[_currentStepIndex.value])
+        }
     }
 
     fun onUserMove(move: Move): Boolean {
@@ -150,11 +152,7 @@ class TutorialManager(
             }
 
             else -> {
-                if (step.interactionRequired) {
-                    TutorialState.WaitingForInteraction(step)
-                } else {
-                    TutorialState.ShowingStep(step)
-                }
+                TutorialState.ShowingStep(step)
             }
         }
 
@@ -169,11 +167,14 @@ class TutorialManager(
 
     private fun startStepAnimations(step: TutorialStep) {
         if (step.animations.isNotEmpty()) {
+            // Usar el nombre de la clase del paso como source para mejor tracking
+            val source = step::class.java.simpleName
             animationCoordinator.handleEvent(
-                AnimationEvent.HighlightEvent(step.animations)
+                AnimationEvent.HighlightEvent(step.animations, source)
             )
         }
     }
+
 
     private fun stopCurrentAnimations() {
         animationCoordinator.handleEvent(AnimationEvent.StopHighlights)
@@ -185,6 +186,12 @@ class TutorialManager(
             delay(delayTime)
             nextStep()
         }
+    }
+
+    fun skipTutorial() {
+        stopCurrentAnimations()
+        autoAdvanceJob?.cancel()
+        completeTutorial()
     }
 
     private fun completeTutorial() {

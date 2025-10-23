@@ -11,10 +11,15 @@ class AnimationCoordinator(
                 event.newGameState
             )
 
-            is AnimationEvent.HighlightEvent -> animationViewModel.animate(event.highlights)
+            is AnimationEvent.HighlightEvent -> {
+                val source = event.source ?: "unknown"
+                animationViewModel.animate(event.highlights, source)
+            }
+
             AnimationEvent.StopHighlights -> animationViewModel.stopHighlights()
             AnimationEvent.Reset -> animationViewModel.reset()
             AnimationEvent.SyncState -> animationViewModel.forceSync()
+            AnimationEvent.ClearQueue -> animationViewModel.clearQueue()
         }
     }
 }
