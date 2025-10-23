@@ -241,7 +241,7 @@ fun MainContent(
                                     onSkipTutorial = events::skipTutorial,
                                     onFinishTutorial = events::endTutorial
                                 ),
-                                updateGameState = viewModel::updateGameState,
+                                updateGameState = viewModel.gameManager::updateGameState,
                             )
                         }
                     },

@@ -206,3 +206,7 @@ fun GameState.isEmptyBoard(): Boolean {
 fun GameState.isInitialState(playerSide: Color): Boolean {
     return this == initialGameState(playerSide)
 }
+
+fun GameState.requireRedraw(): Boolean {
+    return initialGameState().cobs == this.cobs || isEmptyBoard()
+}

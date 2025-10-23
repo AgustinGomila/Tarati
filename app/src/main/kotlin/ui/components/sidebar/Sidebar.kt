@@ -333,19 +333,6 @@ fun HistorialControls(
             }
         }
 
-        if (currentMoveIndex != moveHistory.size - 1) {
-            Button(
-                onClick = onMoveToCurrent,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                )
-            ) {
-                LocalizedText(R.string.move_to_current)
-            }
-        }
-
         // Historial de movimientos
         Box(
             modifier = Modifier
@@ -367,6 +354,7 @@ fun HistorialControls(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
                     ) {
+
                         Box(
                             modifier = Modifier
                                 .size(12.dp)
@@ -379,13 +367,44 @@ fun HistorialControls(
                                 )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${actualIndex + 1} · ${move.from} → ${move.to}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(
+                                    if (actualIndex % 2 == 0) {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    } else {
+                                        MaterialTheme.colorScheme.secondary
+                                    }
+                                )
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "${actualIndex + 1} · ${move.from} → ${move.to}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (actualIndex % 2 == 0) {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondary
+                                }
+                            )
+                        }
                     }
                 }
+            }
+        }
+
+        if (currentMoveIndex != moveHistory.size - 1) {
+            Button(
+                onClick = onMoveToCurrent,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                )
+            ) {
+                LocalizedText(R.string.move_to_current)
             }
         }
     }

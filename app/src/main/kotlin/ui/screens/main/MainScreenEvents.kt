@@ -33,26 +33,15 @@ class MainScreenEvents(
         val newBoardState = applyMoveToBoard(gameState, from, to)
         val nextState = newBoardState.copy(currentTurn = gameState.currentTurn.opponent())
 
-        // Actualizar historial
-        val newEntry = Pair(move, nextState)
-        val currentHistory = viewModel.history.value
-        val currentMoveIndex = viewModel.moveIndex.value
-
-        val truncated = if (currentMoveIndex < currentHistory.size - 1) {
-            currentHistory.take(currentMoveIndex + 1)
-        } else currentHistory
-
-        val newMoveHistory = truncated + newEntry
-        viewModel.updateMoveIndex(newMoveHistory.size - 1)
-        viewModel.updateHistory(newMoveHistory)
-
         // Animar highlights
         if (settingsViewModel.settingsState.value.boardState.animateEffects) {
             highlightService.animateHighlights(highlightService.createMoveHighlights(move))
         }
 
         animationCoordinator.handleEvent(AnimationEvent.MoveEvent(move, gameState, nextState))
-        viewModel.updateGameState(nextState)
+
+        viewModel.gameManager.addMove(move, nextState)
+        viewModel.gameManager.updateGameState(nextState)
 
         if (nextState.isGameOver()) {
             viewModel.gameOver()
@@ -101,29 +90,6 @@ class MainScreenEvents(
     fun skipTutorial() {
         tutorialViewModel.skipTutorial()
         clearBoard()
-    }
-
-    fun undoMove(history: List<Pair<Move, GameState>>, moveIndex: Int) {
-        if (moveIndex >= 0) {
-            viewModel.decrementMoveIndex()
-            val newState = if (moveIndex < history.size) history[moveIndex].second else initialGameState()
-            viewModel.updateGameState(newState)
-        }
-    }
-
-    fun redoMove(history: List<Pair<Move, GameState>>, moveIndex: Int) {
-        if (moveIndex < history.size - 1) {
-            viewModel.incrementMoveIndex()
-            val newState = history[moveIndex].second
-            viewModel.updateGameState(newState)
-        }
-    }
-
-    fun moveToCurrentState(history: List<Pair<Move, GameState>>) {
-        if (history.isNotEmpty()) {
-            viewModel.updateMoveIndex(history.size - 1)
-            viewModel.updateGameState(history.last().second)
-        }
     }
 
     fun showNewGameDialog(color: Color) {

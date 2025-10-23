@@ -135,10 +135,10 @@ fun MainScreen(
     // Estados del ViewModel
     val isEditing by viewModel.isEditing.collectAsState()
     val editBoardOrientation by viewModel.editBoardOrientation.collectAsState()
-    val gameStatus by viewModel.gameStatus.collectAsState()
-    val gameState by viewModel.gameState.collectAsState(initialGameState())
-    val history by viewModel.history.collectAsState(emptyList())
-    val moveIndex by viewModel.moveIndex.collectAsState(-1)
+    val gameStatus by viewModel.gameManager.gameStatus.collectAsState()
+    val gameState by viewModel.gameManager.gameState.collectAsState(initialGameState())
+    val history by viewModel.gameManager.history.collectAsState(emptyList())
+    val moveIndex by viewModel.gameManager.moveIndex.collectAsState(-1)
     val aiEnabled by viewModel.aIEnabled.collectAsState(true)
     val playerSide by viewModel.playerSide.collectAsState(WHITE)
 
@@ -172,7 +172,7 @@ fun MainScreen(
     }
 
     val turnState: TurnIndicatorState by derivedStateOf {
-        val state = viewModel.gameState.value
+        val state = viewModel.gameManager.gameState.value
         when {
             gameStatus != GameStatus.PLAYING && !state.isInitialState(playerSide) -> TurnIndicatorState.NEUTRAL
             isAIThinking -> TurnIndicatorState.AI_THINKING
@@ -323,11 +323,12 @@ fun checkAndApplyMove(
     viewModel: MainViewModel
 ) {
     // Obtener estados
-    val gameStatus = viewModel.gameStatus.value
-    val gameState = viewModel.gameState.value
+    val gameStatus = viewModel.gameManager.gameStatus.value
+    val gameState = viewModel.gameManager.gameState.value
 
-    if (gameStatus != GameStatus.PLAYING && gameState.isInitialState(viewModel.playerSide.value))
-        viewModel.updateGameStatus(GameStatus.PLAYING)
+    if (gameStatus != GameStatus.PLAYING && gameState.isInitialState(viewModel.playerSide.value)) {
+        viewModel.gameManager.updateGameStatus(GameStatus.PLAYING)
+    }
 
     events.applyMove(from, to, gameState)
 }
@@ -349,9 +350,9 @@ fun SidebarContent(
     var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
 
     val sidebarEvents = object : SidebarEvents {
-        override fun onMoveToCurrent() = events.moveToCurrentState(history)
-        override fun onUndo() = events.undoMove(history, moveIndex)
-        override fun onRedo() = events.redoMove(history, moveIndex)
+        override fun onMoveToCurrent() = viewModel.gameManager.moveToCurrentState()
+        override fun onUndo() = viewModel.gameManager.undoMove()
+        override fun onRedo() = viewModel.gameManager.redoMove()
         override fun onDifficultyChange(difficulty: Difficulty) = settingsViewModel.setDifficulty(difficulty)
         override fun onToggleAI() = viewModel.updateAIEnabled(!aiEnabled)
         override fun onSettings() = navController.navigate(SettingsScreenDest.route)

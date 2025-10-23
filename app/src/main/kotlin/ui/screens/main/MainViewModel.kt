@@ -6,7 +6,6 @@ import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.GameStatus
-import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.cleanGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
@@ -20,37 +19,7 @@ class MainViewModel() : ViewModel() {
 
     val isDebug: Boolean = BuildConfig.DEBUG
 
-    private val _gameStatus = MutableStateFlow(GameStatus.NO_PLAYING)
-    val gameStatus: StateFlow<GameStatus> = _gameStatus.asStateFlow()
-    fun updateGameStatus(newStatus: GameStatus) {
-        _gameStatus.value = newStatus
-    }
-
-    private val _gameState = MutableStateFlow(initialGameState())
-    val gameState: StateFlow<GameState> = _gameState.asStateFlow()
-    fun updateGameState(newState: GameState) {
-        _gameState.value = newState
-    }
-
-    private val _history = MutableStateFlow(listOf<Pair<Move, GameState>>())
-    val history: StateFlow<List<Pair<Move, GameState>>> = _history.asStateFlow()
-    fun updateHistory(newHistory: List<Pair<Move, GameState>>) {
-        _history.value = newHistory
-    }
-
-    private val _moveIndex = MutableStateFlow(-1)
-    val moveIndex: StateFlow<Int> = _moveIndex.asStateFlow()
-    fun updateMoveIndex(newMoveIndex: Int) {
-        _moveIndex.value = newMoveIndex
-    }
-
-    fun decrementMoveIndex() {
-        _moveIndex.value--
-    }
-
-    fun incrementMoveIndex() {
-        _moveIndex.value++
-    }
+    val gameManager: GameManager by lazy { GameManager() }
 
     private val _aIEnabled = MutableStateFlow(true)
     val aIEnabled: StateFlow<Boolean> = _aIEnabled.asStateFlow()
@@ -88,7 +57,7 @@ class MainViewModel() : ViewModel() {
         _isEditing.value = !_isEditing.value
         if (_isEditing.value) {
             // Al entrar en edición, actualizar el turno de edición al turno actual del juego
-            _editTurn.value = _gameState.value.currentTurn
+            _editTurn.value = gameManager.gameState.value.currentTurn
             // Resetear color de edición a blanco
             _editColor.value = Color.WHITE
         }
@@ -116,11 +85,11 @@ class MainViewModel() : ViewModel() {
     }
 
     fun clearEditBoard() {
-        _gameState.value = cleanGameState(_editTurn.value)
+        gameManager.updateGameState(cleanGameState(_editTurn.value))
     }
 
     fun editPiece(vertexId: String) {
-        val currentState = _gameState.value
+        val currentState = gameManager.gameState.value
         val currentCob = currentState.cobs[vertexId]
         val mutableCobs = currentState.cobs.toMutableMap()
 
@@ -149,7 +118,7 @@ class MainViewModel() : ViewModel() {
             }
         }
 
-        _gameState.value = currentState.copy(cobs = mutableCobs.toMap())
+        gameManager.updateGameState(currentState.copy(cobs = mutableCobs.toMap()))
     }
 
     private fun canPlacePiece(color: Color, currentCounts: PieceCounts): Boolean {
@@ -185,32 +154,31 @@ class MainViewModel() : ViewModel() {
     }
 
     fun clearHistory() {
-        updateHistory(emptyList())
-        updateMoveIndex(-1)
+        gameManager.clearHistory()
     }
 
     fun setGame(gameState: GameState) {
         clearHistory()
-        updateGameState(gameState)
+        gameManager.updateGameState(gameState)
     }
 
     fun gameOver() {
-        updateGameStatus(GameStatus.GAME_OVER)
+        gameManager.updateGameStatus(GameStatus.GAME_OVER)
     }
 
     fun stopGame() {
-        updateGameStatus(GameStatus.NO_PLAYING)
+        gameManager.updateGameStatus(GameStatus.NO_PLAYING)
     }
 
     fun startGame(playerSide: Color) {
         endEditing()
         updatePlayerSide(playerSide)
         setGame(initialGameState())
-        updateGameStatus(GameStatus.PLAYING)
+        gameManager.updateGameStatus(GameStatus.PLAYING)
     }
 
     fun startGameFromEditedState() {
-        val currentState = _gameState.value
+        val currentState = gameManager.gameState.value
         // Validar que la distribución final sea válida
         val pieceCounts = currentState.getPieceCounts()
         if (!isValidDistribution(pieceCounts.white, pieceCounts.black)) {
@@ -220,7 +188,7 @@ class MainViewModel() : ViewModel() {
 
         endEditing()
         setGame(currentState.copy(currentTurn = _editTurn.value))
-        updateGameStatus(GameStatus.PLAYING)
+        gameManager.updateGameStatus(GameStatus.PLAYING)
     }
 
     // endregion EDIT BOARD

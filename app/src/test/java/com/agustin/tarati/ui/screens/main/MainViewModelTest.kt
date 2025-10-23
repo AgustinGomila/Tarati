@@ -84,7 +84,7 @@ class MainViewModelTest {
         val gameState = initialGameState()
         val history = listOf(Pair(move, gameState))
 
-        viewModel.updateHistory(history)
+        viewModel.addMove(move, gameState)
 
         assertEquals("History should be updated", history, viewModel.history.value)
     }
@@ -94,22 +94,6 @@ class MainViewModelTest {
         viewModel.updateMoveIndex(5)
 
         assertEquals("Move index should be 5", 5, viewModel.moveIndex.value)
-    }
-
-    @Test
-    fun incrementMoveIndex_increasesByOne() {
-        viewModel.updateMoveIndex(2)
-        viewModel.incrementMoveIndex()
-
-        assertEquals("Move index should be 3", 3, viewModel.moveIndex.value)
-    }
-
-    @Test
-    fun decrementMoveIndex_decreasesByOne() {
-        viewModel.updateMoveIndex(2)
-        viewModel.decrementMoveIndex()
-
-        assertEquals("Move index should be 1", 1, viewModel.moveIndex.value)
     }
 
     @Test
