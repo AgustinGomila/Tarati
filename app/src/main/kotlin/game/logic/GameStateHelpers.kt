@@ -12,6 +12,7 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.MatchState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getPosibleCastling
+import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.ui.screens.main.PieceCounts
 
@@ -196,4 +197,12 @@ fun GameState.detectUpgrades(newState: GameState): List<Pair<String, Cob>> {
     }
 
     return upgrades
+}
+
+fun GameState.isEmptyBoard(): Boolean {
+    return this.cobs.isEmpty()
+}
+
+fun GameState.isInitialState(playerSide: Color): Boolean {
+    return this == initialGameState(playerSide)
 }

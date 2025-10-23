@@ -6,13 +6,13 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.tutorial.TutorialManager
 import com.agustin.tarati.game.tutorial.TutorialState
+import com.agustin.tarati.game.tutorial.isCompleted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class TutorialViewModel(val tutorialManager: TutorialManager) : ViewModel() {
 
     val tutorialState: StateFlow<TutorialState> = tutorialManager.tutorialState
-    val tutorialGameState get() = tutorialManager.getCurrentGameState()
     val progress get() = tutorialManager.progress
 
     fun onMoveAttempted(
@@ -37,6 +37,7 @@ class TutorialViewModel(val tutorialManager: TutorialManager) : ViewModel() {
     }
 
     // Delegar todos los métodos al tutorialManager
+    fun isCompleted(): Boolean = tutorialManager.progress.isCompleted()
     fun nextStep() = tutorialManager.nextStep()
     fun previousStep() = tutorialManager.previousStep()
     fun skipTutorial() = tutorialManager.skipTutorial()

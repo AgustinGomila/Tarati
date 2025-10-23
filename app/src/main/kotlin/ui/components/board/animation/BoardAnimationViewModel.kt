@@ -289,13 +289,6 @@ class BoardAnimationViewModel : ViewModel() {
     private var isProcessingQueue = false
     private var currentAnimationJob: Job? = null
 
-    private data class AnimationGroup(
-        val highlights: List<HighlightAnimation>,
-        val groupId: String = UUID.randomUUID().toString(),
-        val source: String = "unknown",
-        val timestamp: Long = System.currentTimeMillis() // Agregar timestamp aquí
-    )
-
     private fun isDuplicateGroup(newGroup: AnimationGroup, existingGroup: AnimationGroup): Boolean {
         if (newGroup.highlights.size != existingGroup.highlights.size) return false
 
@@ -347,6 +340,7 @@ class BoardAnimationViewModel : ViewModel() {
         }
     }
 
+    @Suppress("unused")
     fun clearQueueAndAdd(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
         return viewModelScope.launch {
             clearQueue()
@@ -462,6 +456,19 @@ class BoardAnimationViewModel : ViewModel() {
         }
     }
 
+    fun clearQueue() {
+        viewModelScope.launch {
+            animationQueue.clear()
+            currentAnimationJob?.cancel()
+            isProcessingQueue = false
+        }
+    }
+
+    fun isAnimating(): Boolean {
+        return isProcessingQueue || animationQueue.isNotEmpty()
+    }
+
+    @Suppress("unused")
     fun clearSpecificHighlights(
         vertexIds: List<String> = emptyList(),
         edges: List<Pair<String, String>> = emptyList()
@@ -477,18 +484,7 @@ class BoardAnimationViewModel : ViewModel() {
         }
     }
 
-    fun clearQueue() {
-        viewModelScope.launch {
-            animationQueue.clear()
-            currentAnimationJob?.cancel()
-            isProcessingQueue = false
-        }
-    }
-
-    fun isAnimating(): Boolean {
-        return isProcessingQueue || animationQueue.isNotEmpty()
-    }
-
+    @Suppress("unused")
     fun loadTutorialSequence(sequences: List<List<HighlightAnimation>>) {
         viewModelScope.launch {
             clearQueue()

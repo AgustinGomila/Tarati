@@ -194,10 +194,19 @@ class MainViewModel() : ViewModel() {
         updateGameState(gameState)
     }
 
+    fun gameOver() {
+        updateGameStatus(GameStatus.GAME_OVER)
+    }
+
+    fun stopGame() {
+        updateGameStatus(GameStatus.NO_PLAYING)
+    }
+
     fun startGame(playerSide: Color) {
         endEditing()
         updatePlayerSide(playerSide)
         setGame(initialGameState())
+        updateGameStatus(GameStatus.PLAYING)
     }
 
     fun startGameFromEditedState() {
@@ -211,6 +220,7 @@ class MainViewModel() : ViewModel() {
 
         endEditing()
         setGame(currentState.copy(currentTurn = _editTurn.value))
+        updateGameStatus(GameStatus.PLAYING)
     }
 
     // endregion EDIT BOARD

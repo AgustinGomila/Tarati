@@ -13,3 +13,7 @@ data class TutorialProgress(
     val currentStepIndex: Int,
     val totalSteps: Int
 )
+
+fun TutorialProgress.isCompleted(): Boolean {
+    return currentStepIndex == totalSteps
+}

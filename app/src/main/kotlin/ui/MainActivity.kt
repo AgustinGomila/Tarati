@@ -18,9 +18,7 @@ import com.agustin.tarati.ui.navigation.NavGraph
 import com.agustin.tarati.ui.screens.settings.SettingsEvents
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
-import com.agustin.tarati.ui.theme.PaletteManager
 import com.agustin.tarati.ui.theme.TaratiTheme
-import com.agustin.tarati.ui.theme.availablePalettes
 import com.agustin.tarati.ui.theme.changePalette
 import org.koin.core.context.GlobalContext.get
 import java.util.*
@@ -49,10 +47,6 @@ class MainActivity : ComponentActivity() {
 
                 val settings = viewModel.settingsState.collectAsState()
 
-                val currentPalette = availablePalettes.find { it.name == settings.value.palette }
-                    ?: availablePalettes.first()
-                PaletteManager.setPalette(currentPalette)
-
                 val useDarkTheme = when (settings.value.appTheme) {
                     AppTheme.MODE_AUTO -> isSystemInDarkTheme()
                     AppTheme.MODE_DAY -> false
@@ -64,44 +58,25 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        NavGraph(
-                            object : SettingsEvents {
-                                override fun onThemeChange(theme: AppTheme) {
-                                    viewModel.toggleDarkTheme(theme == AppTheme.MODE_NIGHT)
-                                }
-
-                                override fun onLanguageChange(language: AppLanguage) {
-                                    viewModel.setLanguage(language)
-                                }
-
-                                override fun onLabelsVisibilityChange(visible: Boolean) {
-                                    viewModel.setLabelsVisibility(visible)
-                                }
-
-                                override fun onVerticesVisibilityChange(visible: Boolean) {
-                                    viewModel.setVerticesVisibility(visible)
-                                }
-
-                                override fun onEdgesVisibilityChange(visible: Boolean) {
-                                    viewModel.setEdgesVisibility(visible)
-                                }
-
-                                override fun onAnimateEffectsChange(animate: Boolean) {
-                                    viewModel.setAnimateEffects(animate)
-                                }
-
-                                override fun onTutorialButtonVisibilityChange(visible: Boolean) {
-                                    viewModel.setTutorialButtonVisibility(visible)
-                                }
-
-                                override fun onPaletteChange(paletteName: String) {
-                                    changePalette(paletteName)
-                                }
-                            },
-                        )
+                        NavGraph(settingsEvents(viewModel))
                     }
                 }
             }
+        }
+    }
+
+    fun settingsEvents(viewModel: SettingsViewModel): SettingsEvents {
+        return object : SettingsEvents {
+            override fun onThemeChange(theme: AppTheme) = viewModel.toggleDarkTheme(theme == AppTheme.MODE_NIGHT)
+            override fun onLanguageChange(language: AppLanguage) = viewModel.setLanguage(language)
+            override fun onLabelsVisibilityChange(visible: Boolean) = viewModel.setLabelsVisibility(visible)
+            override fun onVerticesVisibilityChange(visible: Boolean) = viewModel.setVerticesVisibility(visible)
+            override fun onEdgesVisibilityChange(visible: Boolean) = viewModel.setEdgesVisibility(visible)
+            override fun onAnimateEffectsChange(animate: Boolean) = viewModel.setAnimateEffects(animate)
+            override fun onTutorialButtonVisibilityChange(visible: Boolean) =
+                viewModel.setTutorialButtonVisibility(visible)
+
+            override fun onPaletteChange(paletteName: String) = changePalette(paletteName)
         }
     }
 

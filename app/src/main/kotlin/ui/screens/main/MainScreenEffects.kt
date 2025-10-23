@@ -1,0 +1,266 @@
+package com.agustin.tarati.ui.screens.main
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.dp
+import com.agustin.tarati.R
+import com.agustin.tarati.game.ai.AIThinkingViewModel
+import com.agustin.tarati.game.ai.EvaluationConfig
+import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
+import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.GameState
+import com.agustin.tarati.game.core.GameStatus
+import com.agustin.tarati.game.core.Move
+import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.isPortrait
+import com.agustin.tarati.game.logic.toBoardOrientation
+import com.agustin.tarati.ui.components.board.BoardEvents
+import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
+import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
+import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
+import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
+import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.theme.getBoardColors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+@Composable
+fun MainScreenEffects(
+    scope: CoroutineScope,
+    drawerState: DrawerState,
+    isLandscape: Boolean,
+
+    playerSide: Color,
+    gameState: GameState,
+    gameStatus: GameStatus,
+
+    evalConfig: EvaluationConfig,
+    aiEnabled: Boolean,
+    isEditing: Boolean,
+    animateEffects: Boolean,
+    isTutorialActive: Boolean,
+
+    aiThinkingDependencies: List<Any?>,
+
+    aiThinkingViewModel: AIThinkingViewModel,
+    animationViewModel: BoardAnimationViewModel,
+
+    onBoardOrientationChanged: (BoardOrientation) -> Unit,
+    onAIThinkingChanged: (Boolean) -> Unit,
+    onAIMove: (String, String) -> Unit,
+    onTutorialEnd: () -> Unit,
+    onGameOver: () -> Unit,
+
+    debug: Boolean
+) {
+    // Devuelve el estado de la IA
+    LaunchedEffect(aiThinkingViewModel.isAIThinking) {
+        val isThinking = aiThinkingViewModel.isAIThinking
+        onAIThinkingChanged(isThinking)
+    }
+
+    // Efecto para orientación del tablero
+    LaunchedEffect(isLandscape, playerSide) {
+        onBoardOrientationChanged(toBoardOrientation(isLandscape, playerSide))
+    }
+
+    // Efecto para animaciones
+    LaunchedEffect(animateEffects) {
+        animationViewModel.updateAnimateEffects(animateEffects)
+    }
+
+    // Efecto para dificultad
+    LaunchedEffect(evalConfig) {
+        setEvaluationConfig(evalConfig)
+    }
+
+    // Efecto para estado del juego
+    LaunchedEffect(gameStatus, isEditing, isTutorialActive) {
+        if (isTutorialActive || isEditing) return@LaunchedEffect
+        if (gameStatus == GameStatus.NEW_GAME) return@LaunchedEffect
+
+        when (gameStatus) {
+            GameStatus.GAME_OVER -> {
+                delay(1500)
+                onGameOver()
+            }
+
+            else -> {}
+        }
+    }
+
+    // Efecto para ejecutar pensamiento de IA
+    LaunchedEffect(aiThinkingDependencies) {
+        aiThinkingViewModel.calculateAIMove(
+            gameState = gameState,
+            gameStatus = gameStatus,
+            playerSide = playerSide,
+            aiEnabled = aiEnabled,
+            isEditing = isEditing,
+            onMoveFound = onAIMove,
+            debug = debug
+        )
+    }
+
+    // Efecto para drawer y tutorial
+    LaunchedEffect(drawerState.currentValue) {
+        if (drawerState.isOpen && isTutorialActive) {
+            onTutorialEnd()
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+fun MainContent(
+    scope: CoroutineScope,
+    drawerState: DrawerState,
+    boardSize: Size,
+    boardOrientation: BoardOrientation,
+    editBoardOrientation: BoardOrientation,
+    gameState: GameState,
+    turnState: TurnIndicatorState,
+    distributionState: DistributionState,
+    lastMove: Move?,
+    isTutorialActive: Boolean,
+    isAIThinking: Boolean,
+    labelsVisibles: Boolean,
+    edgesVisibles: Boolean,
+    verticesVisibles: Boolean,
+    pieceCounts: PieceCounts,
+    onEditPiece: (String) -> Unit,
+    onPieceMove: (String, String) -> Unit,
+    events: MainScreenEvents,
+    viewModel: MainViewModel,
+    animationViewModel: BoardAnimationViewModel,
+    tutorialViewModel: TutorialViewModel
+) {
+    // Crear eventos de edición
+    val editEvents = remember(viewModel) { EditEvents(viewModel = viewModel) }
+
+    // Obtener estados actualizados
+    val editColor by viewModel.editColor.collectAsState()
+    val editTurn by viewModel.editTurn.collectAsState()
+    val playerSide by viewModel.playerSide.collectAsState()
+    val isEditing by viewModel.isEditing.collectAsState()
+
+    LaunchedEffect(isEditing) {
+        scope.launch { drawerState.close() }
+    }
+
+    Scaffold(
+        topBar = {
+            TaratiTopBar(
+                scope = scope,
+                drawerState = drawerState,
+                isEditing = isEditing
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                if (boardOrientation.isPortrait() && !isEditing) {
+                    LocalizedText(
+                        id = R.string.a_board_game_by_george_spencer_brown,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                CreateBoard(
+                    modifier = Modifier.weight(1f),
+                    state = CreateBoardState(
+                        gameState = gameState,
+                        lastMove = lastMove,
+                        playerSide = playerSide,
+                        isEditing = isEditing,
+                        isTutorialActive = isTutorialActive,
+                        isAIThinking = isAIThinking,
+                        boardOrientation = boardOrientation,
+                        editBoardOrientation = editBoardOrientation,
+                        labelsVisible = labelsVisibles,
+                        edgesVisible = edgesVisibles,
+                        verticesVisible = verticesVisibles,
+                    ),
+                    events = object : BoardEvents {
+                        override fun onMove(from: String, to: String) = onPieceMove(from, to)
+                        override fun onEditPiece(from: String) = onEditPiece(from)
+                        override fun onResetCompleted() = Unit
+                    },
+                    boardAnimationViewModel = animationViewModel,
+                    boardColors = getBoardColors(),
+                    tutorial = {
+                        if (isTutorialActive) {
+                            CreateTutorialOverlay(
+                                viewModel = tutorialViewModel,
+                                boardSize = boardSize,
+                                boardOrientation = editBoardOrientation,
+                                tutorialEvents = TutorialEvents(
+                                    onSkipTutorial = events::skipTutorial,
+                                    onFinishTutorial = events::endTutorial
+                                ),
+                                updateGameState = viewModel::updateGameState,
+                            )
+                        }
+                    },
+                    content = {
+                        EditControls(
+                            isLandscapeScreen = !boardOrientation.isPortrait(),
+                            EditColorState(
+                                playerSide = playerSide,
+                                editTurn = editTurn,
+                                editColor = editColor,
+                            ),
+                            EditActionState(
+                                pieceCounts = pieceCounts,
+                                isValidDistribution = distributionState.isValid,
+                                isCompletedDistribution = distributionState.isCompleted,
+                            ),
+                            editEvents = editEvents
+                        )
+                    },
+                    turnIndicator = {
+                        TurnIndicator(
+                            modifier = it,
+                            currentTurn = gameState.currentTurn,
+                            state = turnState,
+                            boardColors = getBoardColors(),
+                            indicatorEvents = object : IndicatorEvents {
+                                override fun onTouch() {
+                                    events.showNewGameDialog(playerSide)
+                                }
+                            },
+                        )
+                    },
+                    debug = viewModel.isDebug
+                )
+            }
+        }
+    }
+}

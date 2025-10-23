@@ -189,22 +189,21 @@ class TutorialManager(
     }
 
     fun skipTutorial() {
-        stopCurrentAnimations()
-        autoAdvanceJob?.cancel()
         completeTutorial()
     }
 
     private fun completeTutorial() {
         stopCurrentAnimations()
-        _tutorialState.value = TutorialState.Completed
         autoAdvanceJob?.cancel()
+        _tutorialState.value = TutorialState.Completed
     }
 
     fun reset() {
         stopCurrentAnimations()
+        autoAdvanceJob?.cancel()
         _tutorialState.value = TutorialState.Idle
+
         _currentStepIndex.value = 0
         _steps.value = emptyList()
-        autoAdvanceJob?.cancel()
     }
 }

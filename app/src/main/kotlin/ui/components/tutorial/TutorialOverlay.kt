@@ -47,6 +47,9 @@ fun TutorialOverlay(
     val state by viewModel.tutorialState.collectAsState()
 
     LaunchedEffect(state) {
+        val newGameState = viewModel.getCurrentGameState()
+        newGameState?.let { updateGameState(it) }
+
         when (state) {
             is TutorialState.ShowingStep -> {
                 if (viewModel.shouldAutoAdvance()) {
@@ -110,7 +113,13 @@ fun TutorialOverlay(
                             config = bubbleConfig
                         ),
                         bubbleEvents = object : TutorialBubbleEvents {
-                            override fun onNext() = viewModel.nextStep()
+                            override fun onNext() {
+                                viewModel.nextStep()
+                                if (viewModel.isCompleted()) {
+                                    tutorialEvents.onFinishTutorial()
+                                }
+                            }
+
                             override fun onPrevious() = viewModel.previousStep()
                             override fun onSkip() = tutorialEvents.onSkipTutorial()
 

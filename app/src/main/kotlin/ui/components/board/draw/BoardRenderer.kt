@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
 package com.agustin.tarati.ui.components.board.draw
 
 import androidx.compose.foundation.Canvas
@@ -28,6 +30,7 @@ import com.agustin.tarati.game.core.Color
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.isEmptyBoard
 import com.agustin.tarati.game.logic.shouldAnimateMove
 import com.agustin.tarati.ui.components.board.BoardState
 import com.agustin.tarati.ui.components.board.TapEvents
@@ -54,7 +57,6 @@ fun BoardRenderer(
 ) {
     var prevGameState by remember { mutableStateOf<GameState?>(null) }
 
-    val isAnimating by animationViewModel.isAnimating.collectAsState()
     val selectedVertexId by selectViewModel.selectedVertexId.collectAsState()
     val validAdjacentVertexes by selectViewModel.validAdjacentVertexes.collectAsState()
 
@@ -75,17 +77,35 @@ fun BoardRenderer(
         }
     }
 
-    // Efecto para procesar movimientos
-    LaunchedEffect(boardState.lastMove, boardState.gameState, isAnimating) {
-        val lastMove = boardState.lastMove
-        if (lastMove != null && prevGameState != null && !isAnimating) {
-            val newState = boardState.gameState
-            val lastState = prevGameState ?: return@LaunchedEffect
+    // Efecto para actualizar el estado del tablero
+    LaunchedEffect(boardState.gameState) {
+        // Tablero sin piezas
+        if (boardState.gameState.isEmptyBoard()) {
+            selectViewModel.resetSelection()
+            animationViewModel.reset()
+            prevGameState = null
+            return@LaunchedEffect
+        }
 
-            if (lastState.shouldAnimateMove(newState, lastMove)) {
+        // Sincronizar si el estado cambió
+        if (boardState.gameState != prevGameState) {
+            animationViewModel.syncState(boardState.gameState)
+            prevGameState = boardState.gameState
+        }
+    }
+
+    // Efecto para procesar el último movimiento y actualizar el tablero
+    LaunchedEffect(boardState.lastMove) {
+        val prevState = prevGameState
+
+        // Procesar el último movimiento si es necesario
+        val lastMove = boardState.lastMove
+        if (lastMove != null && prevState != null) {
+            val newState = boardState.gameState
+            if (prevState.shouldAnimateMove(newState, lastMove)) {
                 val success = animationViewModel.processMove(
                     move = lastMove,
-                    oldGameState = lastState,
+                    oldGameState = prevState,
                     newGameState = newState
                 )
 
@@ -93,14 +113,6 @@ fun BoardRenderer(
                     prevGameState = newState
                 }
             }
-        }
-    }
-
-    // Sincronizar estado cuando no hay animaciones y el estado cambió
-    LaunchedEffect(boardState.gameState, isAnimating) {
-        if (!isAnimating && boardState.gameState != prevGameState) {
-            animationViewModel.syncState(boardState.gameState)
-            prevGameState = boardState.gameState
         }
     }
 
