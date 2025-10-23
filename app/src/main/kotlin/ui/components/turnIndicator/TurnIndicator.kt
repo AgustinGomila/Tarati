@@ -51,9 +51,7 @@ fun TurnIndicator(
     currentTurn: Color,
     size: Dp = 60.dp,
     boardColors: BoardColors,
-    indicatorEvents: IndicatorEvents = object : IndicatorEvents {
-        override fun onTouch() {}
-    },
+    indicatorEvents: IndicatorEvents,
 ) {
     // Determinar color, icono y comportamiento según el estado
     val color = when (currentTurn) {
@@ -167,6 +165,10 @@ fun DrawNewGameIcon(size: Dp = 60.dp, contentDescription: String) {
     }
 }
 
+fun createPreviewIndicatorEvents(): IndicatorEvents = object : IndicatorEvents {
+    override fun onTouch() = Unit
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TurnIndicatorPreview_AllStates() {
@@ -188,6 +190,7 @@ fun TurnIndicatorPreview_AllStates() {
                 currentTurn = Color.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
+                indicatorEvents = createPreviewIndicatorEvents()
             )
 
             LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
@@ -197,6 +200,7 @@ fun TurnIndicatorPreview_AllStates() {
                 currentTurn = Color.WHITE,
                 size = 80.dp,
                 boardColors = boardColors,
+                indicatorEvents = createPreviewIndicatorEvents()
             )
 
             LocalizedText(R.string.human_turn, style = MaterialTheme.typography.titleMedium)
@@ -206,6 +210,7 @@ fun TurnIndicatorPreview_AllStates() {
                 currentTurn = Color.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
+                indicatorEvents = createPreviewIndicatorEvents()
             )
 
             LocalizedText(R.string.new_game, style = MaterialTheme.typography.titleMedium)
@@ -215,6 +220,7 @@ fun TurnIndicatorPreview_AllStates() {
                 currentTurn = Color.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
+                indicatorEvents = createPreviewIndicatorEvents()
             )
         }
     }

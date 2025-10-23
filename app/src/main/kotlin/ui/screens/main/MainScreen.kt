@@ -206,7 +206,6 @@ fun MainScreen(
 
     // Efectos
     MainScreenEffects(
-        scope = scope,
         drawerState = drawerState,
         isLandscape = isLandscape,
 
@@ -489,17 +488,19 @@ fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, isEditing: Boo
         },
         navigationIcon = {
             IconButton(
-                onClick = {
-                    scope.launch {
-                        if (drawerState.isClosed) drawerState.open()
-                        else drawerState.close()
-                    }
-                }
+                onClick = { drawerState.turnState(scope) }
             ) {
                 Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
             }
         }
     )
+}
+
+private fun DrawerState.turnState(scope: CoroutineScope) {
+    scope.launch {
+        if (isClosed) open()
+        else close()
+    }
 }
 
 data class CreateBoardState(
@@ -542,23 +543,6 @@ fun CreateBoard(
         isEditing = state.isEditing
     )
 
-    // Construir los eventos para Board
-    val boardEvents = object : BoardEvents {
-        override fun onMove(from: String, to: String) {
-            if (!state.isEditing) {
-                events.onMove(from, to)
-            }
-        }
-
-        override fun onEditPiece(from: String) {
-            events.onEditPiece(from)
-        }
-
-        override fun onResetCompleted() {
-            events.onResetCompleted()
-        }
-    }
-
     Box(
         modifier
             .fillMaxWidth(),
@@ -566,12 +550,12 @@ fun CreateBoard(
     ) {
         Board(
             modifier = Modifier.fillMaxSize(),
-            boardState = boardState,
             playerSide = state.playerSide,
-            events = boardEvents,
-            debug = debug,
+            boardState = boardState,
             boardColors = boardColors,
+            events = boardEvents(state, events),
             animationViewModel = boardAnimationViewModel,
+            debug = debug,
         )
 
         when {
@@ -582,6 +566,17 @@ fun CreateBoard(
             else -> turnIndicator(Modifier.align(Alignment.TopEnd))
         }
     }
+}
+
+fun boardEvents(state: CreateBoardState, events: BoardEvents): BoardEvents = object : BoardEvents {
+    override fun onMove(from: String, to: String) {
+        if (!state.isEditing) {
+            events.onMove(from, to)
+        }
+    }
+
+    override fun onEditPiece(from: String) = events.onEditPiece(from)
+    override fun onResetCompleted() = events.onResetCompleted()
 }
 
 // region Previews
@@ -623,10 +618,10 @@ fun EditingModePreviewContent(
         Box(modifier = Modifier.fillMaxSize()) {
             Board(
                 modifier = Modifier.fillMaxSize(),
-                boardState = boardState,
                 playerSide = playerSide,
-                events = boardEvents,
+                boardState = boardState,
                 boardColors = boardColors,
+                events = boardEvents,
             )
 
             EditControlsPreview(
@@ -1163,8 +1158,6 @@ private fun MainScreenPreviewContent(
 
         // Implementación de eventos para el preview
         val sidebarEvents = createPreviewSidebarEvents(
-            scope = scope,
-            drawerState = drawerState,
             currentIsEditing = isEditing,
             onGameStateUpdate = { gameState = it },
             onPlayerSideUpdate = { playerSide = it },
@@ -1523,75 +1516,64 @@ fun BottomControlsPreview() {
 
 @Composable
 private fun createPreviewSidebarEvents(
-    scope: CoroutineScope,
-    drawerState: DrawerState,
     currentIsEditing: Boolean,
     onGameStateUpdate: (GameState) -> Unit,
     onPlayerSideUpdate: (Color) -> Unit,
     onEditingUpdate: (Boolean) -> Unit,
     debug: Boolean
-): SidebarEvents {
-    return object : SidebarEvents {
-        override fun onMoveToCurrent() {
-            onGameStateUpdate(initialGameState())
-        }
+): SidebarEvents = object : SidebarEvents {
+    override fun onMoveToCurrent() = onGameStateUpdate(initialGameState())
+    override fun onUndo() {}
+    override fun onRedo() {}
+    override fun onDifficultyChange(difficulty: Difficulty) {
+        if (debug) println("Difficulty changed to: $difficulty")
+    }
 
-        override fun onUndo() {}
-        override fun onRedo() {}
-        override fun onDifficultyChange(difficulty: Difficulty) {
-            if (debug) println("Difficulty changed to: $difficulty")
-        }
+    override fun onToggleAI() {
+        if (debug) println("AI toggled")
+    }
 
-        override fun onToggleAI() {
-            if (debug) println("AI toggled")
-        }
+    override fun onSettings() {
+        if (debug) println("Settings clicked")
+    }
 
-        override fun onSettings() {
-            if (debug) println("Settings clicked")
-        }
+    override fun onNewGame(color: Color) {
+        onPlayerSideUpdate(color)
+        onGameStateUpdate(initialGameState())
+        if (debug) println("New game with side: $color")
+    }
 
-        override fun onNewGame(color: Color) {
-            onPlayerSideUpdate(color)
-            onGameStateUpdate(initialGameState())
-            if (debug) println("New game with side: $color")
-        }
+    override fun onEditBoard() {
+        onEditingUpdate(!currentIsEditing)
+        if (debug) println("Edit board: $currentIsEditing")
+    }
 
-        override fun onEditBoard() {
-            onEditingUpdate(!currentIsEditing)
-            if (debug) println("Edit board: $currentIsEditing")
-        }
+    override fun onAboutClick() {
+        if (debug) println("About clicked")
+    }
 
-        override fun onAboutClick() {
-            if (debug) println("About clicked")
-        }
-
-        override fun onTutorial() {
-            if (debug) println("Show tutorial!")
-        }
+    override fun onTutorial() {
+        if (debug) println("Show tutorial!")
     }
 }
 
-private fun createPreviewBoardEvents(debug: Boolean): BoardEvents {
-    return object : BoardEvents {
-        override fun onMove(from: String, to: String) {
-            if (debug) println("Move from $from to $to")
-        }
+private fun createPreviewBoardEvents(debug: Boolean): BoardEvents = object : BoardEvents {
+    override fun onMove(from: String, to: String) {
+        if (debug) println("Move from $from to $to")
+    }
 
-        override fun onEditPiece(from: String) {
-            if (debug) println("Edit piece at $from")
-        }
+    override fun onEditPiece(from: String) {
+        if (debug) println("Edit piece at $from")
+    }
 
-        override fun onResetCompleted() {
-            if (debug) println("Board reset completed")
-        }
+    override fun onResetCompleted() {
+        if (debug) println("Board reset completed")
     }
 }
 
-private fun createPreviewIndicatorEvents(debug: Boolean): IndicatorEvents {
-    return object : IndicatorEvents {
-        override fun onTouch() {
-            if (debug) println("Indicator turn clicked")
-        }
+private fun createPreviewIndicatorEvents(debug: Boolean): IndicatorEvents = object : IndicatorEvents {
+    override fun onTouch() {
+        if (debug) println("Indicator turn clicked")
     }
 }
 

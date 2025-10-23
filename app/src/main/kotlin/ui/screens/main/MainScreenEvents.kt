@@ -15,7 +15,6 @@ import com.agustin.tarati.ui.components.board.helpers.HighlightService
 import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 class MainScreenEvents(
     private val scope: CoroutineScope,
@@ -77,7 +76,7 @@ class MainScreenEvents(
         highlightService.stopHighlights()
         animationCoordinator.handleEvent(AnimationEvent.SyncState)
 
-        scope.launch { drawerState.close() }
+        drawerState.closeIfOpen(scope)
 
         viewModel.startGame(playerSide)
     }
@@ -89,7 +88,7 @@ class MainScreenEvents(
         highlightService.stopHighlights()
         animationCoordinator.handleEvent(AnimationEvent.SyncState)
 
-        scope.launch { drawerState.close() }
+        drawerState.closeIfOpen(scope)
 
         tutorialViewModel.startTutorial()
     }

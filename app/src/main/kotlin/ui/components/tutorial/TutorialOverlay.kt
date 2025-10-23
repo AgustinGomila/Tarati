@@ -47,6 +47,7 @@ fun TutorialOverlay(
     val state by viewModel.tutorialState.collectAsState()
 
     LaunchedEffect(state) {
+        val state = state
         val newGameState = viewModel.getCurrentGameState()
         newGameState?.let { updateGameState(it) }
 
@@ -112,25 +113,7 @@ fun TutorialOverlay(
                             ),
                             config = bubbleConfig
                         ),
-                        bubbleEvents = object : TutorialBubbleEvents {
-                            override fun onNext() {
-                                viewModel.nextStep()
-                                if (viewModel.isCompleted()) {
-                                    tutorialEvents.onFinishTutorial()
-                                }
-                            }
-
-                            override fun onPrevious() = viewModel.previousStep()
-                            override fun onSkip() = tutorialEvents.onSkipTutorial()
-
-                            override fun onRepeat() {
-                                viewModel.repeatCurrentStep()
-                                val tutorialState = viewModel.getCurrentGameState()
-                                if (tutorialState != null) {
-                                    updateGameState(tutorialState)
-                                }
-                            }
-                        },
+                        bubbleEvents = tutorialBubbleEvents(viewModel, tutorialEvents, updateGameState),
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -142,19 +125,41 @@ fun TutorialOverlay(
     }
 }
 
-fun getDefaultBubbleConfigForStep(step: TutorialStep): BubbleConfig {
-    return when (step) {
-        is IntroductionStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
-        is CompletedStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
-        is CenterStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is BridgeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is CircumferenceStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is DomesticBasesStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
-        is CobsStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is BasicMovesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is CapturesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is UpgradeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
-        is CastlingStep -> BubbleConfig(BubblePosition.TOP_CENTER)
-        else -> BubbleConfig(BubblePosition.TOP_CENTER)
+fun tutorialBubbleEvents(
+    viewModel: TutorialViewModel,
+    tutorialEvents: TutorialEvents,
+    updateGameState: (GameState) -> Unit
+): TutorialBubbleEvents = object : TutorialBubbleEvents {
+    override fun onNext() {
+        viewModel.nextStep()
+        if (viewModel.isCompleted()) {
+            tutorialEvents.onFinishTutorial()
+        }
     }
+
+    override fun onPrevious() = viewModel.previousStep()
+    override fun onSkip() = tutorialEvents.onSkipTutorial()
+
+    override fun onRepeat() {
+        viewModel.repeatCurrentStep()
+        val tutorialState = viewModel.getCurrentGameState()
+        if (tutorialState != null) {
+            updateGameState(tutorialState)
+        }
+    }
+}
+
+fun getDefaultBubbleConfigForStep(step: TutorialStep): BubbleConfig = when (step) {
+    is IntroductionStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+    is CompletedStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+    is CenterStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is BridgeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is CircumferenceStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is DomesticBasesStep -> BubbleConfig(BubblePosition.CENTER_CENTER)
+    is CobsStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is BasicMovesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is CapturesStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is UpgradeStep -> BubbleConfig(BubblePosition.BOTTOM_CENTER)
+    is CastlingStep -> BubbleConfig(BubblePosition.TOP_CENTER)
+    else -> BubbleConfig(BubblePosition.TOP_CENTER)
 }

@@ -268,11 +268,13 @@ private fun BubbleContent(
 
 // region Previews
 
-private val previewBubbleEvents = object : TutorialBubbleEvents {
-    override fun onNext() {}
-    override fun onPrevious() {}
-    override fun onSkip() {}
-    override fun onRepeat() {}
+private val previewBubbleEvents by lazy {
+    object : TutorialBubbleEvents {
+        override fun onNext() {}
+        override fun onPrevious() {}
+        override fun onSkip() {}
+        override fun onRepeat() {}
+    }
 }
 
 @Preview(name = "Quick - Burbuja Simple", group = "Tutorial Quick")

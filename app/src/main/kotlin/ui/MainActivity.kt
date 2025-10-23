@@ -65,19 +65,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun settingsEvents(viewModel: SettingsViewModel): SettingsEvents {
-        return object : SettingsEvents {
-            override fun onThemeChange(theme: AppTheme) = viewModel.toggleDarkTheme(theme == AppTheme.MODE_NIGHT)
-            override fun onLanguageChange(language: AppLanguage) = viewModel.setLanguage(language)
-            override fun onLabelsVisibilityChange(visible: Boolean) = viewModel.setLabelsVisibility(visible)
-            override fun onVerticesVisibilityChange(visible: Boolean) = viewModel.setVerticesVisibility(visible)
-            override fun onEdgesVisibilityChange(visible: Boolean) = viewModel.setEdgesVisibility(visible)
-            override fun onAnimateEffectsChange(animate: Boolean) = viewModel.setAnimateEffects(animate)
-            override fun onTutorialButtonVisibilityChange(visible: Boolean) =
-                viewModel.setTutorialButtonVisibility(visible)
+    fun settingsEvents(viewModel: SettingsViewModel): SettingsEvents = object : SettingsEvents {
+        override fun onThemeChange(theme: AppTheme) = viewModel.toggleDarkTheme(theme == AppTheme.MODE_NIGHT)
+        override fun onLanguageChange(language: AppLanguage) = viewModel.setLanguage(language)
+        override fun onLabelsVisibilityChange(visible: Boolean) = viewModel.setLabelsVisibility(visible)
+        override fun onVerticesVisibilityChange(visible: Boolean) = viewModel.setVerticesVisibility(visible)
+        override fun onEdgesVisibilityChange(visible: Boolean) = viewModel.setEdgesVisibility(visible)
+        override fun onAnimateEffectsChange(animate: Boolean) = viewModel.setAnimateEffects(animate)
+        override fun onTutorialButtonVisibilityChange(visible: Boolean) =
+            viewModel.setTutorialButtonVisibility(visible)
 
-            override fun onPaletteChange(paletteName: String) = changePalette(paletteName)
-        }
+        override fun onPaletteChange(paletteName: String) = changePalette(paletteName)
     }
 
     fun Context.wrapContext(locale: Locale): Context {

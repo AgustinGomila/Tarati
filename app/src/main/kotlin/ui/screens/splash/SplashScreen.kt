@@ -52,7 +52,7 @@ fun SplashRotateAnimation(
     iterations: Int = 1,
     delayScreen: Long,
 ) {
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(true) {
         rotation.animateTo(
             targetValue = 360f,
             animationSpec = repeatable(

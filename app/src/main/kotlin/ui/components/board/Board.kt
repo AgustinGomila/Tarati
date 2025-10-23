@@ -61,12 +61,12 @@ interface TapEvents {
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    boardState: BoardState,
     playerSide: Color,
+    boardState: BoardState,
+    boardColors: BoardColors,
     events: BoardEvents,
     selectViewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
-    boardColors: BoardColors,
     debug: Boolean = false
 ) {
     Box(
@@ -86,38 +86,40 @@ fun Board(
         BoardRenderer(
             modifier = Modifier.fillMaxSize(),
             playerSide = playerSide,
+            boardState = boardState,
+            colors = boardColors,
+            tapEvents = tapEvents(selectViewModel, events),
             selectViewModel = selectViewModel,
             animationViewModel = animationViewModel,
-            boardState = boardState,
-            tapEvents = object : TapEvents {
-                override fun onSelected(from: String, valid: List<String>) {
-                    selectViewModel.updateSelectedVertex(from)
-                    selectViewModel.updateValidAdjacentVertexes(valid)
-                }
-
-                override fun onMove(from: String, to: String) {
-                    events.onMove(from, to)
-                    selectViewModel.resetSelection()
-                }
-
-                override fun onInvalid(from: String, valid: List<String>) {
-                    selectViewModel.updateSelectedVertex(from)
-                    selectViewModel.updateValidAdjacentVertexes(valid)
-                }
-
-                override fun onEditPieceRequested(from: String) {
-                    events.onEditPiece(from)
-                }
-
-                override fun onCancel() {
-                    selectViewModel.resetSelection()
-                }
-            },
             onBoardSizeChange = { animationViewModel.updateBoardSize(it) },
             onResetCompleted = events::onResetCompleted,
-            colors = boardColors,
             debug = debug
         )
+    }
+}
+
+fun tapEvents(selectViewModel: BoardSelectionViewModel, events: BoardEvents): TapEvents = object : TapEvents {
+    override fun onSelected(from: String, valid: List<String>) {
+        selectViewModel.updateSelectedVertex(from)
+        selectViewModel.updateValidAdjacentVertexes(valid)
+    }
+
+    override fun onMove(from: String, to: String) {
+        events.onMove(from, to)
+        selectViewModel.resetSelection()
+    }
+
+    override fun onInvalid(from: String, valid: List<String>) {
+        selectViewModel.updateSelectedVertex(from)
+        selectViewModel.updateValidAdjacentVertexes(valid)
+    }
+
+    override fun onEditPieceRequested(from: String) {
+        events.onEditPiece(from)
+    }
+
+    override fun onCancel() {
+        selectViewModel.resetSelection()
     }
 }
 
@@ -145,6 +147,7 @@ fun BoardPreview(
 ) {
     TaratiTheme {
         Board(
+            playerSide = previewConfig.playerSide,
             boardState = BoardState(
                 gameState = previewConfig.gameState,
                 lastMove = null,
@@ -154,24 +157,25 @@ fun BoardPreview(
                 edgesVisible = previewConfig.edgesVisible,
                 isEditing = previewConfig.isEditing,
             ),
-            playerSide = previewConfig.playerSide,
-            events = object : BoardEvents {
-                override fun onMove(from: String, to: String) {
-                    if (debug) println("Move from $from to $to")
-                }
-
-                override fun onEditPiece(from: String) {
-                    if (debug) println("Edit piece at $from")
-                }
-
-                override fun onResetCompleted() {
-                    if (debug) println("Reset completed")
-                }
-            },
-            selectViewModel = viewModel,
             boardColors = rememberBoardColors(),
+            events = createPreviewBoardEvents(debug),
+            selectViewModel = viewModel,
             animationViewModel = animationViewModel,
         )
+    }
+}
+
+fun createPreviewBoardEvents(debug: Boolean = false): BoardEvents = object : BoardEvents {
+    override fun onMove(from: String, to: String) {
+        if (debug) println("Move from $from to $to")
+    }
+
+    override fun onEditPiece(from: String) {
+        if (debug) println("Edit piece at $from")
+    }
+
+    override fun onResetCompleted() {
+        if (debug) println("Reset completed")
     }
 }
 

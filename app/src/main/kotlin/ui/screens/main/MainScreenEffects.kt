@@ -42,7 +42,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreenEffects(
-    scope: CoroutineScope,
     drawerState: DrawerState,
     isLandscape: Boolean,
 
@@ -77,22 +76,31 @@ fun MainScreenEffects(
 
     // Efecto para orientación del tablero
     LaunchedEffect(isLandscape, playerSide) {
+        val isLandscape = isLandscape
+        val playerSide = playerSide
         onBoardOrientationChanged(toBoardOrientation(isLandscape, playerSide))
     }
 
     // Efecto para animaciones
     LaunchedEffect(animateEffects) {
+        val animateEffects = animateEffects
         animationViewModel.updateAnimateEffects(animateEffects)
     }
 
     // Efecto para dificultad
     LaunchedEffect(evalConfig) {
+        val evalConfig = evalConfig
         setEvaluationConfig(evalConfig)
     }
 
     // Efecto para estado del juego
     LaunchedEffect(gameStatus, isEditing, isTutorialActive) {
+        val isEditing = isEditing
+        val isTutorialActive = isTutorialActive
+
         if (isTutorialActive || isEditing) return@LaunchedEffect
+
+        val gameStatus = gameStatus
         if (gameStatus == GameStatus.NEW_GAME) return@LaunchedEffect
 
         when (gameStatus) {
@@ -107,6 +115,14 @@ fun MainScreenEffects(
 
     // Efecto para ejecutar pensamiento de IA
     LaunchedEffect(aiThinkingDependencies) {
+        val gameState = gameState
+        val gameStatus = gameStatus
+        val playerSide = playerSide
+        val aiEnabled = aiEnabled
+        val isEditing = isEditing
+        val onAIMove = onAIMove
+        val debug = debug
+
         aiThinkingViewModel.calculateAIMove(
             gameState = gameState,
             gameStatus = gameStatus,
@@ -161,7 +177,7 @@ fun MainContent(
     val isEditing by viewModel.isEditing.collectAsState()
 
     LaunchedEffect(isEditing) {
-        scope.launch { drawerState.close() }
+        drawerState.closeIfOpen(scope)
     }
 
     Scaffold(
@@ -262,5 +278,11 @@ fun MainContent(
                 )
             }
         }
+    }
+}
+
+fun DrawerState.closeIfOpen(scope: CoroutineScope) {
+    scope.launch {
+        if (isOpen) close()
     }
 }
