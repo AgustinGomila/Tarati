@@ -85,14 +85,14 @@ fun DrawScope.drawVertexHighlight(
     drawCircle(
         color = highlight.color.copy(alpha = 0.3f),
         center = pos,
-        radius = pulseRadius * 1.8f
+        radius = pulseRadius * 1.6f
     )
 
     // Círculo principal del highlight
     drawCircle(
         color = highlight.color,
         center = pos,
-        radius = pulseRadius * 1.2f,
+        radius = pulseRadius * 0.8f,
         style = Stroke(width = 3f)
     )
 
@@ -100,7 +100,7 @@ fun DrawScope.drawVertexHighlight(
     drawCircle(
         color = highlight.color,
         center = pos,
-        radius = pulseRadius * 0.6f
+        radius = pulseRadius * 0.4f
     )
 
     // TODO: Si hay mensaje, dibujar texto (opcional)
