@@ -39,6 +39,7 @@ data class BoardState(
     val verticesVisible: Boolean = true,
     val edgesVisible: Boolean = true,
     val newGame: Boolean = false,
+    val aiEnabled: Boolean = true,
     val isEditing: Boolean = false,
     val showBoardPattern: Boolean = true,
     val showBoardGlow: Boolean = false,
@@ -150,6 +151,7 @@ fun BoardPreview(
             playerSide = previewConfig.playerSide,
             boardState = BoardState(
                 gameState = previewConfig.gameState,
+                aiEnabled = false,
                 lastMove = null,
                 boardOrientation = previewConfig.orientation,
                 labelsVisible = previewConfig.labelsVisible,

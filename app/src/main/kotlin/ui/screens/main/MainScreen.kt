@@ -514,6 +514,7 @@ data class CreateBoardState(
     val gameState: GameState,
     val lastMove: Move?,
     val playerSide: Color,
+    val aiEnabled: Boolean,
     val isEditing: Boolean,
     val isTutorialActive: Boolean,
     val isAIThinking: Boolean,
@@ -539,6 +540,7 @@ fun CreateBoard(
     // Construir el estado para Board
     val boardState = BoardState(
         gameState = state.gameState,
+        aiEnabled = state.aiEnabled,
         lastMove = state.lastMove,
         boardOrientation = when {
             state.isEditing -> state.editBoardOrientation
@@ -981,6 +983,7 @@ fun EditingModePreviewContent(
         val exampleGameState = initialGameState()
 
         var isEditing by remember { mutableStateOf(true) }
+        var aiEnabled by remember { mutableStateOf(false) }
         var editColor by remember { mutableStateOf(WHITE) }
         var editTurn by remember { mutableStateOf(WHITE) }
         var playerSide by remember { mutableStateOf(WHITE) }
@@ -993,6 +996,7 @@ fun EditingModePreviewContent(
         val boardState = BoardState(
             gameState = exampleGameState,
             lastMove = null,
+            aiEnabled = aiEnabled,
             boardOrientation = boardOrientation,
             labelsVisible = false,
             verticesVisible = true,
@@ -1091,6 +1095,7 @@ private fun MainScreenPreviewContent(
             gameState = gameState,
             lastMove = null,
             playerSide = playerSide,
+            aiEnabled = true,
             isEditing = isEditing,
             isTutorialActive = isTutorial,
             isAIThinking = false,

@@ -156,6 +156,7 @@ fun BoardRenderer(
                     visualWidth = visualWidth,
                     gameState = boardState.gameState,
                     playerSide = playerSide,
+                    aiEnabled = boardState.aiEnabled,
                     from = selectedVertexId,
                     orientation = orientation,
                     editorMode = editorMode,

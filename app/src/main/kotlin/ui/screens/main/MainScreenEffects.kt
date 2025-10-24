@@ -183,6 +183,7 @@ fun MainContent(
     val editTurn by viewModel.editTurn.collectAsState()
     val playerSide by viewModel.playerSide.collectAsState()
     val isEditing by viewModel.isEditing.collectAsState()
+    val aIEnabled by viewModel.aIEnabled.collectAsState()
 
     LaunchedEffect(isEditing) {
         drawerState.closeIfOpen(scope)
@@ -222,6 +223,7 @@ fun MainContent(
                     state = CreateBoardState(
                         gameState = gameState,
                         lastMove = lastMove,
+                        aiEnabled = aIEnabled,
                         playerSide = playerSide,
                         isEditing = isEditing,
                         isTutorialActive = isTutorialActive,

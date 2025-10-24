@@ -14,6 +14,7 @@ import com.agustin.tarati.ui.components.board.TapEvents
 suspend fun PointerInputScope.tapGestures(
     visualWidth: Float,
     gameState: GameState,
+    aiEnabled: Boolean,
     playerSide: Color,
     from: String?,
     orientation: BoardOrientation,
@@ -37,6 +38,7 @@ suspend fun PointerInputScope.tapGestures(
                 handleTap(
                     gameState = gameState,
                     playerSide = playerSide,
+                    aiEnabled = aiEnabled,
                     from = from,
                     to = vertexId,
                     tapEvents = tapEvents,
@@ -50,6 +52,7 @@ suspend fun PointerInputScope.tapGestures(
 fun handleTap(
     gameState: GameState,
     playerSide: Color,
+    aiEnabled: Boolean,
     from: String?,
     to: String,
     tapEvents: TapEvents,
@@ -62,6 +65,7 @@ fun handleTap(
         selectPiece(
             gameState = gameState,
             playerSide = playerSide,
+            aiEnabled = aiEnabled,
             from = to,
             onSelected = tapEvents::onSelected,
             debug = debug
@@ -90,6 +94,7 @@ fun handleTap(
         toColor == fromColor -> selectPiece(
             gameState = gameState,
             playerSide = playerSide,
+            aiEnabled = aiEnabled,
             from = to,
             onSelected = tapEvents::onSelected,
             debug = debug
@@ -153,6 +158,7 @@ fun movePiece(
 fun selectPiece(
     gameState: GameState,
     playerSide: Color,
+    aiEnabled: Boolean,
     from: String,
     onSelected: (from: String, valid: List<String>) -> Unit,
     debug: Boolean = false
@@ -160,7 +166,7 @@ fun selectPiece(
     val cob = gameState.cobs[from] ?: return
     if (debug) println("Checking piece: $cob at $from, currentTurn: ${gameState.currentTurn}")
 
-    if (cob.color != playerSide) {
+    if (aiEnabled && cob.color != playerSide) {
         if (debug) println("Cannot select: cob=$cob, playerSide=${playerSide}")
         return
     }
