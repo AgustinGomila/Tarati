@@ -132,4 +132,6 @@
     <string name="animations">Animaciones</string>
     <string name="enabled">Activado</string>
     <string name="disabled">Desactivado</string>
+    <string name="move_history">Lista de movimientos</string>
+    <string name="ai_opponent">Oponente IA</string>
 </resources>

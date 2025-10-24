@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -476,7 +477,11 @@ fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, isEditing: Boo
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                LocalizedText(id = (R.string.tarati))
+                Text(
+                    text = localizedString(R.string.tarati),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
                 if (isEditing) {
                     Spacer(modifier = Modifier.width(8.dp))
                     LocalizedText(
@@ -488,10 +493,11 @@ fun TaratiTopBar(scope: CoroutineScope, drawerState: DrawerState, isEditing: Boo
             }
         },
         navigationIcon = {
-            IconButton(
-                onClick = { drawerState.turnState(scope) }
-            ) {
-                Icon(Icons.Default.Menu, contentDescription = localizedString(R.string.menu))
+            IconButton(onClick = { drawerState.turnState(scope) }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = localizedString(R.string.menu)
+                )
             }
         }
     )

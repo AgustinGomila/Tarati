@@ -1,4 +1,5 @@
 @file:Suppress("AssignedValueIsNeverRead")
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.agustin.tarati.ui.components.sidebar
 
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,21 +27,28 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.SquareFoot
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,7 +72,6 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.ui.helpers.customGameState
-import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 
 data class SidebarGameState(
@@ -101,293 +108,399 @@ fun Sidebar(
     events: SidebarEvents,
     onUIStateChange: (SidebarUIState) -> Unit = {}
 ) {
-    Column(
+    Surface(
         modifier = modifier
-            .width(280.dp)
-            .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .width(300.dp)
+            .fillMaxHeight(),
+        tonalElevation = 8.dp,
+        shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
     ) {
-        // Título de la Aplicación
-        LocalizedText(
-            id = R.string.tarati,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        SettingsRow(onSettings = events::onSettings)
-
-        // Controles para iniciar una nueva partida
-        GameControls(
-            playerSide = sidebarState.playerSide,
-            onNewGame = events::onNewGame,
-            onEditBoard = events::onEditBoard,
-        )
-
-        // Sección de IA y Dificultad en una fila
-        AIDifficultyControls(
-            playerSide = sidebarState.playerSide,
-            expanded = uiState.isDifficultyExpanded,
-            onExpandedChange = { expanded ->
-                onUIStateChange(uiState.copy(isDifficultyExpanded = expanded))
-            },
-            difficulty = sidebarState.difficulty,
-            onDifficultyChange = events::onDifficultyChange,
-            isAIEnabled = sidebarState.isAIEnabled,
-            onToggleAI = events::onToggleAI,
-        )
-
-        // Indicador de turno con información del jugador
-        GameStateIndicator(sidebarState.gameState, sidebarState.playerSide)
-
-        // Controles del historial de la partida
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            HistorialControls(
+            // Header con título y configuración
+            SidebarHeader(onSettings = events::onSettings)
+
+            // Estado del juego
+            GameStatusCard(
+                gameState = sidebarState.gameState,
+                playerSide = sidebarState.playerSide
+            )
+
+            // Controles de juego
+            GameControlsSection(
+                playerSide = sidebarState.playerSide,
+                onNewGame = events::onNewGame,
+                onEditBoard = events::onEditBoard,
+            )
+
+            // Configuración de IA
+            AIConfigurationCard(
+                playerSide = sidebarState.playerSide,
+                expanded = uiState.isDifficultyExpanded,
+                onExpandedChange = { expanded ->
+                    onUIStateChange(uiState.copy(isDifficultyExpanded = expanded))
+                },
+                difficulty = sidebarState.difficulty,
+                onDifficultyChange = events::onDifficultyChange,
+                isAIEnabled = sidebarState.isAIEnabled,
+                onToggleAI = events::onToggleAI,
+            )
+
+            // Historial de movimientos
+            MoveHistorySection(
+                modifier = Modifier.weight(1f),
                 currentMoveIndex = sidebarState.moveIndex,
                 moveHistory = sidebarState.moveHistory,
                 onUndo = events::onUndo,
                 onRedo = events::onRedo,
-                onMoveToCurrent = events::onMoveToCurrent
+                onMoveToCurrent = events::onMoveToCurrent,
             )
-        }
 
-        // Botón About en la parte inferior
-        AboutButton(events::onAboutClick)
+            // Footer
+            AboutFooter(onAboutClick = events::onAboutClick)
+        }
     }
 }
 
 @Composable
-fun SettingsRow(
-    onSettings: () -> Unit,
-) {
+private fun SidebarHeader(onSettings: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Button(
+        Text(
+            text = localizedString(R.string.tarati),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        IconButton(
             onClick = onSettings,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            LocalizedText(R.string.settings)
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = stringResource(R.string.settings),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
 @Composable
-fun GameControls(
+private fun GameStatusCard(gameState: GameState, playerSide: Color) {
+    val winner = gameState.getWinner()
+    val relevantSide = winner ?: gameState.currentTurn
+
+    val backgroundColor = when (relevantSide) {
+        WHITE -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.secondaryContainer
+    }
+
+    val textColor = when (relevantSide) {
+        WHITE -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSecondaryContainer
+    }
+
+    val statusText = when {
+        winner != null -> {
+            val resultText = when (playerSide) {
+                winner -> R.string.you_won
+                else -> R.string.you_lost
+            }
+            localizedString(resultText, localizedString(winner.getColorStringResource()))
+        }
+
+        else -> {
+            val turnText = localizedString(gameState.currentTurn.getColorStringResource())
+            val sideTurnText = localizedString(
+                when (gameState.currentTurn) {
+                    playerSide -> R.string.your_turn
+                    else -> R.string.opponent_turn
+                }
+            )
+            "$turnText • $sideTurnText"
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun GameControlsSection(
     playerSide: Color,
     onNewGame: (Color) -> Unit,
     onEditBoard: () -> Unit,
 ) {
-    LocalizedText(
-        id = R.string.new_game,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Button(
-            onClick = { onNewGame(WHITE) },
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (playerSide == WHITE)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (playerSide == WHITE)
-                    MaterialTheme.colorScheme.onPrimary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        ) {
-            LocalizedText(R.string.w)
-        }
+        Text(
+            text = localizedString(R.string.new_game).uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
+        )
 
-        Button(
-            onClick = { onNewGame(BLACK) },
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (playerSide == BLACK)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (playerSide == BLACK)
-                    MaterialTheme.colorScheme.onPrimary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            LocalizedText(R.string.b)
-        }
+            ColorChoiceButton(
+                color = WHITE,
+                isSelected = playerSide == WHITE,
+                onClick = { onNewGame(WHITE) },
+                modifier = Modifier.weight(1f)
+            )
 
-        // Botón de Edición
-        IconButton(
-            onClick = onEditBoard,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = stringResource(R.string.edit),
-                tint = MaterialTheme.colorScheme.tertiary,
+            ColorChoiceButton(
+                color = BLACK,
+                isSelected = playerSide == BLACK,
+                onClick = { onNewGame(BLACK) },
+                modifier = Modifier.weight(1f)
             )
+
+            FilledTonalButton(
+                onClick = onEditBoard,
+                modifier = Modifier.size(54.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SquareFoot,
+                    contentDescription = stringResource(R.string.edit),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
-fun AboutButton(onAboutClick: () -> Unit) {
-    TextButton(
-        onClick = onAboutClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
+private fun ColorChoiceButton(
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (color) {
+        WHITE -> if (isSelected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.surfaceVariant
+
+        else -> if (isSelected) MaterialTheme.colorScheme.secondary
+        else MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val textColor = when (color) {
+        WHITE -> if (isSelected) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.onSurfaceVariant
+
+        else -> if (isSelected) MaterialTheme.colorScheme.onSecondary
+        else MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(54.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = textColor
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = localizedString(if (color == WHITE) R.string.w else R.string.b),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+private fun AIConfigurationCard(
+    playerSide: Color,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    difficulty: Difficulty,
+    onDifficultyChange: (Difficulty) -> Unit,
+    isAIEnabled: Boolean,
+    onToggleAI: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = localizedString(R.string.ai_opponent),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                AIToggleButton(
+                    isAIEnabled = isAIEnabled,
+                    onToggle = onToggleAI
+                )
+            }
+
+            if (isAIEnabled) {
+                DifficultySelector(
+                    expanded = expanded,
+                    onExpandedChange = onExpandedChange,
+                    difficulty = difficulty,
+                    onDifficultyChange = onDifficultyChange
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AIToggleButton(
+    isAIEnabled: Boolean,
+    onToggle: () -> Unit
+) {
+    IconButton(
+        onClick = onToggle,
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(
+                if (isAIEnabled) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surface
+            )
     ) {
         Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = localizedString(R.string.about),
-            tint = MaterialTheme.colorScheme.primary
+            imageVector = if (isAIEnabled) Icons.Filled.SmartToy else Icons.Outlined.SmartToy,
+            contentDescription = stringResource(
+                if (isAIEnabled) R.string.disable_ai else R.string.enable_ai
+            ),
+            tint = if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.outline,
+            modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        LocalizedText(R.string.about_tarati)
     }
 }
 
 @Composable
-fun HistorialControls(
+private fun MoveHistorySection(
+    modifier: Modifier,
     currentMoveIndex: Int,
     moveHistory: List<Move>,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
-    onMoveToCurrent: () -> Unit
+    onMoveToCurrent: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Controles compactos
+        Text(
+            text = localizedString(R.string.move_history).uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
+        )
+
+        // Controles de navegación
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            OutlinedButton(
                 onClick = onUndo,
                 enabled = currentMoveIndex > 0,
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Undo")
             }
 
-            Button(
+            OutlinedButton(
                 onClick = onRedo,
                 enabled = currentMoveIndex < moveHistory.size - 1,
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
+                Text("Redo")
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    null,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
+        // Lista de movimientos
+        Card(
+            modifier = modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                .weight(1f, false),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(8.dp)
             ) {
                 itemsIndexed(moveHistory.chunked(2)) { index, moves ->
                     val moveNumber = index + 1
                     val whiteMove = moves.firstOrNull()
                     val blackMove = moves.getOrNull(1)
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // Número
-                        Text(
-                            text = "$moveNumber.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.width(24.dp)
-                        )
+                    MoveHistoryRow(
+                        moveNumber = moveNumber,
+                        whiteMove = whiteMove,
+                        blackMove = blackMove,
+                        currentMoveIndex = currentMoveIndex,
+                        rowIndex = index,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
 
-                        // Columna blanca
-                        Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (whiteMove != null) {
-                                val isCurrent = currentMoveIndex == index * 2
-                                Text(
-                                    text = "${whiteMove.from}→${whiteMove.to}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isCurrent) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
-                                )
-                            }
-                        }
-
-                        // Columna negra
-                        Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (blackMove != null) {
-                                val isCurrent = currentMoveIndex == index * 2 + 1
-                                Text(
-                                    text = "${blackMove.from}→${blackMove.to}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isCurrent) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-
-                    // Divisor sutil entre líneas
                     if (index < moveHistory.chunked(2).size - 1) {
                         HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp),
                             thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                         )
                     }
                 }
@@ -399,133 +512,98 @@ fun HistorialControls(
             Button(
                 onClick = onMoveToCurrent,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text(stringResource(R.string.go_to_the_end))
+                Text("Jump to Current Position")
             }
         }
     }
 }
 
 @Composable
-fun GameStateIndicator(gameState: GameState, playerSide: Color) {
-    val winner = gameState.getWinner()
-    val relevantSide = winner ?: gameState.currentTurn
-
-    val (color, backgroundColor) = when (relevantSide) {
-        WHITE -> MaterialTheme.colorScheme.onPrimary to MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSecondary to MaterialTheme.colorScheme.secondary
-    }
-
-    val textToShow = when {
-        winner != null -> {
-            val resultText = when (playerSide) {
-                winner -> R.string.you_won
-                else -> R.string.you_lost
-            }
-            localizedString(resultText, localizedString(playerSide.getColorStringResource()))
-        }
-
-        else -> {
-            val turnText = localizedString(gameState.currentTurn.getColorStringResource())
-            val sideTurnText = localizedString(
-                when (gameState.currentTurn) {
-                    playerSide -> R.string.your_turn
-                    else -> R.string.opponent_turn
-                }
-            )
-            "$turnText: $sideTurnText"
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor),
-        contentAlignment = Alignment.Center
+private fun MoveHistoryRow(
+    moveNumber: Int,
+    whiteMove: Move?,
+    blackMove: Move?,
+    currentMoveIndex: Int,
+    rowIndex: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Número del movimiento
         Text(
-            text = textToShow,
-            color = color,
-            style = MaterialTheme.typography.bodyLarge
+            text = "$moveNumber.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(24.dp)
+        )
+
+        // Movimiento blanco
+        MoveText(
+            move = whiteMove,
+            isCurrent = currentMoveIndex == rowIndex * 2,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Movimiento negro
+        MoveText(
+            move = blackMove,
+            isCurrent = currentMoveIndex == rowIndex * 2 + 1,
+            modifier = Modifier.weight(1f)
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AIDifficultyControls(
-    playerSide: Color,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    difficulty: Difficulty,
-    onDifficultyChange: (Difficulty) -> Unit,
-    isAIEnabled: Boolean,
-    onToggleAI: () -> Unit
+private fun MoveText(
+    move: Move?,
+    isCurrent: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.CenterStart
     ) {
-        // Selector de dificultad
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            LocalizedText(
-                id = R.string.ai_difficulty,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        if (move != null) {
+            Text(
+                text = "${move.from}→${move.to}",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isCurrent) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            DifficultySelector(expanded, onExpandedChange, difficulty, onDifficultyChange)
         }
-
-        // Botón de toggle IA (icono solamente)
-        Spacer(modifier = Modifier.width(8.dp))
-        AIEnabledButton(playerSide, isAIEnabled, onToggleAI)
     }
 }
 
 @Composable
-fun AIEnabledButton(playerSide: Color, isAIEnabled: Boolean, onToggleAI: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                color = if (playerSide == BLACK)
-                    MaterialTheme.colorScheme.secondary
-                else
-                    MaterialTheme.colorScheme.primary,
-            ),
-        contentAlignment = Alignment.Center
+private fun AboutFooter(onAboutClick: () -> Unit) {
+    TextButton(
+        onClick = onAboutClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        IconButton(
-            onClick = onToggleAI,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector =
-                    if (isAIEnabled) Icons.Filled.SmartToy
-                    else Icons.Outlined.SmartToy,
-                contentDescription = stringResource(
-                    if (isAIEnabled) R.string.disable_ai
-                    else R.string.enable_ai
-                ),
-                tint =
-                    if (isAIEnabled) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.outline
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = localizedString(R.string.about),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = localizedString(R.string.about_tarati),
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
 @ExperimentalMaterial3Api
 @Composable
-fun DifficultySelector(
+private fun DifficultySelector(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     difficulty: Difficulty,
@@ -543,8 +621,14 @@ fun DifficultySelector(
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
             modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+            shape = RoundedCornerShape(10.dp)
         )
 
         ExposedDropdownMenu(
@@ -554,8 +638,8 @@ fun DifficultySelector(
             Difficulty.ALL.forEach { difficultyOption ->
                 DropdownMenuItem(
                     text = {
-                        LocalizedText(
-                            difficultyOption.displayNameRes,
+                        Text(
+                            text = stringResource(difficultyOption.displayNameRes),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     },

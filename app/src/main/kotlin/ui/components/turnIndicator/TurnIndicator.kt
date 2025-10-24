@@ -181,7 +181,7 @@ fun TurnIndicatorPreview_AllStates() {
                 .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             LocalizedText(R.string.ai_thinking, style = MaterialTheme.typography.titleMedium)
 

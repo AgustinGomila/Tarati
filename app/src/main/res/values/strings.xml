@@ -125,4 +125,6 @@
     <string name="animations">Animations</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
+    <string name="move_history">Move history</string>
+    <string name="ai_opponent">AI opponent</string>
 </resources>
