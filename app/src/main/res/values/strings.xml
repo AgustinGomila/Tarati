@@ -50,8 +50,6 @@
     <string name="opponent_turn">Opponent turn</string>
     <string name="light_theme">Light theme</string>
     <string name="board_labels">Board labels</string>
-    <string name="show">Show</string>
-    <string name="hide">Hide</string>
     <string name="edit">Edit</string>
     <string name="editing">Editing</string>
     <string name="start_game">Start game</string>
@@ -76,7 +74,6 @@
     <string name="board_vertices">Vertices</string>
     <string name="color_palette">Color Palette</string>
     <string name="select_color_palette">Select color palette</string>
-    <string name="select_palette">Select palette</string>
     <string name="animate_effects">Board effects</string>
     <string name="board_edges">Edges</string>
     <string name="tutorial_introduction_title">Welcome to Tarati</string>
@@ -123,4 +120,9 @@
     <string name="tutorial_completed_description">You have completed the Tarati basic course, now try playing a game.
     </string>
     <string name="go_to_the_end">Go to the end</string>
+    <string name="general">General</string>
+    <string name="board_display">Board display</string>
+    <string name="animations">Animations</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
 </resources>

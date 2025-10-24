@@ -2,19 +2,24 @@ package com.agustin.tarati.ui.screens.settings
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -34,14 +40,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.ui.localization.AppLanguage
-import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppTheme
+import com.agustin.tarati.ui.theme.TaratiTheme
 import com.agustin.tarati.ui.theme.availablePalettes
 
 interface SettingsEvents {
@@ -63,19 +71,16 @@ fun SettingsScreen(
     val viewModel: SettingsViewModel = viewModel()
     val settingsState by viewModel.settingsState.collectAsState()
 
-    val language = settingsState.language
-    val theme = settingsState.appTheme
-    val boardState = settingsState.boardState
-    val palette = settingsState.palette
-    val labelsVisibility = boardState.labelsVisibles
-    val verticesVisibility = boardState.verticesVisibles
-    val edgesVisibility = boardState.edgesVisibles
-    val animateEffects = boardState.animateEffects
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { LocalizedText(R.string.settings) },
+                title = {
+                    Text(
+                        text = localizedString(R.string.settings),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -85,129 +90,149 @@ fun SettingsScreen(
                     }
                 }
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
+        }
     ) { padding ->
-        Column(
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .padding(padding),
+            color = MaterialTheme.colorScheme.background
         ) {
-            LanguageOption(language, events::onLanguageChange)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            ThemeOption(theme, events::onThemeChange)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            PaletteOption(palette) { newPaletteName ->
-                viewModel.setPalette(newPaletteName)
-                events.onPaletteChange(newPaletteName)
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            VisibilityOption(
-                id = R.string.board_labels,
-                visibility = labelsVisibility
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                viewModel.setLabelsVisibility(it)
-                events.onLabelsVisibilityChange(it)
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            VisibilityOption(
-                id = R.string.board_vertices,
-                visibility = verticesVisibility
-            ) {
-                viewModel.setVerticesVisibility(it)
-                events.onVerticesVisibilityChange(it)
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                SettingsCategory(title = R.string.general)
+                LanguageSetting(
+                    language = settingsState.language,
+                    onLanguageChange = events::onLanguageChange
+                )
 
-            VisibilityOption(
-                id = R.string.board_edges,
-                visibility = edgesVisibility
-            ) {
-                viewModel.setEdgesVisibility(it)
-                events.onEdgesVisibilityChange(it)
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                SettingsCategory(title = R.string.appearance)
+                ThemeSetting(
+                    theme = settingsState.appTheme,
+                    onThemeChange = events::onThemeChange
+                )
+                PaletteSetting(
+                    paletteName = settingsState.palette,
+                    onPaletteSelected = { palette ->
+                        viewModel.setPalette(palette)
+                        events.onPaletteChange(palette)
+                    }
+                )
 
-            VisibilityOption(
-                id = R.string.animate_effects,
-                visibility = animateEffects
-            ) {
-                viewModel.setAnimateEffects(it)
-                events.onAnimateEffectsChange(it)
+                SettingsCategory(title = R.string.board_display)
+                ToggleSetting(
+                    icon = Icons.Default.Visibility,
+                    title = R.string.board_labels,
+                    checked = settingsState.boardState.labelsVisibles,
+                    onCheckedChange = { visible ->
+                        viewModel.setLabelsVisibility(visible)
+                        events.onLabelsVisibilityChange(visible)
+                    }
+                )
+                ToggleSetting(
+                    icon = Icons.Default.Visibility,
+                    title = R.string.board_vertices,
+                    checked = settingsState.boardState.verticesVisibles,
+                    onCheckedChange = { visible ->
+                        viewModel.setVerticesVisibility(visible)
+                        events.onVerticesVisibilityChange(visible)
+                    }
+                )
+                ToggleSetting(
+                    icon = Icons.Default.Visibility,
+                    title = R.string.board_edges,
+                    checked = settingsState.boardState.edgesVisibles,
+                    onCheckedChange = { visible ->
+                        viewModel.setEdgesVisibility(visible)
+                        events.onEdgesVisibilityChange(visible)
+                    }
+                )
+
+                SettingsCategory(title = R.string.animations)
+                ToggleSetting(
+                    icon = Icons.Default.Animation,
+                    title = R.string.animate_effects,
+                    checked = settingsState.boardState.animateEffects,
+                    onCheckedChange = { animate ->
+                        viewModel.setAnimateEffects(animate)
+                        events.onAnimateEffectsChange(animate)
+                    }
+                )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }
 
 @Composable
-fun PaletteOption(
-    paletteName: String,
-    onPaletteSelected: (String) -> Unit = {}
-) {
-    LocalizedText(
-        id = R.string.color_palette,
+private fun SettingsCategory(@StringRes title: Int) {
+    Text(
+        text = localizedString(title),
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(16.dp)
-    )
-
-    SettingsItem(
-        title = paletteName,
-        subtitle = localizedString(R.string.select_color_palette),
-        trailing = {
-            EnhancedPaletteSelector(
-                currentPaletteName = paletteName,
-                onPaletteSelected = onPaletteSelected
-            )
-        }
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
     )
 }
 
 @Composable
-fun EnhancedPaletteSelector(
-    currentPaletteName: String,
-    onPaletteSelected: (String) -> Unit = {}
+private fun LanguageSetting(
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Box {
-        Row(
-            modifier = Modifier
-                .clickable { expanded = true }
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = currentPaletteName,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = localizedString(R.string.select_palette)
-            )
-        }
+    SettingItem(
+        icon = Icons.Default.Language,
+        title = when (language) {
+            AppLanguage.SPANISH -> R.string.spanish
+            AppLanguage.ENGLISH -> R.string.english
+        },
+        subtitle = R.string.language
+    ) {
+        Box {
+            Row(
+                modifier = Modifier
+                    .clickable { expanded = true }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = localizedString(
+                        when (language) {
+                            AppLanguage.SPANISH -> R.string.spanish
+                            AppLanguage.ENGLISH -> R.string.english
+                        }
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            availablePalettes.forEach { palette ->
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
                 DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = palette.name,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
+                    text = { Text(localizedString(R.string.spanish)) },
                     onClick = {
-                        onPaletteSelected(palette.name)
+                        onLanguageChange(AppLanguage.SPANISH)
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(localizedString(R.string.english)) },
+                    onClick = {
+                        onLanguageChange(AppLanguage.ENGLISH)
                         expanded = false
                     }
                 )
@@ -217,140 +242,252 @@ fun EnhancedPaletteSelector(
 }
 
 @Composable
-fun LanguageOption(
-    language: AppLanguage,
-    onChange: (AppLanguage) -> Unit = {}
+private fun ThemeSetting(
+    theme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
 ) {
-    LocalizedText(
-        id = R.string.language,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(16.dp)
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                // Alternar entre los dos idiomas
-                val newLanguage = if (language == AppLanguage.SPANISH)
-                    AppLanguage.ENGLISH else
-                    AppLanguage.SPANISH
-                onChange(newLanguage)
-            }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+    SettingItem(
+        icon = Icons.Default.DarkMode,
+        title = if (theme == AppTheme.MODE_NIGHT) R.string.dark_theme else R.string.light_theme,
+        subtitle = R.string.appearance
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            LocalizedText(
-                id = when (language) {
-                    AppLanguage.SPANISH -> R.string.spanish
-                    AppLanguage.ENGLISH -> R.string.english
-                },
-                style = MaterialTheme.typography.bodyLarge
-            )
-            LocalizedText(
-                id = R.string.language,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-        Icon(
-            imageVector = Icons.Default.Language,
-            contentDescription = localizedString(R.string.language)
+        Switch(
+            checked = theme == AppTheme.MODE_NIGHT,
+            onCheckedChange = {
+                val newTheme = if (it) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO
+                onThemeChange(newTheme)
+            }
         )
     }
 }
 
 @Composable
-fun ThemeOption(
-    theme: AppTheme,
-    onChange: (AppTheme) -> Unit = {},
+private fun PaletteSetting(
+    paletteName: String,
+    onPaletteSelected: (String) -> Unit
 ) {
-    LocalizedText(
-        id = R.string.appearance,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(16.dp)
-    )
+    var expanded by remember { mutableStateOf(false) }
 
-    SettingsItem(
-        title = localizedString(
-            if (theme == AppTheme.MODE_NIGHT) R.string.dark_theme
-            else R.string.light_theme
-        ),
-        subtitle = localizedString(
-            if (theme == AppTheme.MODE_NIGHT) R.string.dark_theme
-            else R.string.light_theme
-        ),
-        trailing = {
-            Switch(
-                checked = theme == AppTheme.MODE_NIGHT,
-                onCheckedChange = {
-                    val appTheme = if (it) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO
-                    onChange(appTheme)
+    SettingItem(
+        icon = Icons.Default.Palette,
+        title = R.string.color_palette,
+        subtitle = R.string.select_color_palette
+    ) {
+        Box {
+            Row(
+                modifier = Modifier
+                    .clickable { expanded = true }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = paletteName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                availablePalettes.forEach { palette ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = palette.name,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        onClick = {
+                            onPaletteSelected(palette.name)
+                            expanded = false
+                        }
+                    )
                 }
-            )
+            }
         }
-    )
+    }
 }
 
 @Composable
-fun VisibilityOption(
-    @StringRes id: Int,
-    visibility: Boolean,
-    onChange: (Boolean) -> Unit = {},
+private fun ToggleSetting(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    @StringRes title: Int,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    LocalizedText(
-        id = id,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(16.dp)
-    )
-
-    SettingsItem(
-        title = localizedString(
-            if (visibility) R.string.show
-            else R.string.hide
-        ),
-        subtitle = localizedString(
-            if (visibility) R.string.show
-            else R.string.hide
-        ),
-        trailing = {
-            Switch(
-                checked = visibility,
-                onCheckedChange = onChange
-            )
-        }
-    )
+    SettingItem(
+        icon = icon,
+        title = title,
+        subtitle = if (checked) R.string.enabled else R.string.disabled
+    ) {
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
 }
 
-// Componente reutilizable
 @Composable
-fun SettingsItem(
-    title: String,
-    subtitle: String? = null,
-    trailing: @Composable () -> Unit = {}
+private fun SettingItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    @StringRes title: Int,
+    @StringRes subtitle: Int,
+    trailingContent: @Composable () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge
+                text = localizedString(title),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            subtitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
+            Text(
+                text = localizedString(subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        trailing()
+
+        trailingContent()
+    }
+
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 56.dp, end = 16.dp),
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+    )
+}
+
+// region Previews
+
+@Preview(name = "Language Setting")
+@Composable
+fun LanguageSettingPreview() {
+    TaratiTheme {
+        Column {
+            LanguageSetting(
+                language = AppLanguage.SPANISH,
+                onLanguageChange = {}
+            )
+            LanguageSetting(
+                language = AppLanguage.ENGLISH,
+                onLanguageChange = {}
+            )
+        }
     }
 }
+
+@Preview(name = "Theme Setting")
+@Composable
+fun ThemeSettingPreview() {
+    TaratiTheme {
+        Column {
+            ThemeSetting(
+                theme = AppTheme.MODE_AUTO,
+                onThemeChange = {}
+            )
+            ThemeSetting(
+                theme = AppTheme.MODE_NIGHT,
+                onThemeChange = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Palette Setting")
+@Composable
+fun PaletteSettingPreview() {
+    TaratiTheme {
+        PaletteSetting(
+            paletteName = "Default Palette",
+            onPaletteSelected = {}
+        )
+    }
+}
+
+@Preview(name = "Toggle Settings")
+@Composable
+fun ToggleSettingsPreview() {
+    TaratiTheme {
+        Column {
+            ToggleSetting(
+                icon = Icons.Default.Visibility,
+                title = R.string.board_labels,
+                checked = true,
+                onCheckedChange = {}
+            )
+            ToggleSetting(
+                icon = Icons.Default.Visibility,
+                title = R.string.board_vertices,
+                checked = false,
+                onCheckedChange = {}
+            )
+            ToggleSetting(
+                icon = Icons.Default.Animation,
+                title = R.string.animate_effects,
+                checked = true,
+                onCheckedChange = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Setting Item")
+@Composable
+fun SettingItemPreview() {
+    TaratiTheme {
+        Column {
+            SettingItem(
+                icon = Icons.Default.Language,
+                title = R.string.language,
+                subtitle = R.string.language,
+                trailingContent = {
+                    Text("ES", color = MaterialTheme.colorScheme.primary)
+                }
+            )
+            SettingItem(
+                icon = Icons.Default.DarkMode,
+                title = R.string.dark_theme,
+                subtitle = R.string.dark_theme,
+                trailingContent = {
+                    Switch(checked = true, onCheckedChange = {})
+                }
+            )
+        }
+    }
+}
+
+@Preview(name = "Settings Categories")
+@Composable
+fun SettingsCategoriesPreview() {
+    TaratiTheme {
+        Column {
+            SettingsCategory(title = R.string.general)
+            SettingsCategory(title = R.string.appearance)
+            SettingsCategory(title = R.string.board_display)
+            SettingsCategory(title = R.string.animations)
+        }
+    }
+}
+
+// endregion Previews

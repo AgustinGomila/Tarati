@@ -55,8 +55,6 @@
     <string name="opponent_turn">Turno oponente</string>
     <string name="light_theme">Tema claro</string>
     <string name="board_labels">Etiquetas visibles</string>
-    <string name="show">Mostrar</string>
-    <string name="hide">Ocultar</string>
     <string name="edit">Editar</string>
     <string name="editing">Editando</string>
     <string name="start_game">Empezar partida</string>
@@ -81,7 +79,6 @@
     <string name="board_vertices">Vértices</string>
     <string name="color_palette">Paleta de Colores</string>
     <string name="select_color_palette">Seleccionar paleta de colores</string>
-    <string name="select_palette">Seleccionar paleta</string>
     <string name="animate_effects">Efectos animados</string>
     <string name="board_edges">Aristas</string>
     <string name="tutorial_introduction_title">Bienvenido a Tarati</string>
@@ -130,4 +127,9 @@
         partida.
     </string>
     <string name="go_to_the_end">Ir al final</string>
+    <string name="general">General</string>
+    <string name="board_display">Tablero</string>
+    <string name="animations">Animaciones</string>
+    <string name="enabled">Activado</string>
+    <string name="disabled">Desactivado</string>
 </resources>
