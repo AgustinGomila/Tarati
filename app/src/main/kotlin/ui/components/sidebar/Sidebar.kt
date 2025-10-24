@@ -24,13 +24,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lens
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SquareFoot
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -38,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -189,7 +188,7 @@ private fun SidebarHeader(onSettings: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Icon(
-                imageVector = Icons.Filled.Edit,
+                imageVector = Icons.Filled.Settings,
                 contentDescription = stringResource(R.string.settings),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -282,15 +281,18 @@ private fun GameControlsSection(
                 modifier = Modifier.weight(1f)
             )
 
-            FilledTonalButton(
+            IconButton(
                 onClick = onEditBoard,
-                modifier = Modifier.size(54.dp),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(54.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Icon(
                     imageVector = Icons.Filled.SquareFoot,
                     contentDescription = stringResource(R.string.edit),
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -312,7 +314,7 @@ private fun ColorChoiceButton(
         else MaterialTheme.colorScheme.surfaceVariant
     }
 
-    val textColor = when (color) {
+    val tintColor = when (color) {
         WHITE -> if (isSelected) MaterialTheme.colorScheme.onPrimary
         else MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -320,19 +322,18 @@ private fun ColorChoiceButton(
         else MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    Button(
+    IconButton(
         onClick = onClick,
-        modifier = modifier.height(54.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
-            contentColor = textColor
-        ),
-        shape = RoundedCornerShape(12.dp)
+        modifier = modifier
+            .size(54.dp)
+            .fillMaxHeight(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor),
     ) {
-        Text(
-            text = localizedString(if (color == WHITE) R.string.w else R.string.b),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+        Icon(
+            imageVector = if (color == WHITE) Icons.Filled.Lens else Icons.Filled.Lens,
+            contentDescription = stringResource(R.string.edit),
+            tint = tintColor
         )
     }
 }
@@ -479,6 +480,7 @@ private fun MoveHistorySection(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .fillMaxHeight()
                     .height(200.dp)
                     .padding(8.dp)
             ) {
@@ -703,10 +705,25 @@ fun SidebarPreview_Dark() {
     ) {
         val exampleGameState = customGameState()
         val exampleMoveHistory = listOf(
-            Move("C1", "B1"),
-            Move("C7", "B4")
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
+            Move("C1", "B1"), Move("C7", "B4"),
         )
-
         val sidebarGameState = SidebarGameState(
             gameState = exampleGameState,
             playerSide = BLACK,
