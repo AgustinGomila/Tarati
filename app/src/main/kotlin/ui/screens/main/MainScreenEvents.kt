@@ -22,7 +22,7 @@ class MainScreenEvents(
     private val highlightService: HighlightService,
     private val viewModel: MainViewModel,
     private val tutorialViewModel: TutorialViewModel,
-    private val onShowNewGameDialog: () -> Unit,
+    private val onShowNewGameDialog: (color: Color) -> Unit,
     private val onShowAboutDialog: () -> Unit,
 ) {
 
@@ -53,7 +53,7 @@ class MainScreenEvents(
 
     fun startNewGame(playerSide: Color) {
         clearBoard()
-        tutorialViewModel.skipTutorial()
+        tutorialViewModel.closeTutorial()
 
         highlightService.stopHighlights()
         animationCoordinator.handleEvent(AnimationEvent.SyncState)
@@ -75,19 +75,18 @@ class MainScreenEvents(
         tutorialViewModel.startTutorial()
     }
 
+    fun resetTutorial() {
+        tutorialViewModel.resetTutorial()
+        clearBoard()
+    }
+
     fun endTutorial() {
         tutorialViewModel.endTutorial()
         clearBoard()
     }
 
-    fun skipTutorial() {
-        tutorialViewModel.skipTutorial()
-        clearBoard()
-    }
-
     fun showNewGameDialog(color: Color) {
-        viewModel.updatePlayerSide(color)
-        onShowNewGameDialog()
+        onShowNewGameDialog(color)
     }
 
     fun showAboutDialog() {

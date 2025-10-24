@@ -144,6 +144,7 @@ fun MainScreen(
 
     // Estados locales para diálogos
     var showNewGameDialog by remember { mutableStateOf(false) }
+    var attemptNewGameColor by remember { mutableStateOf(WHITE) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showGameOverDialog by remember { mutableStateOf(false) }
 
@@ -157,7 +158,7 @@ fun MainScreen(
 
     // Estados locales
     var lastMove by remember { mutableStateOf<Move?>(null) }
-    var isAIThinking by remember { mutableStateOf(false) }
+    val isAIThinking by aiThinkingViewModel.isAIThinking.collectAsState(false)
 
     // Estados derivados
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -173,8 +174,8 @@ fun MainScreen(
     val turnState: TurnIndicatorState by derivedStateOf {
         val state = viewModel.gameManager.gameState.value
         when {
-            gameStatus != GameStatus.PLAYING && !state.isInitialState(playerSide) -> TurnIndicatorState.NEUTRAL
             isAIThinking -> TurnIndicatorState.AI_THINKING
+            gameStatus != GameStatus.PLAYING && !state.isInitialState(playerSide) -> TurnIndicatorState.NEUTRAL
             else -> TurnIndicatorState.HUMAN_TURN
         }
     }
@@ -198,7 +199,10 @@ fun MainScreen(
             highlightService = highlightService,
             viewModel = viewModel,
             tutorialViewModel = tutorialViewModel,
-            onShowNewGameDialog = { showNewGameDialog = true },
+            onShowNewGameDialog = {
+                attemptNewGameColor = it
+                showNewGameDialog = true
+            },
         ) { showAboutDialog = true }
     }
 
@@ -220,15 +224,17 @@ fun MainScreen(
         tutorialState = tutorialState,
 
         aiThinkingDependencies = listOf(gameStatus, gameState.currentTurn, aiEnabled, playerSide, isEditing),
-
-        aiThinkingViewModel = aiThinkingViewModel,
         animationViewModel = animationViewModel,
 
         onBoardOrientationChanged = { boardOrientation = it },
-        onAIThinkingChanged = { isAIThinking = it },
         onAIMove = { from, to -> checkAndApplyMove(events, from, to, viewModel) },
-        onTutorialEnd = events::endTutorial,
+        onTutorialEnd = events::resetTutorial,
         onGameOver = { showGameOverDialog = true },
+        calculateAIMove = { gameState, move ->
+            scope.launch {
+                aiThinkingViewModel.calculateAIMove(gameState, move, debug = true)
+            }
+        },
 
         debug = viewModel.isDebug
     )
@@ -247,9 +253,10 @@ fun MainScreen(
             events.stopGame()
         },
         showNewGameDialog = showNewGameDialog,
+        attemptNewGameColor = attemptNewGameColor,
         onNewGameConfirmed = {
             showNewGameDialog = false
-            events.startNewGame(playerSide)
+            events.startNewGame(it)
         },
         onNewGameDismissed = {
             showNewGameDialog = false

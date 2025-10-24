@@ -56,12 +56,13 @@ fun MainScreenDialogs(
     onGameOverDismissed: () -> Unit,
 
     showNewGameDialog: Boolean,
-    onNewGameConfirmed: () -> Unit,
+    onNewGameConfirmed: (color: Color) -> Unit,
     onNewGameDismissed: () -> Unit,
+    attemptNewGameColor: Color,
 
     showAboutDialog: Boolean,
     onShowTutorial: () -> Unit,
-    onAboutDismissed: () -> Unit
+    onAboutDismissed: () -> Unit,
 ) {
     if (showGameOverDialog) {
         val matchState = gameState.getMatchState()
@@ -83,7 +84,7 @@ fun MainScreenDialogs(
 
     if (showNewGameDialog && !isAnimating) {
         NewGameDialog(
-            onConfirmed = onNewGameConfirmed,
+            onConfirmed = { onNewGameConfirmed(attemptNewGameColor) },
             onDismissed = onNewGameDismissed,
         )
     }
@@ -277,7 +278,7 @@ fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
         text = { LocalizedText(id = (R.string.are_you_sure_you_want_to_start_a_new_game)) },
         confirmButton = {
             Button(
-                onClick = { onConfirmed() }
+                onClick = onConfirmed
             ) {
                 LocalizedText(R.string.yes)
             }

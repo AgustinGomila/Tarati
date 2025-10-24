@@ -67,7 +67,7 @@ class TutorialManager(
             _currentStepIndex.value++
             showStep(_steps.value[_currentStepIndex.value])
         } else {
-            completeTutorial()
+            endTutorial()
         }
     }
 
@@ -188,21 +188,20 @@ class TutorialManager(
         }
     }
 
-    fun skipTutorial() {
-        completeTutorial()
-    }
-
-    private fun completeTutorial() {
+    fun endTutorial() {
         stopCurrentAnimations()
         autoAdvanceJob?.cancel()
         _tutorialState.value = TutorialState.Completed
     }
 
-    fun reset() {
+    fun closeTutorial() {
         stopCurrentAnimations()
         autoAdvanceJob?.cancel()
         _tutorialState.value = TutorialState.Idle
+    }
 
+    fun reset() {
+        closeTutorial()
         _currentStepIndex.value = 0
         _steps.value = emptyList()
     }

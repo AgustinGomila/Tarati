@@ -40,14 +40,14 @@ class TutorialViewModel(val tutorialManager: TutorialManager) : ViewModel() {
     fun isCompleted(): Boolean = tutorialManager.progress.isCompleted()
     fun nextStep() = tutorialManager.nextStep()
     fun previousStep() = tutorialManager.previousStep()
-    fun skipTutorial() = tutorialManager.skipTutorial()
+    fun endTutorial() = tutorialManager.endTutorial()
     fun repeatCurrentStep() = tutorialManager.repeatCurrentStep()
     fun getCurrentGameState(): GameState? = tutorialManager.getCurrentGameState()
     fun shouldAutoAdvance(): Boolean = tutorialManager.shouldAutoAdvance()
     fun getCurrentStepDuration(): Long = tutorialManager.getCurrentStepDuration()
     fun requestUserInteraction(moves: List<Move>) = tutorialManager.requestUserInteraction(moves)
-    fun endTutorial() = tutorialManager.reset()
-
+    fun resetTutorial() = tutorialManager.reset()
+    fun closeTutorial() = tutorialManager.closeTutorial()
     fun startTutorial() {
         viewModelScope.launch {
             tutorialManager.loadRulesTutorial()

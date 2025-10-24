@@ -250,7 +250,7 @@ private fun GameStatusCard(gameState: GameState, playerSide: Color) {
 @Composable
 private fun GameControlsSection(
     playerSide: Color,
-    onNewGame: (Color) -> Unit,
+    onNewGame: (color: Color) -> Unit,
     onEditBoard: () -> Unit,
 ) {
     Column(

@@ -4,5 +4,4 @@ enum class GameStatus {
     PLAYING,
     NO_PLAYING,
     GAME_OVER,
-    NEW_GAME,
 }

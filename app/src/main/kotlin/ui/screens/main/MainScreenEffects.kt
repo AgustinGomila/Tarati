@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
-import com.agustin.tarati.game.ai.AIThinkingViewModel
 import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
 import com.agustin.tarati.game.core.Color
@@ -26,6 +25,7 @@ import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.game.logic.isGameOver
 import com.agustin.tarati.game.logic.isPortrait
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.game.tutorial.TutorialState
@@ -59,27 +59,25 @@ fun MainScreenEffects(
     tutorialState: TutorialState,
 
     aiThinkingDependencies: List<Any?>,
+    calculateAIMove: (
+        gameState: GameState,
+        onMoveFound: (String, String) -> Unit,
+    ) -> Unit,
 
-    aiThinkingViewModel: AIThinkingViewModel,
     animationViewModel: BoardAnimationViewModel,
 
     onBoardOrientationChanged: (BoardOrientation) -> Unit,
-    onAIThinkingChanged: (Boolean) -> Unit,
     onAIMove: (String, String) -> Unit,
     onTutorialEnd: () -> Unit,
     onGameOver: () -> Unit,
 
     debug: Boolean
 ) {
-    // Devuelve el estado de la IA
-    LaunchedEffect(aiThinkingViewModel.isAIThinking) {
-        val isThinking = aiThinkingViewModel.isAIThinking
-        onAIThinkingChanged(isThinking)
-    }
-
     LaunchedEffect(tutorialState) {
         val tutorialState = tutorialState
-        if (tutorialState == TutorialState.Completed) onTutorialEnd()
+        if (tutorialState == TutorialState.Completed) {
+            onTutorialEnd()
+        }
     }
 
     // Efecto para orientación del tablero
@@ -109,15 +107,9 @@ fun MainScreenEffects(
         if (isTutorialActive || isEditing) return@LaunchedEffect
 
         val gameStatus = gameStatus
-        if (gameStatus == GameStatus.NEW_GAME) return@LaunchedEffect
-
-        when (gameStatus) {
-            GameStatus.GAME_OVER -> {
-                delay(1500)
-                onGameOver()
-            }
-
-            else -> {}
+        if (gameStatus == GameStatus.GAME_OVER) {
+            delay(1500)
+            onGameOver()
         }
     }
 
@@ -131,15 +123,16 @@ fun MainScreenEffects(
         val onAIMove = onAIMove
         val debug = debug
 
-        aiThinkingViewModel.calculateAIMove(
-            gameState = gameState,
-            gameStatus = gameStatus,
-            playerSide = playerSide,
-            aiEnabled = aiEnabled,
-            isEditing = isEditing,
-            onMoveFound = onAIMove,
-            debug = debug
-        )
+        if (!aiEnabled || isEditing || gameStatus != GameStatus.PLAYING) {
+            if (debug) println("DEBUG: AI blocked - gameStatus: $gameStatus, aiEnabled: $aiEnabled")
+            return@LaunchedEffect
+        }
+
+        val shouldAIPlay = gameState.currentTurn != playerSide && !gameState.isGameOver()
+
+        if (!shouldAIPlay) return@LaunchedEffect
+
+        calculateAIMove(gameState, onAIMove)
     }
 
     // Efecto para drawer y tutorial
@@ -248,8 +241,8 @@ fun MainContent(
                                 boardSize = boardSize,
                                 boardOrientation = editBoardOrientation,
                                 tutorialEvents = TutorialEvents(
-                                    onSkipTutorial = events::skipTutorial,
-                                    onFinishTutorial = events::endTutorial
+                                    onSkipTutorial = events::endTutorial,
+                                    onFinishTutorial = events::resetTutorial
                                 ),
                                 updateGameState = viewModel.gameManager::updateGameState,
                             )

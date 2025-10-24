@@ -14,6 +14,7 @@ import com.agustin.tarati.game.core.GameBoard.getCentralRegions
 import com.agustin.tarati.game.core.GameBoard.getCircumferenceRegions
 import com.agustin.tarati.game.core.GameBoard.getDomesticRegions
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
+import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.sin
@@ -201,13 +202,8 @@ private fun calculateBoardBoundingBox(
     canvasSize: Size,
     orientation: BoardOrientation
 ): BoardRect {
-    // Obtener todos los vértices de todas las regiones
-    val allVertices = getCentralRegions().flatMap { it.vertices } +
-            getCircumferenceRegions().flatMap { it.vertices } +
-            getDomesticRegions().flatMap { it.vertices }
-
     // Calcular posiciones y encontrar los límites
-    val positions = allVertices.distinct().map { vertexId ->
+    val positions = vertices.distinct().map { vertexId ->
         getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
     }
 
