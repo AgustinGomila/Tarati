@@ -132,4 +132,6 @@
     <string name="disabled">Desactivado</string>
     <string name="move_history">Lista de movimientos</string>
     <string name="ai_opponent">Oponente IA</string>
+    <string name="board_regions">Áreas</string>
+    <string name="board_perimeter">Perímetro</string>
 </resources>

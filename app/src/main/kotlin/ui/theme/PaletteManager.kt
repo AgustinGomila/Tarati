@@ -22,7 +22,7 @@ fun rememberBoardColors(): BoardColors {
         blackCobColor = palette.blackCobColor,
         boardBackground = palette.boardBackground,
         boardEdgeColor = palette.boardEdgeColor,
-        boardGlowColor = palette.boardGlowColor,
+        boardPerimeterColor = palette.boardPerimeterColor,
         boardPatternBorderColor = palette.boardPatternBorderColor,
         boardPatternColor1 = palette.boardPatternColor1,
         boardPatternColor2 = palette.boardPatternColor2,

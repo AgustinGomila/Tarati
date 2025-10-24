@@ -19,6 +19,8 @@ private data class SettingsFlows(
     val labelsVisibility: Boolean,
     val verticesVisibility: Boolean,
     val edgesVisibility: Boolean,
+    val regionsVisibility: Boolean,
+    val perimeterVisibility: Boolean,
     val animateEffects: Boolean,
     val palette: String
 )
@@ -41,6 +43,8 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                 sr.labelsVisibility,
                 sr.verticesVisibility,
                 sr.edgesVisibility,
+                sr.regionsVisibility,
+                sr.perimeterVisibility,
                 sr.animateEffects,
                 sr.palette
             )
@@ -54,8 +58,10 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                     labelsVisibility = values[3] as Boolean,
                     verticesVisibility = values[4] as Boolean,
                     edgesVisibility = values[5] as Boolean,
-                    animateEffects = values[6] as Boolean,
-                    palette = values[7] as String
+                    regionsVisibility = values[6] as Boolean,
+                    perimeterVisibility = values[7] as Boolean,
+                    animateEffects = values[8] as Boolean,
+                    palette = values[9] as String
                 )
             }.collect { flows ->
                 _settingsState.value = SettingsState(
@@ -66,6 +72,8 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                         labelsVisibles = flows.labelsVisibility,
                         verticesVisibles = flows.verticesVisibility,
                         edgesVisibles = flows.edgesVisibility,
+                        regionsVisibles = flows.regionsVisibility,
+                        perimeterVisible = flows.perimeterVisibility,
                         animateEffects = flows.animateEffects,
                     ),
                     palette = flows.palette
@@ -113,6 +121,18 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
     fun setEdgesVisibility(visible: Boolean) {
         viewModelScope.launch {
             sr.setEdgesVisibility(visible)
+        }
+    }
+
+    fun setRegionsVisibility(visible: Boolean) {
+        viewModelScope.launch {
+            sr.setRegionsVisibility(visible)
+        }
+    }
+
+    fun setPerimeterVisibility(visible: Boolean) {
+        viewModelScope.launch {
+            sr.setPerimeterVisibility(visible)
         }
     }
 

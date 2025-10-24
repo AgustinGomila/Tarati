@@ -54,5 +54,7 @@ data class PreviewConfig(
     val labelsVisible: Boolean = true,
     val verticesVisible: Boolean = true,
     val edgesVisible: Boolean = true,
+    val regionsVisible: Boolean = true,
+    val perimeterVisible: Boolean = true,
     val debug: Boolean = false
 )

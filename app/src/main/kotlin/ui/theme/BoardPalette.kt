@@ -9,7 +9,7 @@ interface BoardPalette {
     val blackCobColor: Color
     val boardBackground: Color
     val boardEdgeColor: Color
-    val boardGlowColor: Color
+    val boardPerimeterColor: Color
     val boardPatternBorderColor: Color
     val boardPatternColor1: Color
     val boardPatternColor2: Color
@@ -50,7 +50,7 @@ object ClassicPalette : BoardPalette {
     override val blackCobColor = Color(0xFF181717)
     override val boardBackground = Color(0xFF867567)
     override val boardEdgeColor = Color(0xFF57381A)
-    override val boardGlowColor = Color(0xFF87CEEB)
+    override val boardPerimeterColor = Color(0xFF968271)
     override val boardPatternBorderColor = Color(0xFF654321)
     override val boardPatternColor1 = Color(0xFF8B4513)
     override val boardPatternColor2 = Color(0xFFC2945A)
@@ -91,7 +91,7 @@ object DarkPalette : BoardPalette {
     override val blackCobColor = Color(0xFF192454)
     override val boardBackground = Color(0xFF756F98)
     override val boardEdgeColor = Color(0xFF503375)
-    override val boardGlowColor = Color(0xFFBB86FC)
+    override val boardPerimeterColor = Color(0xFF8477A8)
     override val boardPatternBorderColor = Color(0xFF1DB2A5)
     override val boardPatternColor1 = Color(0xFF422791)
     override val boardPatternColor2 = Color(0xFF7133AF)
@@ -132,7 +132,7 @@ object NaturePalette : BoardPalette {
     override val blackCobColor = Color(0xFF193341)
     override val boardBackground = Color(0xFF5C8498)
     override val boardEdgeColor = Color(0xFF704F45)
-    override val boardGlowColor = Color(0xFF48754D)
+    override val boardPerimeterColor = Color(0xFF5B9597)
     override val boardPatternBorderColor = Color(0xFF325921)
     override val boardPatternColor1 = Color(0xFF4C6432)
     override val boardPatternColor2 = Color(0xFFADBD9B)

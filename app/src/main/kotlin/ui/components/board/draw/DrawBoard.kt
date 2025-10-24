@@ -3,13 +3,14 @@ package com.agustin.tarati.ui.components.board.draw
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.agustin.tarati.game.core.GameBoard.BoardRegion
+import com.agustin.tarati.game.core.GameBoard.domesticVertices
+import com.agustin.tarati.game.core.GameBoard.getBoardRect
 import com.agustin.tarati.game.core.GameBoard.getCentralRegions
 import com.agustin.tarati.game.core.GameBoard.getCircumferenceRegions
 import com.agustin.tarati.game.core.GameBoard.getDomesticRegions
@@ -17,18 +18,23 @@ import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.theme.BoardColors
-import kotlin.math.sin
-
 
 fun DrawScope.drawBoardBackground(
     canvasSize: Size,
     orientation: BoardOrientation,
     colors: BoardColors,
-    showPattern: Boolean = true,
-    showGlow: Boolean = false
+    regionsVisible: Boolean,
+    perimeterVisible: Boolean,
 ) {
     // Fondo base del tablero
-    val boardRect = calculateBoardBoundingBox(canvasSize, orientation)
+    val boardRect = calculateBoardBoundingBox(
+        getBoardRect(
+            vertices = vertices,
+            canvasSize = canvasSize,
+            orientation = orientation
+        ),
+        canvasSize, 0.1f,
+    )
     drawRoundRect(
         color = colors.boardBackground,
         topLeft = boardRect.topLeft,
@@ -36,7 +42,11 @@ fun DrawScope.drawBoardBackground(
         cornerRadius = CornerRadius(16f)
     )
 
-    if (showPattern) {
+    if (perimeterVisible) {
+        drawBoardPerimeter(canvasSize, orientation, colors)
+    }
+
+    if (regionsVisible) {
         // Dibujar regiones centrales
         drawBoardPatternTwoColors(
             canvasSize = canvasSize,
@@ -65,10 +75,6 @@ fun DrawScope.drawBoardBackground(
             borderColor = colors.boardPatternBorderColor,
             orientation = orientation
         )
-    }
-
-    if (showGlow) {
-        drawBoardGlowEffect(canvasSize, colors)
     }
 }
 
@@ -163,61 +169,48 @@ fun DrawScope.drawBoardPatternSingleColor(
     }
 }
 
-fun DrawScope.drawBoardGlowEffect(
+fun DrawScope.drawBoardPerimeter(
     canvasSize: Size,
+    orientation: BoardOrientation,
     colors: BoardColors
 ) {
     val center = Offset(canvasSize.width / 2, canvasSize.height / 2)
     val radius = minOf(canvasSize.width, canvasSize.height) * 0.8f / 2
 
-    // Efecto de glow sutil en el borde
-    val glowTime = System.currentTimeMillis() % 3000L / 3000f
-    val pulse = (sin(glowTime * 2 * Math.PI).toFloat() * 0.1f) + 0.9f
+    val boardRect = calculateBoardBoundingBox(
+        getBoardRect(
+            vertices = domesticVertices,
+            canvasSize = canvasSize,
+            orientation = orientation
+        ), canvasSize, 0.06f
+    )
+
+    drawRoundRect(
+        color = colors.boardPerimeterColor,
+        topLeft = boardRect.topLeft,
+        size = boardRect.size,
+        cornerRadius = CornerRadius(16f)
+    )
 
     drawCircle(
-        color = colors.boardGlowColor.copy(alpha = 0.2f * pulse),
+        color = colors.boardPerimeterColor,
+        style = Fill,
         center = center,
         radius = radius * 1.02f,
-        style = Stroke(width = 8f)
-    )
-
-    // Gradiente radial interior
-    val radialGradient = Brush.radialGradient(
-        colors = listOf(
-            colors.boardGlowColor.copy(alpha = 0.05f),
-            colors.boardGlowColor.copy(alpha = 0.0f)
-        ),
-        center = center,
-        radius = radius * 0.8f
-    )
-
-    drawCircle(
-        brush = radialGradient,
-        center = center,
-        radius = radius * 0.8f
     )
 }
 
 private fun calculateBoardBoundingBox(
+    rect: BoardRect,
     canvasSize: Size,
-    orientation: BoardOrientation
+    margin: Float,
 ): BoardRect {
-    // Calcular posiciones y encontrar los límites
-    val positions = vertices.distinct().map { vertexId ->
-        getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
-    }
-
-    val minX = positions.minOf { it.x }
-    val maxX = positions.maxOf { it.x }
-    val minY = positions.minOf { it.y }
-    val maxY = positions.maxOf { it.y }
-
     // Añadir un margen para que el fondo se extienda un poco más allá de los vértices
-    val margin = minOf(canvasSize.width, canvasSize.height) * 0.1f
+    val margin = minOf(canvasSize.width, canvasSize.height) * margin
 
     return BoardRect(
-        topLeft = Offset(minX - margin, minY - margin),
-        size = Size((maxX - minX) + 2 * margin, (maxY - minY) + 2 * margin)
+        topLeft = Offset(rect.topLeft.x - margin, rect.topLeft.y - margin),
+        size = Size(rect.size.width + 2 * margin, rect.size.height + 2 * margin),
     )
 }
 

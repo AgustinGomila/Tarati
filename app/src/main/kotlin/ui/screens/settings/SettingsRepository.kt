@@ -20,6 +20,8 @@ interface SettingsRepository {
     val labelsVisibility: Flow<Boolean>
     val verticesVisibility: Flow<Boolean>
     val edgesVisibility: Flow<Boolean>
+    val regionsVisibility: Flow<Boolean>
+    val perimeterVisibility: Flow<Boolean>
     val animateEffects: Flow<Boolean>
 
     suspend fun setDarkTheme(enabled: Boolean)
@@ -29,6 +31,8 @@ interface SettingsRepository {
     suspend fun setLabelsVisibility(visibility: Boolean)
     suspend fun setVerticesVisibility(visibility: Boolean)
     suspend fun setEdgesVisibility(visibility: Boolean)
+    suspend fun setRegionsVisibility(visibility: Boolean)
+    suspend fun setPerimeterVisibility(visibility: Boolean)
     suspend fun setAnimateEffects(animate: Boolean)
 }
 
@@ -42,12 +46,16 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
         val LABELS_VISIBILITY_KEY = booleanPreferencesKey("labels_visibles")
         val VERTICES_VISIBILITY_KEY = booleanPreferencesKey("vertices_visibles")
         val EDGES_VISIBILITY_KEY = booleanPreferencesKey("edges_visibles")
+        val REGIONS_VISIBILITY_KEY = booleanPreferencesKey("regions_visibles")
+        val PERIMETER_VISIBILITY_KEY = booleanPreferencesKey("perimeter_visible")
         val ANIMATE_EFFECTS_KEY = booleanPreferencesKey("animate_effects")
 
         private const val DARK_THEME_DEFAULT = true
         private const val LABELS_VISIBILITY_DEFAULT = false
         private const val VERTICES_VISIBILITY_DEFAULT = true
         private const val EDGES_VISIBILITY_DEFAULT = false
+        private const val REGIONS_VISIBILITY_DEFAULT = true
+        private const val PERIMETER_VISIBILITY_DEFAULT = true
         private const val ANIMATE_EFFECTS_DEFAULT = true
     }
 
@@ -82,6 +90,12 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
     override val edgesVisibility: Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[EDGES_VISIBILITY_KEY] ?: EDGES_VISIBILITY_DEFAULT }
 
+    override val regionsVisibility: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[REGIONS_VISIBILITY_KEY] ?: REGIONS_VISIBILITY_DEFAULT }
+
+    override val perimeterVisibility: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[PERIMETER_VISIBILITY_KEY] ?: PERIMETER_VISIBILITY_DEFAULT }
+
     override val animateEffects: Flow<Boolean> =
         dataStore.data.map { preferences -> preferences[ANIMATE_EFFECTS_KEY] ?: ANIMATE_EFFECTS_DEFAULT }
 
@@ -115,12 +129,6 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
         }
     }
 
-    override suspend fun setAnimateEffects(animate: Boolean) {
-        dataStore.edit { settings ->
-            settings[ANIMATE_EFFECTS_KEY] = animate
-        }
-    }
-
     override suspend fun setVerticesVisibility(visibility: Boolean) {
         dataStore.edit { settings ->
             settings[VERTICES_VISIBILITY_KEY] = visibility
@@ -130,6 +138,24 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
     override suspend fun setEdgesVisibility(visibility: Boolean) {
         dataStore.edit { settings ->
             settings[EDGES_VISIBILITY_KEY] = visibility
+        }
+    }
+
+    override suspend fun setRegionsVisibility(visibility: Boolean) {
+        dataStore.edit { settings ->
+            settings[REGIONS_VISIBILITY_KEY] = visibility
+        }
+    }
+
+    override suspend fun setPerimeterVisibility(visibility: Boolean) {
+        dataStore.edit { settings ->
+            settings[PERIMETER_VISIBILITY_KEY] = visibility
+        }
+    }
+
+    override suspend fun setAnimateEffects(animate: Boolean) {
+        dataStore.edit { settings ->
+            settings[ANIMATE_EFFECTS_KEY] = animate
         }
     }
 }

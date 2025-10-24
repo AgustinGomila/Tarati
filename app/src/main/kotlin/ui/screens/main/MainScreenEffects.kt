@@ -160,6 +160,8 @@ fun MainContent(
     labelsVisibles: Boolean,
     edgesVisibles: Boolean,
     verticesVisibles: Boolean,
+    regionsVisibles: Boolean,
+    perimeterVisible: Boolean,
     pieceCounts: PieceCounts,
     onEditPiece: (String) -> Unit,
     onPieceMove: (String, String) -> Unit,
@@ -226,6 +228,8 @@ fun MainContent(
                         labelsVisible = labelsVisibles,
                         edgesVisible = edgesVisibles,
                         verticesVisible = verticesVisibles,
+                        regionsVisible = regionsVisibles,
+                        perimeterVisible = perimeterVisible,
                     ),
                     events = object : BoardEvents {
                         override fun onMove(from: String, to: String) = onPieceMove(from, to)

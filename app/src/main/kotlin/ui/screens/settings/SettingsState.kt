@@ -9,6 +9,8 @@ data class BoardState(
     val labelsVisibles: Boolean = false,
     val verticesVisibles: Boolean = true,
     val edgesVisibles: Boolean = false,
+    val regionsVisibles: Boolean = true,
+    val perimeterVisible: Boolean = true,
     val animateEffects: Boolean = true,
 )
 

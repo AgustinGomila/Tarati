@@ -262,6 +262,62 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun regionsVisibility_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.REGIONS_VISIBILITY_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.regionsVisibility.take(1).toList()[0]
+
+        assertTrue("Regions should be visible", result)
+    }
+
+    @Test
+    fun regionsVisibility_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.REGIONS_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.regionsVisibility.take(1).toList()[0]
+
+        assertTrue("Regions should be visible by default", result)
+    }
+
+    @Test
+    fun perimeterVisibility_returnsStoredValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.PERIMETER_VISIBILITY_KEY] } returns true
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.perimeterVisibility.take(1).toList()[0]
+
+        assertTrue("Perimeter should be visible", result)
+    }
+
+    @Test
+    fun perimeterVisibility_returnsDefaultWhenNotSet() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.PERIMETER_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        val result = repository.perimeterVisibility.take(1).toList()[0]
+
+        assertTrue("Perimeter should be visible by default", result)
+    }
+
+    @Test
     fun animateEffects_returnsStoredValue() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         val mockPreferences = mockk<Preferences>()
@@ -317,6 +373,40 @@ class SettingsRepositoryTest {
 
         val repository = SettingsRepositoryImpl(mockDataStore)
         repository.setEdgesVisibility(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
+
+    @Test
+    fun setRegionsVisibility_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.REGIONS_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setRegionsVisibility(true)
+
+        coVerify {
+            mockDataStore.updateData(any())
+        }
+    }
+
+    @Test
+    fun setPerimeterVisibility_savesValue() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockPreferences = mockk<Preferences>()
+
+        every { mockPreferences[SettingsRepositoryImpl.PERIMETER_VISIBILITY_KEY] } returns null
+        every { mockDataStore.data } returns flowOf(mockPreferences)
+        coEvery { mockDataStore.updateData(any()) } returns mockk()
+
+        val repository = SettingsRepositoryImpl(mockDataStore)
+        repository.setPerimeterVisibility(true)
 
         coVerify {
             mockDataStore.updateData(any())

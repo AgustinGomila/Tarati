@@ -41,8 +41,8 @@ data class BoardState(
     val newGame: Boolean = false,
     val aiEnabled: Boolean = true,
     val isEditing: Boolean = false,
-    val showBoardPattern: Boolean = true,
-    val showBoardGlow: Boolean = false,
+    val regionsVisible: Boolean = true,
+    val perimeterVisible: Boolean = true,
 )
 
 interface BoardEvents {
@@ -79,8 +79,8 @@ fun Board(
                 canvasSize = size,
                 orientation = boardState.boardOrientation,
                 colors = boardColors,
-                showPattern = boardState.showBoardPattern,
-                showGlow = boardState.showBoardGlow
+                regionsVisible = boardState.regionsVisible,
+                perimeterVisible = boardState.perimeterVisible
             )
         }
 

@@ -40,6 +40,8 @@ class SettingsViewModelTest {
         coEvery { mockSettingsRepository.labelsVisibility } returns MutableStateFlow(false)
         coEvery { mockSettingsRepository.verticesVisibility } returns MutableStateFlow(true)
         coEvery { mockSettingsRepository.edgesVisibility } returns MutableStateFlow(false)
+        coEvery { mockSettingsRepository.regionsVisibility } returns MutableStateFlow(true)
+        coEvery { mockSettingsRepository.perimeterVisibility } returns MutableStateFlow(true)
         coEvery { mockSettingsRepository.animateEffects } returns MutableStateFlow(true)
         coEvery { mockSettingsRepository.palette } returns MutableStateFlow(ClassicPalette.name)
 
@@ -70,6 +72,8 @@ class SettingsViewModelTest {
         assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
         assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
         assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
+        assertTrue("Initial regions should be visible", state.boardState.regionsVisibles)
+        assertTrue("Initial perimeter should be visible", state.boardState.perimeterVisible)
         assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
     }
 
@@ -186,6 +190,24 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun setRegionsVisibility_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setRegionsVisibility(any()) } returns Unit
+
+        viewModel.setRegionsVisibility(true)
+
+        coVerify { mockSettingsRepository.setRegionsVisibility(true) }
+    }
+
+    @Test
+    fun setPerimeterVisibility_savesSetting() = runTest {
+        coEvery { mockSettingsRepository.setPerimeterVisibility(any()) } returns Unit
+
+        viewModel.setPerimeterVisibility(true)
+
+        coVerify { mockSettingsRepository.setPerimeterVisibility(true) }
+    }
+
+    @Test
     fun setAnimateEffects_savesSetting() = runTest {
         coEvery { mockSettingsRepository.setAnimateEffects(any()) } returns Unit
 
@@ -202,6 +224,8 @@ class SettingsViewModelTest {
         assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
         assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
         assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
+        assertTrue("Initial regions should be visible", state.boardState.regionsVisibles)
+        assertTrue("Initial perimeter should be visible", state.boardState.perimeterVisible)
         assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
     }
 
@@ -209,14 +233,20 @@ class SettingsViewModelTest {
     fun multipleVisibilityChanges_triggerRepositoryCalls() = runTest {
         coEvery { mockSettingsRepository.setVerticesVisibility(any()) } returns Unit
         coEvery { mockSettingsRepository.setEdgesVisibility(any()) } returns Unit
+        coEvery { mockSettingsRepository.setRegionsVisibility(any()) } returns Unit
+        coEvery { mockSettingsRepository.setPerimeterVisibility(any()) } returns Unit
         coEvery { mockSettingsRepository.setAnimateEffects(any()) } returns Unit
 
         viewModel.setVerticesVisibility(false)
         viewModel.setEdgesVisibility(true)
+        viewModel.setRegionsVisibility(true)
+        viewModel.setPerimeterVisibility(false)
         viewModel.setAnimateEffects(false)
 
         coVerify { mockSettingsRepository.setVerticesVisibility(false) }
         coVerify { mockSettingsRepository.setEdgesVisibility(true) }
+        coVerify { mockSettingsRepository.setRegionsVisibility(true) }
+        coVerify { mockSettingsRepository.setPerimeterVisibility(false) }
         coVerify { mockSettingsRepository.setAnimateEffects(false) }
     }
 }

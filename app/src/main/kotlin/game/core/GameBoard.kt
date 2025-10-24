@@ -3,6 +3,7 @@
 package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import com.agustin.tarati.game.core.Color.BLACK
 import com.agustin.tarati.game.core.Color.WHITE
 import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
@@ -12,6 +13,7 @@ import com.agustin.tarati.game.core.GameBoard.getCastlingMoves
 import com.agustin.tarati.game.core.GameBoard.homeBases
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.logic.BoardOrientation
+import com.agustin.tarati.ui.components.board.draw.BoardRect
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -158,6 +160,22 @@ object GameBoard {
         }
 
         map.toMap()
+    }
+
+    fun getBoardRect(vertices: List<String>, canvasSize: Size, orientation: BoardOrientation): BoardRect {
+        val positions = vertices.distinct().map { vertexId ->
+            getVisualPosition(vertexId, canvasSize.width, canvasSize.height, orientation)
+        }
+
+        val minX = positions.minOf { it.x }
+        val maxX = positions.maxOf { it.x }
+        val minY = positions.minOf { it.y }
+        val maxY = positions.maxOf { it.y }
+
+        return BoardRect(
+            topLeft = Offset(minX, minY),
+            size = Size(width = maxX - minX, height = maxY - minY)
+        )
     }
 
     fun getVisualPosition(

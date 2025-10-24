@@ -154,6 +154,8 @@ fun MainScreen(
     val labelsVisibles = settingsState.boardState.labelsVisibles
     val edgesVisibles = settingsState.boardState.edgesVisibles
     val verticesVisibles = settingsState.boardState.verticesVisibles
+    val regionsVisibles = settingsState.boardState.regionsVisibles
+    val perimeterVisible = settingsState.boardState.perimeterVisible
     val animateEffects = settingsState.boardState.animateEffects
 
     // Estados locales
@@ -304,6 +306,8 @@ fun MainScreen(
             labelsVisibles = labelsVisibles,
             edgesVisibles = edgesVisibles,
             verticesVisibles = verticesVisibles,
+            regionsVisibles = regionsVisibles,
+            perimeterVisible = perimeterVisible,
             pieceCounts = pieceCounts,
             onEditPiece = viewModel::editPiece,
             onPieceMove = { from, to ->
@@ -530,6 +534,8 @@ data class CreateBoardState(
     val labelsVisible: Boolean,
     val verticesVisible: Boolean,
     val edgesVisible: Boolean,
+    val regionsVisible: Boolean,
+    val perimeterVisible: Boolean,
 )
 
 @Composable
@@ -556,6 +562,8 @@ fun CreateBoard(
         labelsVisible = state.labelsVisible,
         verticesVisible = state.verticesVisible,
         edgesVisible = state.edgesVisible,
+        regionsVisible = state.regionsVisible,
+        perimeterVisible = state.perimeterVisible,
         isEditing = state.isEditing
     )
 
@@ -1074,6 +1082,8 @@ private fun MainScreenPreviewContent(
         var labelsVisible by remember { mutableStateOf(config.labelsVisible) }
         var verticesVisible by remember { mutableStateOf(config.verticesVisible) }
         var edgesVisible by remember { mutableStateOf(config.edgesVisible) }
+        var regionsVisible by remember { mutableStateOf(config.regionsVisible) }
+        var perimeterVisible by remember { mutableStateOf(config.perimeterVisible) }
 
         // Estado UI para el Sidebar
         var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
@@ -1111,6 +1121,8 @@ private fun MainScreenPreviewContent(
             labelsVisible = labelsVisible,
             verticesVisible = verticesVisible,
             edgesVisible = edgesVisible,
+            regionsVisible = regionsVisible,
+            perimeterVisible = perimeterVisible,
         )
 
         val createBoardEvents = createPreviewBoardEvents(config.debug)

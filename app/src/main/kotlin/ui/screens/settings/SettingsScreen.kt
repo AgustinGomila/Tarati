@@ -58,6 +58,8 @@ interface SettingsEvents {
     fun onLabelsVisibilityChange(visible: Boolean)
     fun onVerticesVisibilityChange(visible: Boolean)
     fun onEdgesVisibilityChange(visible: Boolean)
+    fun onRegionsVisibilityChange(visible: Boolean)
+    fun onPerimeterVisibilityChange(visible: Boolean)
     fun onAnimateEffectsChange(animate: Boolean)
     fun onPaletteChange(paletteName: String)
 }
@@ -150,6 +152,24 @@ fun SettingsScreen(
                     onCheckedChange = { visible ->
                         viewModel.setEdgesVisibility(visible)
                         events.onEdgesVisibilityChange(visible)
+                    }
+                )
+                ToggleSetting(
+                    icon = Icons.Default.Visibility,
+                    title = R.string.board_regions,
+                    checked = settingsState.boardState.regionsVisibles,
+                    onCheckedChange = { visible ->
+                        viewModel.setRegionsVisibility(visible)
+                        events.onRegionsVisibilityChange(visible)
+                    }
+                )
+                ToggleSetting(
+                    icon = Icons.Default.Visibility,
+                    title = R.string.board_perimeter,
+                    checked = settingsState.boardState.perimeterVisible,
+                    onCheckedChange = { visible ->
+                        viewModel.setPerimeterVisibility(visible)
+                        events.onPerimeterVisibilityChange(visible)
                     }
                 )
 
@@ -446,6 +466,18 @@ fun ToggleSettingsPreview() {
                 icon = Icons.Default.Animation,
                 title = R.string.animate_effects,
                 checked = true,
+                onCheckedChange = {}
+            )
+            ToggleSetting(
+                icon = Icons.Default.Visibility,
+                title = R.string.board_regions,
+                checked = false,
+                onCheckedChange = {}
+            )
+            ToggleSetting(
+                icon = Icons.Default.Visibility,
+                title = R.string.board_perimeter,
+                checked = false,
                 onCheckedChange = {}
             )
         }

@@ -13,7 +13,7 @@ data class BoardColors(
     val blackCobColor: Color,
     val boardBackground: Color,
     val boardEdgeColor: Color,
-    val boardGlowColor: Color,
+    val boardPerimeterColor: Color,
     val boardPatternBorderColor: Color,
     val boardPatternColor1: Color,
     val boardPatternColor2: Color,

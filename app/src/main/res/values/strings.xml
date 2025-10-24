@@ -125,4 +125,6 @@
     <string name="disabled">Disabled</string>
     <string name="move_history">Move history</string>
     <string name="ai_opponent">AI opponent</string>
+    <string name="board_regions">Areas</string>
+    <string name="board_perimeter">Perimeter</string>
 </resources>
