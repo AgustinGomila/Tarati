@@ -9,12 +9,14 @@ import com.agustin.tarati.game.core.GameBoard.BoardRegion
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.components.board.animation.RegionHighlight
+import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.sin
 
 fun DrawScope.drawRegionHighlight(
     highlight: RegionHighlight,
     canvasSize: Size,
     orientation: BoardOrientation,
+    colors: BoardColors
 ) {
     val region = highlight.region
 
@@ -32,14 +34,14 @@ fun DrawScope.drawRegionHighlight(
     // Dibujar fondo de la región con efecto de pulso
     drawPath(
         path = path,
-        color = highlight.color.copy(alpha = 0.6f * pulseFactor),
+        color = colors.highlightRegion1Color.copy(alpha = 0.6f * pulseFactor),
         style = Fill
     )
 
     // Dibujar borde resaltado con efecto de pulso
     drawPath(
         path = path,
-        color = highlight.color,
+        color = colors.highlightRegion2Color,
         style = Stroke(width = 3f * pulseFactor)
     )
 }

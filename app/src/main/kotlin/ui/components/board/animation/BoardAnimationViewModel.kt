@@ -333,7 +333,6 @@ class BoardAnimationViewModel : ViewModel() {
 
     private fun areVertexHighlightsEqual(a: VertexHighlight, b: VertexHighlight): Boolean {
         return a.vertexId == b.vertexId &&
-                a.color == b.color &&
                 a.pulse == b.pulse &&
                 a.duration == b.duration
     }
@@ -341,14 +340,12 @@ class BoardAnimationViewModel : ViewModel() {
     private fun areEdgeHighlightsEqual(a: EdgeHighlight, b: EdgeHighlight): Boolean {
         return a.from == b.from &&
                 a.to == b.to &&
-                a.color == b.color &&
                 a.pulse == b.pulse &&
                 a.duration == b.duration
     }
 
     private fun areRegionHighlightsEqual(a: RegionHighlight, b: RegionHighlight): Boolean {
         return a.region == b.region &&
-                a.color == b.color &&
                 a.pulse == b.pulse &&
                 a.duration == b.duration
     }

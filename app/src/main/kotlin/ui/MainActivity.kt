@@ -18,8 +18,9 @@ import com.agustin.tarati.ui.navigation.NavGraph
 import com.agustin.tarati.ui.screens.settings.SettingsEvents
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.AppTheme
+import com.agustin.tarati.ui.theme.PaletteManager
 import com.agustin.tarati.ui.theme.TaratiTheme
-import com.agustin.tarati.ui.theme.changePalette
+import com.agustin.tarati.ui.theme.availablePalettes
 import org.koin.core.context.GlobalContext.get
 import java.util.*
 
@@ -46,6 +47,8 @@ class MainActivity : ComponentActivity() {
             LanguageAwareApp {
 
                 val settings = viewModel.settingsState.collectAsState()
+
+                setCurrentPalette(settings.value.palette)
 
                 val useDarkTheme = when (settings.value.appTheme) {
                     AppTheme.MODE_AUTO -> isSystemInDarkTheme()
@@ -75,7 +78,13 @@ class MainActivity : ComponentActivity() {
         override fun onTutorialButtonVisibilityChange(visible: Boolean) =
             viewModel.setTutorialButtonVisibility(visible)
 
-        override fun onPaletteChange(paletteName: String) = changePalette(paletteName)
+        override fun onPaletteChange(paletteName: String) = setCurrentPalette(paletteName)
+    }
+
+    fun setCurrentPalette(paletteName: String) {
+        val currentPalette = availablePalettes.find { it.name == paletteName }
+            ?: availablePalettes.first()
+        PaletteManager.setPalette(currentPalette)
     }
 
     fun Context.wrapContext(locale: Locale): Context {

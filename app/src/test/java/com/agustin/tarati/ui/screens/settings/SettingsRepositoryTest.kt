@@ -232,7 +232,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.tutorialButtonVisibility.take(1).toList()[0]
 
-        assertFalse("Tutorial button should be hidden by default", result)
+        assertTrue("Tutorial button should be visible by default", result)
     }
 
     @Test
@@ -260,7 +260,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.verticesVisibility.take(1).toList()[0]
 
-        assertFalse("Vertices should be hidden by default", result)
+        assertTrue("Vertices should be visibles by default", result)
     }
 
     @Test
@@ -316,7 +316,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.animateEffects.take(1).toList()[0]
 
-        assertFalse("Animate effects should be disabled by default", result)
+        assertTrue("Animate effects should be enabled by default", result)
     }
 
 // Tests de escritura para las nuevas propiedades

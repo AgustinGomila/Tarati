@@ -9,6 +9,7 @@ import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameBoard.vertices
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.ui.components.board.BoardState
+import com.agustin.tarati.ui.components.board.animation.HighlightAction
 import com.agustin.tarati.ui.components.board.animation.VertexHighlight
 import com.agustin.tarati.ui.theme.BoardColors
 import kotlin.math.sin
@@ -33,7 +34,7 @@ fun DrawScope.drawVertices(
 
             val vertexColor = when {
                 vertexId == selectedVertexId -> colors.vertexSelectedColor
-                adjacentVertexes.contains(vertexId) -> colors.vertexHighlightColor
+                adjacentVertexes.contains(vertexId) -> colors.vertexAdjacentColor
                 cob != null -> colors.vertexOccupiedColor
                 else -> colors.boardVertexColor
             }
@@ -67,6 +68,7 @@ fun DrawScope.drawVertexHighlight(
     highlight: VertexHighlight,
     canvasSize: Size,
     orientation: BoardOrientation,
+    colors: BoardColors,
 ) {
     val pos = getVisualPosition(highlight.vertexId, canvasSize.width, canvasSize.height, orientation)
     val baseRadius = minOf(canvasSize.width, canvasSize.height) * 0.03f
@@ -81,27 +83,54 @@ fun DrawScope.drawVertexHighlight(
 
     val pulseRadius = baseRadius * pulseFactor
 
-    // Círculo exterior brillante
-    drawCircle(
-        color = highlight.color.copy(alpha = 0.3f),
-        center = pos,
-        radius = pulseRadius * 1.6f
-    )
-
-    // Círculo principal del highlight
-    drawCircle(
-        color = highlight.color,
-        center = pos,
-        radius = pulseRadius * 0.8f,
-        style = Stroke(width = 3f)
-    )
-
-    // Núcleo brillante
-    drawCircle(
-        color = highlight.color,
-        center = pos,
-        radius = pulseRadius * 0.4f
-    )
+    if (highlight.action == HighlightAction.CAPTURE) {
+        drawCircle(
+            color = colors.highlightVertexCapture1Color.copy(alpha = 0.3f),
+            center = pos,
+            radius = pulseRadius * 2f
+        )
+        drawCircle(
+            color = colors.highlightVertexCapture2Color,
+            center = pos,
+            radius = pulseRadius * 1.2f,
+            style = Stroke(width = 3f)
+        )
+        drawCircle(
+            color = colors.highlightVertexCapture3Color,
+            center = pos,
+            radius = pulseRadius * 0.4f
+        )
+    } else if (highlight.action == HighlightAction.UPGRADE) {
+        drawCircle(
+            color = colors.highlightVertexUpgrade1Color.copy(alpha = 0.3f),
+            center = pos,
+            radius = pulseRadius * 2f
+        )
+        drawCircle(
+            color = colors.highlightVertexUpgrade1Color,
+            center = pos,
+            radius = pulseRadius * 1.6f,
+            style = Stroke(width = 4f)
+        )
+        drawCircle(
+            color = colors.highlightVertexUpgrade2Color,
+            center = pos,
+            radius = pulseRadius * 0.6f
+        )
+    } else {
+        // Movimiento común, iluminar vértices adyacentes.
+        drawCircle(
+            color = colors.highlightVertexAdjacent1Color.copy(alpha = 0.6f),
+            center = pos,
+            radius = pulseRadius * 0.8f,
+            style = Stroke(width = 3f)
+        )
+        drawCircle(
+            color = colors.highlightVertexAdjacent2Color,
+            center = pos,
+            radius = pulseRadius * 0.4f
+        )
+    }
 
     // TODO: Si hay mensaje, dibujar texto (opcional)
     highlight.messageResId?.let {

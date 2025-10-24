@@ -45,6 +45,7 @@ fun DrawScope.drawEdgeHighlight(
     highlight: EdgeHighlight,
     canvasSize: Size,
     orientation: BoardOrientation,
+    colors: BoardColors
 ) {
     val fromPos = getVisualPosition(
         highlight.from,
@@ -100,21 +101,21 @@ fun DrawScope.drawEdgeHighlight(
     // Dibujar estela triangular
     drawPath(
         path = path,
-        color = highlight.color,
+        color = colors.highlightEdge1Color,
         alpha = 0.7f
     )
 
     // Círculo grande en el extremo "to" (base del triángulo)
     drawCircle(
-        color = highlight.color,
+        color = colors.highlightEdge2Color,
         center = toPos,
         radius = circleRadius,
         alpha = 0.9f
     )
 
-    // Efecto de brillo opcional
+    // Efecto de brillo
     drawCircle(
-        color = highlight.color.copy(alpha = 0.3f),
+        color = colors.highlightEdge3Color.copy(alpha = 0.3f),
         center = toPos,
         radius = circleRadius * 1.8f,
         alpha = 0.4f

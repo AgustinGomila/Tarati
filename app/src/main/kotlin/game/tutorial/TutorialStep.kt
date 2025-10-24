@@ -1,6 +1,5 @@
 package com.agustin.tarati.game.tutorial
 
-import androidx.compose.ui.graphics.Color
 import com.agustin.tarati.R
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.Color.BLACK
@@ -185,14 +184,14 @@ private fun createCenterAnimations(): List<HighlightAnimation> {
     val animations = mutableListOf<HighlightAnimation>()
     // Centro Absoluto A
     animations.add(
-        HighlightAnimation.Vertex(VertexHighlight("A1", Color.Green, true, startDelay = 500L, persistent = true))
+        HighlightAnimation.Vertex(VertexHighlight("A1", true, startDelay = 500L, persistent = true))
     )
     animations.add(HighlightAnimation.Pause())
     // Fase 1: Iluminar aristas centrales en secuencia
     absoluteCenterToBridgeEdges.forEachIndexed { index, (from, to) ->
         animations.add(
             HighlightAnimation.Edge(
-                EdgeHighlight(from, to, Color.Yellow, true, startDelay = (index * 400).toLong())
+                EdgeHighlight(from, to, true, startDelay = (index * 400).toLong())
             )
         )
         animations.add(HighlightAnimation.Pause())
@@ -202,7 +201,7 @@ private fun createCenterAnimations(): List<HighlightAnimation> {
     bridgeVertices.forEachIndexed { index, vertex ->
         animations.add(
             HighlightAnimation.Vertex(
-                VertexHighlight(vertex, Color.Blue, true, startDelay = (index * 400).toLong())
+                VertexHighlight(vertex, true, startDelay = (index * 400).toLong())
             )
         )
     }
@@ -215,7 +214,7 @@ private fun createBridgeAnimations(): List<HighlightAnimation> {
     bridgeVertices.forEach { vertex ->
         animations.add(
             HighlightAnimation.Vertex(
-                VertexHighlight(vertex, Color(0xFFFFEB3B), true, startDelay = 1000L)
+                VertexHighlight(vertex, true, startDelay = 1000L)
             )
         )
         animations.add(HighlightAnimation.Pause())
@@ -224,7 +223,7 @@ private fun createBridgeAnimations(): List<HighlightAnimation> {
     bridgeEdges.forEach { (from, to) ->
         animations.add(
             HighlightAnimation.Edge(
-                EdgeHighlight(from, to, Color(0xFF4CAF50), true, startDelay = 1200L)
+                EdgeHighlight(from, to, true, startDelay = 1200L)
             )
         )
         animations.add(HighlightAnimation.Pause())
@@ -239,7 +238,7 @@ private fun createCircumferenceAnimations(): List<HighlightAnimation> {
     circumferenceVertices.forEach { vertex ->
         animations.add(
             HighlightAnimation.Vertex(
-                VertexHighlight(vertex, Color(0xFFFF9800), true, startDelay = 600L)
+                VertexHighlight(vertex, true, startDelay = 600L)
             )
         )
         animations.add(HighlightAnimation.Pause())
@@ -248,7 +247,7 @@ private fun createCircumferenceAnimations(): List<HighlightAnimation> {
     circumferenceEdges.forEach { (from, to) ->
         animations.add(
             HighlightAnimation.Edge(
-                EdgeHighlight(from, to, Color(0xFF4CAFAF), true, startDelay = 1200L)
+                EdgeHighlight(from, to, true, startDelay = 1200L)
             )
         )
         animations.add(HighlightAnimation.Pause())
@@ -260,101 +259,101 @@ private fun createCircumferenceAnimations(): List<HighlightAnimation> {
 private fun createDomesticAnimations(): List<HighlightAnimation> {
     return listOf(
         // Base blanca
-        HighlightAnimation.Vertex(VertexHighlight("D1", Color(0xFF99D9BF), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("D2", Color(0xFF99D9BF), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C1", Color(0xFF99D9BF), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C2", Color(0xFF99D9BF), true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("D1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("D2", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C2", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
         // Conexiones base blanca
-        HighlightAnimation.Edge(EdgeHighlight("D1", "D2", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("D2", "C2", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("C2", "C1", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("C1", "D1", Color(0xFF80BDE7), true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("D1", "D2", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("D2", "C2", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("C2", "C1", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("C1", "D1", true, startDelay = 1200L)),
         HighlightAnimation.Pause(),
         // Base negra
-        HighlightAnimation.Vertex(VertexHighlight("D3", Color(0xFFFFEBEE), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("D4", Color(0xFFFFEBEE), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFFFFCDD2), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFFFFCDD2), true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("D3", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("D4", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C7", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
         // Conexiones base blanca
-        HighlightAnimation.Edge(EdgeHighlight("D3", "D4", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("D4", "C8", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("C8", "C7", Color(0xFF80BDE7), true, startDelay = 1200L)),
-        HighlightAnimation.Edge(EdgeHighlight("C7", "D3", Color(0xFF80BDE7), true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("D3", "D4", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("D4", "C8", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("C8", "C7", true, startDelay = 1200L)),
+        HighlightAnimation.Edge(EdgeHighlight("C7", "D3", true, startDelay = 1200L)),
         HighlightAnimation.Pause(),
     )
 }
 
 private fun createCobsAnimations(): List<HighlightAnimation> {
     return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("D1", Color.Yellow, true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("D2", Color.Yellow, true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("D3", Color.Yellow, true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("D4", Color.Yellow, true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("D1", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("D2", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("D3", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("D4", true, startDelay = 1000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("C1", Color(0xFF4CAF50), true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C2", Color(0xFF4CAF50), true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF4CAF50), true, startDelay = 1000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFF4CAF50), true, startDelay = 1000L))
+        HighlightAnimation.Vertex(VertexHighlight("C1", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C2", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C7", true, startDelay = 1000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", true, startDelay = 1000L))
     )
 }
 
 private fun createMoveAnimations(): List<HighlightAnimation> {
     return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("C1", Color.Yellow, true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C1", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("C1", "B1", Color(0xFF4CAF50), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFF98DA9B), true, startDelay = 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("C1", "C12", Color(0xFF4CAF50), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C12", Color.Yellow, true, startDelay = 2000L)),
+        HighlightAnimation.Edge(EdgeHighlight("C1", "B1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 1500L)),
+        HighlightAnimation.Edge(EdgeHighlight("C1", "C12", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C12", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("C2", "B1", Color(0xFF4CA7AF), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFF98DA9B), true, startDelay = 1500L)),
-        HighlightAnimation.Edge(EdgeHighlight("C2", "C3", Color(0xFF4CA7AF), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C3", Color(0xFF98DA9B), true, startDelay = 1500L)),
+        HighlightAnimation.Edge(EdgeHighlight("C2", "B1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 1500L)),
+        HighlightAnimation.Edge(EdgeHighlight("C2", "C3", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C3", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFF9DAF4C), true, startDelay = 2000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C12", Color(0xFF4CAF50), true, startDelay = 2000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C3", Color(0xFF4CAFA3), true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C12", true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C3", true, startDelay = 2000L)),
     )
 }
 
 private fun createCaptureAnimations(): List<HighlightAnimation> {
     return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("C1", Color.Yellow, true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C1", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("C1", "B1", Color(0xFFF44336), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFF4CAF50), true, startDelay = 2000L)),
+        HighlightAnimation.Edge(EdgeHighlight("C1", "B1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("A1", Color(0xFFF44336), true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("A1", true, startDelay = 2000L)),
     )
 }
 
 private fun createUpgradeAnimations(): List<HighlightAnimation> {
     return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("B4", Color.Yellow, true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("B4", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("B4", "C7", Color(0xFF2196F3), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF348DD2), true, startDelay = 2000L)),
+        HighlightAnimation.Edge(EdgeHighlight("B4", "C7", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C7", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("B4", "C8", Color(0xFFF32194), true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFFF321E9), true, startDelay = 2000L)),
+        HighlightAnimation.Edge(EdgeHighlight("B4", "C8", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("C7", Color(0xFF9C27B0), true, startDelay = 2000L)),
-        HighlightAnimation.Vertex(VertexHighlight("C8", Color(0xFF9C27B0), true, startDelay = 2000L))
+        HighlightAnimation.Vertex(VertexHighlight("C7", true, startDelay = 2000L)),
+        HighlightAnimation.Vertex(VertexHighlight("C8", true, startDelay = 2000L))
     )
 }
 
 private fun createCastlingAnimations(): List<HighlightAnimation> {
     return listOf(
-        HighlightAnimation.Vertex(VertexHighlight("C1", Color.Yellow, true, startDelay = 1500L)),
-        HighlightAnimation.Vertex(VertexHighlight("C2", Color.Yellow, true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C1", true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("C2", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFFF44336), true, startDelay = 1500L)),
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 1500L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Edge(EdgeHighlight("C1", "C2", Color(0xFF9C27B0), true, startDelay = 2000L)),
+        HighlightAnimation.Edge(EdgeHighlight("C1", "C2", true, startDelay = 2000L)),
         HighlightAnimation.Pause(),
-        HighlightAnimation.Vertex(VertexHighlight("B1", Color(0xFF4CAF50), true, startDelay = 2000L))
+        HighlightAnimation.Vertex(VertexHighlight("B1", true, startDelay = 2000L))
     )
 }

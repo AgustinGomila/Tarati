@@ -1,41 +1,46 @@
 package com.agustin.tarati.ui.components.board.animation
 
-import androidx.compose.ui.graphics.Color
 import com.agustin.tarati.game.core.GameBoard.BoardRegion
 
 data class VertexHighlight(
     val vertexId: String,
-    val color: Color,
     val pulse: Boolean = false,
     val duration: Long = 500L,
     val startDelay: Long = 0L,
     val postDelay: Long = 0L,
     val persistent: Boolean = false,
+    val action: HighlightAction = HighlightAction.MOVE,
     val messageResId: Int? = null
 )
 
 data class EdgeHighlight(
     val from: String,
     val to: String,
-    val color: Color,
     val pulse: Boolean = false,
     val duration: Long = 500L,
     val startDelay: Long = 0L,
     val postDelay: Long = 0L,
     val persistent: Boolean = false,
+    val action: HighlightAction = HighlightAction.MOVE,
     val messageResId: Int? = null
 )
 
 data class RegionHighlight(
     val region: BoardRegion,
-    val color: Color,
     val pulse: Boolean = true,
     val duration: Long,
     val startDelay: Long = 0,
     val postDelay: Long = 0,
     val persistent: Boolean = false,
+    val action: HighlightAction = HighlightAction.MOVE,
     val messageResId: Int? = null
 )
+
+enum class HighlightAction {
+    MOVE,
+    CAPTURE,
+    UPGRADE
+}
 
 sealed class HighlightAnimation {
     data class Vertex(val highlight: VertexHighlight) : HighlightAnimation()
@@ -50,7 +55,6 @@ fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
             EdgeHighlight(
                 from = from,
                 to = to,
-                color = Color(0xFFDED760),
                 pulse = true,
                 duration = 600L,
                 startDelay = 100L
@@ -59,7 +63,6 @@ fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = to,
-                color = Color(0xFF4CAF50),
                 pulse = true,
                 duration = 400L,
                 startDelay = 300L
@@ -73,9 +76,9 @@ fun createCaptureHighlight(vertexId: String): List<HighlightAnimation> {
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = vertexId,
-                color = Color(0xFFF44336),
                 pulse = true,
-                duration = 600L
+                duration = 600L,
+                action = HighlightAction.CAPTURE,
             )
         )
     )
@@ -86,9 +89,9 @@ fun createUpgradeHighlight(vertexId: String): List<HighlightAnimation> {
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = vertexId,
-                color = Color(0xFF36B8F4),
                 pulse = true,
-                duration = 600L
+                duration = 600L,
+                action = HighlightAction.UPGRADE,
             )
         )
     )
@@ -99,7 +102,6 @@ fun createValidMovesHighlights(validMoves: List<String>): List<HighlightAnimatio
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = vertexId,
-                color = Color(0xFFF3A621),
                 duration = 400L
             )
         )
@@ -113,7 +115,6 @@ fun createRegionHighlight(
     return HighlightAnimation.Region(
         RegionHighlight(
             region = region,
-            color = Color(0xFFEFD47C),
             duration = duration
         )
     )

@@ -189,6 +189,7 @@ fun BoardRenderer(
                             highlight = highlight.highlight,
                             canvasSize = size,
                             orientation = boardState.boardOrientation,
+                            colors = colors
                         )
                     }
 
@@ -197,6 +198,7 @@ fun BoardRenderer(
                             highlight = highlight.highlight,
                             canvasSize = size,
                             orientation = boardState.boardOrientation,
+                            colors = colors
                         )
                     }
 
@@ -205,6 +207,7 @@ fun BoardRenderer(
                             highlight = highlight.highlight,
                             canvasSize = size,
                             orientation = boardState.boardOrientation,
+                            colors = colors
                         )
                     }
 
