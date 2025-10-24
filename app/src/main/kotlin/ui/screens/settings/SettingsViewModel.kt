@@ -20,7 +20,6 @@ private data class SettingsFlows(
     val verticesVisibility: Boolean,
     val edgesVisibility: Boolean,
     val animateEffects: Boolean,
-    val tutorialButtonVisibility: Boolean,
     val palette: String
 )
 
@@ -43,7 +42,6 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                 sr.verticesVisibility,
                 sr.edgesVisibility,
                 sr.animateEffects,
-                sr.tutorialButtonVisibility,
                 sr.palette
             )
 
@@ -57,15 +55,13 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
                     verticesVisibility = values[4] as Boolean,
                     edgesVisibility = values[5] as Boolean,
                     animateEffects = values[6] as Boolean,
-                    tutorialButtonVisibility = values[7] as Boolean,
-                    palette = values[8] as String
+                    palette = values[7] as String
                 )
             }.collect { flows ->
                 _settingsState.value = SettingsState(
                     appTheme = if (flows.isDarkTheme) AppTheme.MODE_NIGHT else AppTheme.MODE_AUTO,
                     difficulty = flows.difficulty,
                     language = flows.language,
-                    tutorialButtonVisible = flows.tutorialButtonVisibility,
                     boardState = BoardState(
                         labelsVisibles = flows.labelsVisibility,
                         verticesVisibles = flows.verticesVisibility,
@@ -123,12 +119,6 @@ class SettingsViewModel(val sr: SettingsRepository = get().get()) : ViewModel() 
     fun setAnimateEffects(animate: Boolean) {
         viewModelScope.launch {
             sr.setAnimateEffects(animate)
-        }
-    }
-
-    fun setTutorialButtonVisibility(visible: Boolean) {
-        viewModelScope.launch {
-            sr.setTutorialButtonVisibility(visible)
         }
     }
 }

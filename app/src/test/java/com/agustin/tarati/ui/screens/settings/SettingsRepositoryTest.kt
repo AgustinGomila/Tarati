@@ -35,7 +35,7 @@ class SettingsRepositoryTest {
     }
 
     @Test
-    fun isDarkTheme_returnsFalseWhenNotSet() = runTest {
+    fun isDarkTheme_returnsTrueWhenNotSet() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         val mockPreferences = mockk<Preferences>()
 
@@ -45,7 +45,7 @@ class SettingsRepositoryTest {
         val repository = SettingsRepositoryImpl(mockDataStore)
         val result = repository.isDarkTheme.take(1).toList()[0]
 
-        assertFalse("Dark theme should be disabled by default", result)
+        assertTrue("Dark theme should be enabled by default", result)
     }
 
     @Test
@@ -205,36 +205,6 @@ class SettingsRepositoryTest {
         }
     }
 
-    // Añadir estos tests a la clase SettingsRepositoryTest
-
-    @Test
-    fun tutorialButtonVisibility_returnsStoredValue() = runTest {
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val mockPreferences = mockk<Preferences>()
-
-        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns true
-        every { mockDataStore.data } returns flowOf(mockPreferences)
-
-        val repository = SettingsRepositoryImpl(mockDataStore)
-        val result = repository.tutorialButtonVisibility.take(1).toList()[0]
-
-        assertTrue("Tutorial button should be visible", result)
-    }
-
-    @Test
-    fun tutorialButtonVisibility_returnsDefaultWhenNotSet() = runTest {
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val mockPreferences = mockk<Preferences>()
-
-        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns null
-        every { mockDataStore.data } returns flowOf(mockPreferences)
-
-        val repository = SettingsRepositoryImpl(mockDataStore)
-        val result = repository.tutorialButtonVisibility.take(1).toList()[0]
-
-        assertTrue("Tutorial button should be visible by default", result)
-    }
-
     @Test
     fun verticesVisibility_returnsStoredValue() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
@@ -317,25 +287,6 @@ class SettingsRepositoryTest {
         val result = repository.animateEffects.take(1).toList()[0]
 
         assertTrue("Animate effects should be enabled by default", result)
-    }
-
-// Tests de escritura para las nuevas propiedades
-
-    @Test
-    fun setTutorialButtonVisibility_savesValue() = runTest {
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val mockPreferences = mockk<Preferences>()
-
-        every { mockPreferences[SettingsRepositoryImpl.TUTORIAL_BUTTON_VISIBILITY_KEY] } returns null
-        every { mockDataStore.data } returns flowOf(mockPreferences)
-        coEvery { mockDataStore.updateData(any()) } returns mockk()
-
-        val repository = SettingsRepositoryImpl(mockDataStore)
-        repository.setTutorialButtonVisibility(true)
-
-        coVerify {
-            mockDataStore.updateData(any())
-        }
     }
 
     @Test

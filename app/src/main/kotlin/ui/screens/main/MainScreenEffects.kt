@@ -28,6 +28,7 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.isPortrait
 import com.agustin.tarati.game.logic.toBoardOrientation
+import com.agustin.tarati.game.tutorial.TutorialState
 import com.agustin.tarati.ui.components.board.BoardEvents
 import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
 import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
@@ -53,7 +54,9 @@ fun MainScreenEffects(
     aiEnabled: Boolean,
     isEditing: Boolean,
     animateEffects: Boolean,
+
     isTutorialActive: Boolean,
+    tutorialState: TutorialState,
 
     aiThinkingDependencies: List<Any?>,
 
@@ -72,6 +75,11 @@ fun MainScreenEffects(
     LaunchedEffect(aiThinkingViewModel.isAIThinking) {
         val isThinking = aiThinkingViewModel.isAIThinking
         onAIThinkingChanged(isThinking)
+    }
+
+    LaunchedEffect(tutorialState) {
+        val tutorialState = tutorialState
+        if (tutorialState == TutorialState.Completed) onTutorialEnd()
     }
 
     // Efecto para orientación del tablero

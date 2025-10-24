@@ -15,11 +15,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SmartToy
@@ -31,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
@@ -69,7 +74,6 @@ data class SidebarGameState(
     val moveHistory: List<Move>,
     val difficulty: Difficulty,
     val isAIEnabled: Boolean,
-    val showTutorialOption: Boolean,
 )
 
 data class SidebarUIState(
@@ -86,7 +90,6 @@ interface SidebarEvents {
     fun onNewGame(color: Color)
     fun onEditBoard()
     fun onAboutClick()
-    fun onTutorial()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,7 +107,7 @@ fun Sidebar(
             .fillMaxHeight()
             .background(MaterialTheme.colorScheme.surface)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Título de la Aplicación
@@ -114,14 +117,10 @@ fun Sidebar(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        SettingsRow(
-            showTutorialButton = sidebarState.showTutorialOption,
-            onSettings = events::onSettings,
-            onShowTutorial = events::onTutorial,
-        )
+        SettingsRow(onSettings = events::onSettings)
 
         // Controles para iniciar una nueva partida
-        GameSettingsControls(
+        GameControls(
             playerSide = sidebarState.playerSide,
             onNewGame = events::onNewGame,
             onEditBoard = events::onEditBoard,
@@ -146,7 +145,7 @@ fun Sidebar(
         // Controles del historial de la partida
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             HistorialControls(
                 currentMoveIndex = sidebarState.moveIndex,
@@ -165,8 +164,6 @@ fun Sidebar(
 @Composable
 fun SettingsRow(
     onSettings: () -> Unit,
-    showTutorialButton: Boolean,
-    onShowTutorial: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -182,24 +179,11 @@ fun SettingsRow(
         ) {
             LocalizedText(R.string.settings)
         }
-
-        if (showTutorialButton) {
-            IconButton(
-                onClick = onShowTutorial,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                    contentDescription = stringResource(R.string.show_tutorial),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            }
-        }
     }
 }
 
 @Composable
-fun GameSettingsControls(
+fun GameControls(
     playerSide: Color,
     onNewGame: (Color) -> Unit,
     onEditBoard: () -> Unit,
@@ -292,14 +276,11 @@ fun HistorialControls(
     onMoveToCurrent: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        LocalizedText(
-            id = R.string.move_history,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
+        // Controles compactos
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -310,12 +291,10 @@ fun HistorialControls(
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                LocalizedText(R.string.back)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(16.dp))
             }
 
             Button(
@@ -324,87 +303,108 @@ fun HistorialControls(
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                LocalizedText(R.string.forward)
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
             }
         }
 
-        // Historial de movimientos
+        Spacer(modifier = Modifier.height(8.dp))
+
         Box(
             modifier = Modifier
-                .weight(1f) // Ocupar el espacio restante
+                .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         ) {
-            val scrollState = rememberScrollState()
-
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-                    .padding(12.dp)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
             ) {
-                moveHistory.reversed().forEachIndexed { index, move ->
-                    val actualIndex = moveHistory.size - 1 - index
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    ) {
+                itemsIndexed(moveHistory.chunked(2)) { index, moves ->
+                    val moveNumber = index + 1
+                    val whiteMove = moves.firstOrNull()
+                    val blackMove = moves.getOrNull(1)
 
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(
-                                    if (actualIndex == currentMoveIndex)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Número
+                        Text(
+                            text = "$moveNumber.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.width(24.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Columna blanca
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(
-                                    if (actualIndex % 2 == 0) {
-                                        MaterialTheme.colorScheme.surfaceVariant
-                                    } else {
-                                        MaterialTheme.colorScheme.secondary
-                                    }
-                                )
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                text = "${actualIndex + 1} · ${move.from} → ${move.to}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (actualIndex % 2 == 0) {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                } else {
-                                    MaterialTheme.colorScheme.onSecondary
-                                }
-                            )
+                            if (whiteMove != null) {
+                                val isCurrent = currentMoveIndex == index * 2
+                                Text(
+                                    text = "${whiteMove.from}→${whiteMove.to}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isCurrent) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
+                                )
+                            }
                         }
+
+                        // Columna negra
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (blackMove != null) {
+                                val isCurrent = currentMoveIndex == index * 2 + 1
+                                Text(
+                                    text = "${blackMove.from}→${blackMove.to}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isCurrent) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    // Divisor sutil entre líneas
+                    if (index < moveHistory.chunked(2).size - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        )
                     }
                 }
             }
         }
 
+        // Botón para volver al final
         if (currentMoveIndex != moveHistory.size - 1) {
             Button(
                 onClick = onMoveToCurrent,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                LocalizedText(R.string.move_to_current)
+                Text(stringResource(R.string.go_to_the_end))
             }
         }
     }
@@ -581,7 +581,6 @@ class PreviewSidebarEvents : SidebarEvents {
     override fun onNewGame(color: Color) {}
     override fun onEditBoard() {}
     override fun onAboutClick() {}
-    override fun onTutorial() {}
 }
 
 @Preview(showBackground = true, widthDp = 280, heightDp = 800)
@@ -603,7 +602,6 @@ fun SidebarPreview() {
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,
-            showTutorialOption = true
         )
 
         Sidebar(
@@ -632,7 +630,6 @@ fun SidebarPreview_Dark() {
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.HARD,
             isAIEnabled = false,
-            showTutorialOption = false
         )
 
         Sidebar(
@@ -659,7 +656,6 @@ fun SidebarPreview_ExpandedDropdown() {
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,
-            showTutorialOption = false
         )
 
         var uiState by remember { mutableStateOf(SidebarUIState(isDifficultyExpanded = true)) }

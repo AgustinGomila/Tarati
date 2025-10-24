@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -149,7 +148,6 @@ fun MainScreen(
 
     // Configuración
     val settingsState by settingsViewModel.settingsState.collectAsState()
-    val tutorialButtonVisible = settingsState.tutorialButtonVisible
     val evalConfig = EvaluationConfig.getByDifficulty(settingsState.difficulty)
     val labelsVisibles = settingsState.boardState.labelsVisibles
     val edgesVisibles = settingsState.boardState.edgesVisibles
@@ -216,7 +214,10 @@ fun MainScreen(
         aiEnabled = aiEnabled,
         isEditing = isEditing,
         animateEffects = animateEffects,
+
         isTutorialActive = isTutorialActive.value,
+        tutorialState = tutorialState,
+
         aiThinkingDependencies = listOf(gameStatus, gameState.currentTurn, aiEnabled, playerSide, isEditing),
 
         aiThinkingViewModel = aiThinkingViewModel,
@@ -253,6 +254,10 @@ fun MainScreen(
             showNewGameDialog = false
             events.stopGame()
         },
+        onShowTutorial = {
+            showAboutDialog = false
+            events.startTutorial()
+        },
         showAboutDialog = showAboutDialog
     ) {
         showAboutDialog = false
@@ -270,7 +275,6 @@ fun MainScreen(
                 history = history,
                 evalConfig = evalConfig,
                 aiEnabled = aiEnabled,
-                tutorialButtonVisible = tutorialButtonVisible,
                 events = events,
                 viewModel = viewModel,
                 settingsViewModel = settingsViewModel
@@ -341,7 +345,6 @@ fun SidebarContent(
     history: List<Pair<Move, GameState>>,
     evalConfig: EvaluationConfig,
     aiEnabled: Boolean,
-    tutorialButtonVisible: Boolean,
     events: MainScreenEvents,
     viewModel: MainViewModel,
     settingsViewModel: SettingsViewModel
@@ -358,7 +361,6 @@ fun SidebarContent(
         override fun onNewGame(color: Color) = events.showNewGameDialog(color)
         override fun onEditBoard() = viewModel.toggleEditing()
         override fun onAboutClick() = events.showAboutDialog()
-        override fun onTutorial() = events.startTutorial()
     }
 
     val sidebarGameState = SidebarGameState(
@@ -368,7 +370,6 @@ fun SidebarContent(
         moveHistory = history.map { it.first },
         difficulty = evalConfig.difficulty,
         isAIEnabled = aiEnabled,
-        showTutorialOption = tutorialButtonVisible,
     )
 
     Sidebar(
@@ -577,76 +578,6 @@ fun boardEvents(state: CreateBoardState, events: BoardEvents): BoardEvents = obj
 
     override fun onEditPiece(from: String) = events.onEditPiece(from)
     override fun onResetCompleted() = events.onResetCompleted()
-}
-
-// region Previews
-
-@Preview(showBackground = true)
-@Composable
-fun EditingModePreviewContent(
-    darkTheme: Boolean = false,
-    isLandscape: Boolean = false,
-    boardOrientation: BoardOrientation = if (isLandscape) BoardOrientation.LANDSCAPE_BLACK else BoardOrientation.PORTRAIT_WHITE
-) {
-    TaratiTheme(darkTheme = darkTheme) {
-        val exampleGameState = initialGameState()
-
-        var isEditing by remember { mutableStateOf(true) }
-        var editColor by remember { mutableStateOf(WHITE) }
-        var editTurn by remember { mutableStateOf(WHITE) }
-        var playerSide by remember { mutableStateOf(WHITE) }
-
-        val pieceCounts = PieceCounts(4, 4)
-        val isValidDistribution = true
-        val isCompletedDistribution = true
-
-        // Crear estado para Board
-        val boardState = BoardState(
-            gameState = exampleGameState,
-            lastMove = null,
-            boardOrientation = boardOrientation,
-            labelsVisible = false,
-            verticesVisible = true,
-            edgesVisible = true,
-            isEditing = isEditing,
-        )
-
-        // Crear eventos para Board
-        val boardEvents = createPreviewBoardEvents(false)
-        val boardColors = getBoardColors()
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Board(
-                modifier = Modifier.fillMaxSize(),
-                playerSide = playerSide,
-                boardState = boardState,
-                boardColors = boardColors,
-                events = boardEvents,
-            )
-
-            EditControlsPreview(
-                isLandscapeScreen = isLandscape,
-                colorState = EditColorState(
-                    playerSide = playerSide,
-                    editColor = editColor,
-                    editTurn = editTurn
-                ),
-                colorEvents = EditColorEvents(
-                    onColorToggle = { editColor = editColor.opponent() },
-                    onPlayerSideToggle = { playerSide = playerSide.opponent() },
-                    onTurnToggle = { editTurn = editTurn.opponent() }
-                ),
-                actionState = EditActionState(
-                    pieceCounts = pieceCounts,
-                    isValidDistribution = isValidDistribution,
-                    isCompletedDistribution = isCompletedDistribution
-                ),
-                actionEvents = EditActionEvents(
-                    onClearBoard = { /* No-op en preview */ }
-                )
-            )
-        }
-    }
 }
 
 @Composable
@@ -1031,100 +962,74 @@ fun PieceCounter(whiteCount: Int, blackCount: Int, isValid: Boolean) {
     }
 }
 
+// region Previews
+
+@Preview(showBackground = true)
 @Composable
-fun AboutDialog(onDismiss: () -> Unit = { }) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { LocalizedText(id = (R.string.about_tarati)) },
-        text = {
-            Column {
-                LocalizedText(
-                    id = R.string.tarati_is_a_strategic_board_game_created_by_george_spencer_brown,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                LocalizedText(
-                    id = (R.string.game_rules),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                LocalizedText(
-                    id = (R.string.players_2_white_vs_black_objective_control_the_board),
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LocalizedText(
-                    id = (R.string.credits),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                LocalizedText(
-                    id = (R.string.original_concept_george_spencer_brown),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss
-            ) {
-                LocalizedText(id = (R.string.close))
-            }
-        }
-    )
-}
-
-@Composable
-fun GameOverDialog(
-    gameOverMessage: String,
-    onConfirmed: () -> Unit,
-    onDismissed: () -> Unit = {},
+fun EditingModePreviewContent(
+    darkTheme: Boolean = false,
+    isLandscape: Boolean = false,
+    boardOrientation: BoardOrientation = if (isLandscape) BoardOrientation.LANDSCAPE_BLACK else BoardOrientation.PORTRAIT_WHITE
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        title = { LocalizedText(id = (R.string.game_over)) },
-        text = { Text(gameOverMessage) },
-        confirmButton = {
-            Button(
-                onClick = onConfirmed
-            ) {
-                LocalizedText(id = (R.string.new_game))
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismissed
-            ) {
-                LocalizedText(id = (R.string.continue_))
-            }
-        }
-    )
-}
+    TaratiTheme(darkTheme = darkTheme) {
+        val exampleGameState = initialGameState()
 
-@Composable
-fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        title = { LocalizedText(id = (R.string.new_game)) },
-        text = { LocalizedText(id = (R.string.are_you_sure_you_want_to_start_a_new_game)) },
-        confirmButton = {
-            Button(
-                onClick = { onConfirmed() }
-            ) {
-                LocalizedText(R.string.yes)
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismissed
-            ) {
-                LocalizedText(R.string.cancel)
-            }
+        var isEditing by remember { mutableStateOf(true) }
+        var editColor by remember { mutableStateOf(WHITE) }
+        var editTurn by remember { mutableStateOf(WHITE) }
+        var playerSide by remember { mutableStateOf(WHITE) }
+
+        val pieceCounts = PieceCounts(4, 4)
+        val isValidDistribution = true
+        val isCompletedDistribution = true
+
+        // Crear estado para Board
+        val boardState = BoardState(
+            gameState = exampleGameState,
+            lastMove = null,
+            boardOrientation = boardOrientation,
+            labelsVisible = false,
+            verticesVisible = true,
+            edgesVisible = true,
+            isEditing = isEditing,
+        )
+
+        // Crear eventos para Board
+        val boardEvents = createPreviewBoardEvents(false)
+        val boardColors = getBoardColors()
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Board(
+                modifier = Modifier.fillMaxSize(),
+                playerSide = playerSide,
+                boardState = boardState,
+                boardColors = boardColors,
+                events = boardEvents,
+            )
+
+            EditControlsPreview(
+                isLandscapeScreen = isLandscape,
+                colorState = EditColorState(
+                    playerSide = playerSide,
+                    editColor = editColor,
+                    editTurn = editTurn
+                ),
+                colorEvents = EditColorEvents(
+                    onColorToggle = { editColor = editColor.opponent() },
+                    onPlayerSideToggle = { playerSide = playerSide.opponent() },
+                    onTurnToggle = { editTurn = editTurn.opponent() }
+                ),
+                actionState = EditActionState(
+                    pieceCounts = pieceCounts,
+                    isValidDistribution = isValidDistribution,
+                    isCompletedDistribution = isCompletedDistribution
+                ),
+                actionEvents = EditActionEvents(
+                    onClearBoard = { /* No-op en preview */ }
+                )
+            )
         }
-    )
+    }
 }
 
 // Función base reutilizable para los previews
@@ -1173,7 +1078,6 @@ private fun MainScreenPreviewContent(
             moveHistory = exampleMoveHistory,
             difficulty = Difficulty.DEFAULT,
             isAIEnabled = true,
-            showTutorialOption = true
         )
 
         // Estado y eventos para CreateBoard
@@ -1550,10 +1454,6 @@ private fun createPreviewSidebarEvents(
 
     override fun onAboutClick() {
         if (debug) println("About clicked")
-    }
-
-    override fun onTutorial() {
-        if (debug) println("Show tutorial!")
     }
 }
 

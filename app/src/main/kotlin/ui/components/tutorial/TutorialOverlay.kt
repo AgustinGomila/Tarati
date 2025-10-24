@@ -113,7 +113,11 @@ fun TutorialOverlay(
                             ),
                             config = bubbleConfig
                         ),
-                        bubbleEvents = tutorialBubbleEvents(viewModel, tutorialEvents, updateGameState),
+                        bubbleEvents = tutorialBubbleEvents(
+                            viewModel = viewModel,
+                            tutorialEvents = tutorialEvents,
+                            updateGameState = updateGameState
+                        ),
                         modifier = Modifier.fillMaxSize()
                     )
                 }

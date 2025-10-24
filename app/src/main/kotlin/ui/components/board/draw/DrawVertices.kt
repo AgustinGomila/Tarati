@@ -83,53 +83,59 @@ fun DrawScope.drawVertexHighlight(
 
     val pulseRadius = baseRadius * pulseFactor
 
-    if (highlight.action == HighlightAction.CAPTURE) {
-        drawCircle(
-            color = colors.highlightVertexCapture1Color.copy(alpha = 0.3f),
-            center = pos,
-            radius = pulseRadius * 2f
-        )
-        drawCircle(
-            color = colors.highlightVertexCapture2Color,
-            center = pos,
-            radius = pulseRadius * 1.2f,
-            style = Stroke(width = 3f)
-        )
-        drawCircle(
-            color = colors.highlightVertexCapture3Color,
-            center = pos,
-            radius = pulseRadius * 0.4f
-        )
-    } else if (highlight.action == HighlightAction.UPGRADE) {
-        drawCircle(
-            color = colors.highlightVertexUpgrade1Color.copy(alpha = 0.3f),
-            center = pos,
-            radius = pulseRadius * 2f
-        )
-        drawCircle(
-            color = colors.highlightVertexUpgrade1Color,
-            center = pos,
-            radius = pulseRadius * 1.6f,
-            style = Stroke(width = 4f)
-        )
-        drawCircle(
-            color = colors.highlightVertexUpgrade2Color,
-            center = pos,
-            radius = pulseRadius * 0.6f
-        )
-    } else {
-        // Movimiento común, iluminar vértices adyacentes.
-        drawCircle(
-            color = colors.highlightVertexAdjacent1Color.copy(alpha = 0.6f),
-            center = pos,
-            radius = pulseRadius * 0.8f,
-            style = Stroke(width = 3f)
-        )
-        drawCircle(
-            color = colors.highlightVertexAdjacent2Color,
-            center = pos,
-            radius = pulseRadius * 0.4f
-        )
+    when (highlight.action) {
+        HighlightAction.CAPTURE -> {
+            drawCircle(
+                color = colors.highlightVertexCapture1Color.copy(alpha = 0.3f),
+                center = pos,
+                radius = pulseRadius * 2f
+            )
+            drawCircle(
+                color = colors.highlightVertexCapture2Color,
+                center = pos,
+                radius = pulseRadius * 1.2f,
+                style = Stroke(width = 3f)
+            )
+            drawCircle(
+                color = colors.highlightVertexCapture3Color,
+                center = pos,
+                radius = pulseRadius * 0.4f
+            )
+        }
+
+        HighlightAction.UPGRADE -> {
+            drawCircle(
+                color = colors.highlightVertexUpgrade1Color.copy(alpha = 0.3f),
+                center = pos,
+                radius = pulseRadius * 2f
+            )
+            drawCircle(
+                color = colors.highlightVertexUpgrade1Color,
+                center = pos,
+                radius = pulseRadius * 1.6f,
+                style = Stroke(width = 4f)
+            )
+            drawCircle(
+                color = colors.highlightVertexUpgrade2Color,
+                center = pos,
+                radius = pulseRadius * 0.6f
+            )
+        }
+
+        else -> {
+            // Movimiento común, iluminar vértices adyacentes.
+            drawCircle(
+                color = colors.highlightVertexAdjacent1Color.copy(alpha = 0.6f),
+                center = pos,
+                radius = pulseRadius * 0.8f,
+                style = Stroke(width = 3f)
+            )
+            drawCircle(
+                color = colors.highlightVertexAdjacent2Color,
+                center = pos,
+                radius = pulseRadius * 0.4f
+            )
+        }
     }
 
     // TODO: Si hay mensaje, dibujar texto (opcional)

@@ -40,7 +40,6 @@ class SettingsViewModelTest {
         coEvery { mockSettingsRepository.labelsVisibility } returns MutableStateFlow(false)
         coEvery { mockSettingsRepository.verticesVisibility } returns MutableStateFlow(true)
         coEvery { mockSettingsRepository.edgesVisibility } returns MutableStateFlow(false)
-        coEvery { mockSettingsRepository.tutorialButtonVisibility } returns MutableStateFlow(false)
         coEvery { mockSettingsRepository.animateEffects } returns MutableStateFlow(true)
         coEvery { mockSettingsRepository.palette } returns MutableStateFlow(ClassicPalette.name)
 
@@ -72,7 +71,6 @@ class SettingsViewModelTest {
         assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
         assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
         assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
-        assertFalse("Initial tutorial button should be hidden", state.tutorialButtonVisible)
     }
 
     @Test
@@ -169,17 +167,6 @@ class SettingsViewModelTest {
         coVerify { mockSettingsRepository.setLanguage(AppLanguage.SPANISH) }
     }
 
-    // Añadir estos tests a la clase SettingsViewModelTest
-
-    @Test
-    fun setTutorialButtonVisibility_savesSetting() = runTest {
-        coEvery { mockSettingsRepository.setTutorialButtonVisibility(any()) } returns Unit
-
-        viewModel.setTutorialButtonVisibility(true)
-
-        coVerify { mockSettingsRepository.setTutorialButtonVisibility(true) }
-    }
-
     @Test
     fun setVerticesVisibility_savesSetting() = runTest {
         coEvery { mockSettingsRepository.setVerticesVisibility(any()) } returns Unit
@@ -220,17 +207,14 @@ class SettingsViewModelTest {
 
     @Test
     fun multipleVisibilityChanges_triggerRepositoryCalls() = runTest {
-        coEvery { mockSettingsRepository.setTutorialButtonVisibility(any()) } returns Unit
         coEvery { mockSettingsRepository.setVerticesVisibility(any()) } returns Unit
         coEvery { mockSettingsRepository.setEdgesVisibility(any()) } returns Unit
         coEvery { mockSettingsRepository.setAnimateEffects(any()) } returns Unit
 
-        viewModel.setTutorialButtonVisibility(true)
         viewModel.setVerticesVisibility(false)
         viewModel.setEdgesVisibility(true)
         viewModel.setAnimateEffects(false)
 
-        coVerify { mockSettingsRepository.setTutorialButtonVisibility(true) }
         coVerify { mockSettingsRepository.setVerticesVisibility(false) }
         coVerify { mockSettingsRepository.setEdgesVisibility(true) }
         coVerify { mockSettingsRepository.setAnimateEffects(false) }

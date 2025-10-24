@@ -12,15 +12,6 @@ object PaletteManager {
     fun setPalette(palette: BoardPalette) {
         _currentPalette.value = palette
     }
-
-    fun getPaletteByName(name: String): BoardPalette? {
-        return availablePalettes.find { it.name == name }
-    }
-}
-
-fun changePalette(paletteName: String) {
-    val palette = PaletteManager.getPaletteByName(paletteName)
-    palette?.let { PaletteManager.setPalette(it) }
 }
 
 @Composable

@@ -75,9 +75,6 @@ class MainActivity : ComponentActivity() {
         override fun onVerticesVisibilityChange(visible: Boolean) = viewModel.setVerticesVisibility(visible)
         override fun onEdgesVisibilityChange(visible: Boolean) = viewModel.setEdgesVisibility(visible)
         override fun onAnimateEffectsChange(animate: Boolean) = viewModel.setAnimateEffects(animate)
-        override fun onTutorialButtonVisibilityChange(visible: Boolean) =
-            viewModel.setTutorialButtonVisibility(visible)
-
         override fun onPaletteChange(paletteName: String) = setCurrentPalette(paletteName)
     }
 

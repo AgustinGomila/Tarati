@@ -36,10 +36,7 @@
     <string name="ai_difficulty">AI Difficulty</string>
     <string name="disable_ai">Disable AI</string>
     <string name="enable_ai">Enable AI</string>
-    <string name="move_history">Move History</string>
     <string name="back">Back</string>
-    <string name="forward">Forward</string>
-    <string name="move_to_current">Move to Current</string>
     <string name="about">About</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
@@ -125,4 +122,5 @@
     <string name="tutorial_completed_title">Instruction completed</string>
     <string name="tutorial_completed_description">You have completed the Tarati basic course, now try playing a game.
     </string>
+    <string name="go_to_the_end">Go to the end</string>
 </resources>

@@ -18,7 +18,6 @@ interface SettingsRepository {
     val language: Flow<AppLanguage>
     val palette: Flow<String>
     val labelsVisibility: Flow<Boolean>
-    val tutorialButtonVisibility: Flow<Boolean>
     val verticesVisibility: Flow<Boolean>
     val edgesVisibility: Flow<Boolean>
     val animateEffects: Flow<Boolean>
@@ -28,7 +27,6 @@ interface SettingsRepository {
     suspend fun setLanguage(language: AppLanguage)
     suspend fun setPalette(paletteName: String)
     suspend fun setLabelsVisibility(visibility: Boolean)
-    suspend fun setTutorialButtonVisibility(visibility: Boolean)
     suspend fun setVerticesVisibility(visibility: Boolean)
     suspend fun setEdgesVisibility(visibility: Boolean)
     suspend fun setAnimateEffects(animate: Boolean)
@@ -42,21 +40,16 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
         val LANGUAGE_KEY = stringPreferencesKey("app_language")
         val PALETTE_KEY = stringPreferencesKey("app_palette")
         val LABELS_VISIBILITY_KEY = booleanPreferencesKey("labels_visibles")
-        val TUTORIAL_BUTTON_VISIBILITY_KEY = booleanPreferencesKey("tutorial_button_visible")
         val VERTICES_VISIBILITY_KEY = booleanPreferencesKey("vertices_visibles")
         val EDGES_VISIBILITY_KEY = booleanPreferencesKey("edges_visibles")
         val ANIMATE_EFFECTS_KEY = booleanPreferencesKey("animate_effects")
 
+        private const val DARK_THEME_DEFAULT = true
         private const val LABELS_VISIBILITY_DEFAULT = false
-        private const val TUTORIAL_BUTTON_VISIBILITY_DEFAULT = true
         private const val VERTICES_VISIBILITY_DEFAULT = true
         private const val EDGES_VISIBILITY_DEFAULT = false
         private const val ANIMATE_EFFECTS_DEFAULT = true
-
     }
-
-    override val isDarkTheme: Flow<Boolean> = dataStore.data
-        .map { preferences -> preferences[DARK_THEME_KEY]?.let { true } ?: false }
 
     override val difficulty: Flow<Difficulty> = dataStore.data
         .map { preferences ->
@@ -77,11 +70,11 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
             preferences[PALETTE_KEY] ?: availablePalettes.first().name
         }
 
+    override val isDarkTheme: Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[DARK_THEME_KEY] ?: DARK_THEME_DEFAULT }
+
     override val labelsVisibility: Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[LABELS_VISIBILITY_KEY] ?: LABELS_VISIBILITY_DEFAULT }
-
-    override val tutorialButtonVisibility: Flow<Boolean> = dataStore.data
-        .map { preferences -> preferences[TUTORIAL_BUTTON_VISIBILITY_KEY] ?: TUTORIAL_BUTTON_VISIBILITY_DEFAULT }
 
     override val verticesVisibility: Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[VERTICES_VISIBILITY_KEY] ?: VERTICES_VISIBILITY_DEFAULT }
@@ -91,7 +84,6 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
 
     override val animateEffects: Flow<Boolean> =
         dataStore.data.map { preferences -> preferences[ANIMATE_EFFECTS_KEY] ?: ANIMATE_EFFECTS_DEFAULT }
-
 
     override suspend fun setDarkTheme(enabled: Boolean) {
         dataStore.edit { settings ->
@@ -126,12 +118,6 @@ class SettingsRepositoryImpl(var dataStore: DataStore<Preferences>) : SettingsRe
     override suspend fun setAnimateEffects(animate: Boolean) {
         dataStore.edit { settings ->
             settings[ANIMATE_EFFECTS_KEY] = animate
-        }
-    }
-
-    override suspend fun setTutorialButtonVisibility(visibility: Boolean) {
-        dataStore.edit { settings ->
-            settings[TUTORIAL_BUTTON_VISIBILITY_KEY] = visibility
         }
     }
 
