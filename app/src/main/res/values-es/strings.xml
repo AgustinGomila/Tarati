@@ -38,7 +38,6 @@
     <string name="difficulty_medium">Medio</string>
     <string name="difficulty_hard">Difícil</string>
     <string name="difficulty_champion">Campeón</string>
-    <string name="ai_difficulty">Dificultad de la IA</string>
     <string name="disable_ai">Desactivar IA</string>
     <string name="enable_ai">Activar IA</string>
     <string name="back">Atrás</string>
@@ -126,7 +125,6 @@
     <string name="tutorial_completed_description">Haz completa el curso básico de Tarati, ahora prueba juegar una
         partida.
     </string>
-    <string name="go_to_the_end">Ir al final</string>
     <string name="general">General</string>
     <string name="board_display">Tablero</string>
     <string name="animations">Animaciones</string>
