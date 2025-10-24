@@ -103,8 +103,8 @@ fun AboutDialog(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.85f)
+                .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             tonalElevation = 8.dp

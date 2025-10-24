@@ -1,8 +1,8 @@
 # 🌀 Tarati — A Board Game by George Spencer Brown
 
-<img src="screenshots/logo.png" alt="Logo" style="display: block; margin: 0 auto;">
+<div align="center">
 
-<div style="text-align: center; margin: 0 auto; max-width: 100%;">
+<img src="screenshots/logo.png" alt="Logo" style="display: block; margin: 0 auto;">
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20-purple.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11.0-blue.svg)](https://developer.android.com/jetpack/compose)
@@ -24,7 +24,7 @@ distinctions.
 
 > *"A game of distinctions and decisions" - George Spencer Brown*
 
-<img src="screenshots/board.png" alt="Logo" style="display: block; margin: 0 auto;">
+<img src="screenshots/board.png" alt="Board" style="display: block; margin: 0 auto;">
 
 This application is a complete adaptation to **Kotlin and Jetpack Compose** of
 the [original React implementation](https://github.com/adamblvck/tarati-react) created by **Adam Blvck**.
