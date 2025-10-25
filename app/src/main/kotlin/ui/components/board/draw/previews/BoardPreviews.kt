@@ -126,7 +126,7 @@ fun PreviewBoardRendererEditingMode(
                 animationViewModel = animationViewModel,
                 onBoardSizeChange = {},
                 onResetCompleted = {},
-                debug = true
+                debug = false
             )
         }
     }

@@ -157,7 +157,7 @@ fun MainScreen(
         aiThinkingDependencies = listOf(gameStatus, gameState.currentTurn, aiEnabled, playerSide, isEditing),
         calculateAIMove = { gameState, move ->
             scope.launch {
-                aiThinkingViewModel.calculateAIMove(gameState, move, debug = true)
+                aiThinkingViewModel.calculateAIMove(gameState, move, debug = viewModel.isDebug)
             }
         },
         onAIMove = { from, to ->
