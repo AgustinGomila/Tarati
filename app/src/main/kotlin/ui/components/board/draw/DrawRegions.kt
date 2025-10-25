@@ -34,15 +34,17 @@ fun DrawScope.drawRegionHighlight(
     // Dibujar fondo de la región con efecto de pulso
     drawPath(
         path = path,
-        color = colors.highlightRegion1Color.copy(alpha = 0.6f * pulseFactor),
-        style = Fill
+        color = colors.highlightRegion1Color,
+        style = Fill,
+        alpha = 0.6f * pulseFactor
     )
 
     // Dibujar borde resaltado con efecto de pulso
     drawPath(
         path = path,
         color = colors.highlightRegion2Color,
-        style = Stroke(width = 3f * pulseFactor)
+        style = Stroke(width = 10f * pulseFactor),
+        alpha = 0.8f * pulseFactor
     )
 }
 

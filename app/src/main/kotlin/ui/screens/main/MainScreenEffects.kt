@@ -30,12 +30,24 @@ import com.agustin.tarati.game.logic.isPortrait
 import com.agustin.tarati.game.logic.toBoardOrientation
 import com.agustin.tarati.game.tutorial.TutorialState
 import com.agustin.tarati.ui.components.board.BoardEvents
+import com.agustin.tarati.ui.components.board.CreateBoard
+import com.agustin.tarati.ui.components.board.CreateBoardState
 import com.agustin.tarati.ui.components.board.animation.BoardAnimationViewModel
+import com.agustin.tarati.ui.components.editor.DistributionState
+import com.agustin.tarati.ui.components.editor.EditActionState
+import com.agustin.tarati.ui.components.editor.EditColorState
+import com.agustin.tarati.ui.components.editor.EditControls
+import com.agustin.tarati.ui.components.editor.EditEvents
+import com.agustin.tarati.ui.components.editor.PieceCounts
+import com.agustin.tarati.ui.components.topbar.TaratiTopBar
 import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
+import com.agustin.tarati.ui.components.tutorial.CreateTutorialOverlay
+import com.agustin.tarati.ui.components.tutorial.TutorialEvents
 import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
 import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.screens.settings.BoardVisualState
 import com.agustin.tarati.ui.theme.getBoardColors
 import kotlinx.coroutines.CoroutineScope
@@ -185,6 +197,7 @@ fun MainContent(
             TaratiTopBar(
                 scope = scope,
                 drawerState = drawerState,
+                title = localizedString(R.string.tarati),
                 isEditing = isEditing
             )
         }

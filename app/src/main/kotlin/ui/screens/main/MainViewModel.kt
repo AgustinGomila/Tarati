@@ -11,6 +11,7 @@ import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.BoardOrientation
 import com.agustin.tarati.game.logic.getPieceCounts
+import com.agustin.tarati.ui.components.editor.PieceCounts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

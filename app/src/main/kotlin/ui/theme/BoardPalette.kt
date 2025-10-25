@@ -24,9 +24,9 @@ interface BoardPalette {
     val whiteCobBorderColor: Color
     val whiteCobColor: Color
 
-    val highlightEdgeFirst: Color
-    val highlightEdgeSecond: Color
-    val highlightEdgeThird: Color
+    val highlightEdge1Color: Color
+    val highlightEdge2Color: Color
+    val highlightEdge3Color: Color
 
     val highlightVertexCapture1Color: Color
     val highlightVertexCapture2Color: Color
@@ -38,9 +38,9 @@ interface BoardPalette {
     val highlightVertexUpgrade2Color: Color
     val highlightVertexUpgrade3Color: Color
 
-    val highlightRegionFirst: Color
-    val highlightRegionSecond: Color
-    val highlightRegionThird: Color
+    val highlightRegion1Color: Color
+    val highlightRegion2Color: Color
+    val highlightRegion3Color: Color
 }
 
 object ClassicPalette : BoardPalette {
@@ -52,12 +52,12 @@ object ClassicPalette : BoardPalette {
     override val boardEdgeColor = Color(0xFF57381A)
     override val boardPerimeterColor = Color(0xFF968271)
     override val boardPatternBorderColor = Color(0xFF654321)
-    override val boardPatternColor1 = Color(0xFF8B4513)
-    override val boardPatternColor2 = Color(0xFFC2945A)
+    override val boardPatternColor1 = Color(0xFFC5915B)
+    override val boardPatternColor2 = Color(0xFFD5A76A)
     override val boardPatternColor3 = Color(0xFFECD2A5)
     override val boardVertexColor = Color(0xFF382617)
     override val neutralColor = Color(0xFFB75B3E)
-    override val selectionIndicatorColor = Color(0x662196F3)
+    override val selectionIndicatorColor = Color(0x801894F6)
     override val textColor = Color(0xFF212121)
     override val vertexAdjacentColor = Color(0xFFC9AD58)
     override val vertexOccupiedColor = Color(0xFF333333)
@@ -65,9 +65,9 @@ object ClassicPalette : BoardPalette {
     override val whiteCobBorderColor = Color(0xFF2F2C2C)
     override val whiteCobColor = Color(0xFFDED7D3)
 
-    override val highlightEdgeFirst = Color(0xFFDED760)
-    override val highlightEdgeSecond = Color(0xFFE8E191)
-    override val highlightEdgeThird = Color(0xFFD4C93A)
+    override val highlightEdge1Color = Color(0xFF19ADF3)
+    override val highlightEdge2Color = Color(0xFFAB63DC)
+    override val highlightEdge3Color = Color(0xFF0AE0A3)
 
     override val highlightVertexCapture1Color = Color(0xFF36D8F4)
     override val highlightVertexCapture2Color = Color(0xFF6BF9E4)
@@ -79,9 +79,9 @@ object ClassicPalette : BoardPalette {
     override val highlightVertexUpgrade2Color = Color(0xFFF9AD6B)
     override val highlightVertexUpgrade3Color = Color(0xFFE0710F)
 
-    override val highlightRegionFirst = Color(0xFFEFD47C)
-    override val highlightRegionSecond = Color(0xFFE5D8AE)
-    override val highlightRegionThird = Color(0xFFE9C44A)
+    override val highlightRegion1Color = Color(0xFFEFD47C)
+    override val highlightRegion2Color = Color(0xFFECE2C2)
+    override val highlightRegion3Color = Color(0xFFDCB73D)
 }
 
 object DarkPalette : BoardPalette {
@@ -91,14 +91,14 @@ object DarkPalette : BoardPalette {
     override val blackCobColor = Color(0xFF192454)
     override val boardBackground = Color(0xFF756F98)
     override val boardEdgeColor = Color(0xFF503375)
-    override val boardPerimeterColor = Color(0xFF8477A8)
+    override val boardPerimeterColor = Color(0xFF8E7EBB)
     override val boardPatternBorderColor = Color(0xFF1DB2A5)
-    override val boardPatternColor1 = Color(0xFF422791)
-    override val boardPatternColor2 = Color(0xFF7133AF)
-    override val boardPatternColor3 = Color(0xFF7446B6)
+    override val boardPatternColor1 = Color(0xFF6848C5)
+    override val boardPatternColor2 = Color(0xFF7647C2)
+    override val boardPatternColor3 = Color(0xFF8456C5)
     override val boardVertexColor = Color(0xFF333757)
     override val neutralColor = Color(0xFF4F7C52)
-    override val selectionIndicatorColor = Color(0x66CF6679)
+    override val selectionIndicatorColor = Color(0x80EC5B75)
     override val textColor = Color(0xFFFFFFFF)
     override val vertexAdjacentColor = Color(0xFFC9589C)
     override val vertexOccupiedColor = Color(0xFF16B6A7)
@@ -106,9 +106,9 @@ object DarkPalette : BoardPalette {
     override val whiteCobBorderColor = Color(0xFF382750)
     override val whiteCobColor = Color(0xFFA496C0)
 
-    override val highlightEdgeFirst = Color(0xFFA05DE0)
-    override val highlightEdgeSecond = Color(0xFFBE96D7)
-    override val highlightEdgeThird = Color(0xFFA070DA)
+    override val highlightEdge1Color = Color(0xFFCD57FF)
+    override val highlightEdge2Color = Color(0xFF8DC46E)
+    override val highlightEdge3Color = Color(0xFFD53E3E)
 
     override val highlightVertexCapture1Color = Color(0xFFE736F4)
     override val highlightVertexCapture2Color = Color(0xFFB26BF9)
@@ -120,9 +120,9 @@ object DarkPalette : BoardPalette {
     override val highlightVertexUpgrade2Color = Color(0xFF90E074)
     override val highlightVertexUpgrade3Color = Color(0xFF0FE032)
 
-    override val highlightRegionFirst = Color(0xFF03DAC6)
-    override val highlightRegionSecond = Color(0xFF66FFF0)
-    override val highlightRegionThird = Color(0xFF00B3A1)
+    override val highlightRegion1Color = Color(0xFF03DAC6)
+    override val highlightRegion2Color = Color(0xFF66FFF0)
+    override val highlightRegion3Color = Color(0xFF00B3A1)
 }
 
 object NaturePalette : BoardPalette {
@@ -132,14 +132,14 @@ object NaturePalette : BoardPalette {
     override val blackCobColor = Color(0xFF193341)
     override val boardBackground = Color(0xFF5C8498)
     override val boardEdgeColor = Color(0xFF704F45)
-    override val boardPerimeterColor = Color(0xFF5B9597)
+    override val boardPerimeterColor = Color(0xFF5D999B)
     override val boardPatternBorderColor = Color(0xFF325921)
-    override val boardPatternColor1 = Color(0xFF4C6432)
-    override val boardPatternColor2 = Color(0xFFADBD9B)
-    override val boardPatternColor3 = Color(0xFF759A59)
+    override val boardPatternColor1 = Color(0xFF6D914E)
+    override val boardPatternColor2 = Color(0xFF7CA25E)
+    override val boardPatternColor3 = Color(0xFFACBD99)
     override val boardVertexColor = Color(0xFF2E404E)
     override val neutralColor = Color(0xFFC9A030)
-    override val selectionIndicatorColor = Color(0x66F57C00)
+    override val selectionIndicatorColor = Color(0x80E58A12)
     override val textColor = Color(0xFF216E27)
     override val vertexAdjacentColor = Color(0xFF58C9A9)
     override val vertexOccupiedColor = Color(0xFF1C5B20)
@@ -147,9 +147,9 @@ object NaturePalette : BoardPalette {
     override val whiteCobBorderColor = Color(0xFF4D3528)
     override val whiteCobColor = Color(0xFFDEC8A5)
 
-    override val highlightEdgeFirst = Color(0xFFF3A621)
-    override val highlightEdgeSecond = Color(0xFFF6BC5F)
-    override val highlightEdgeThird = Color(0xFFE0920A)
+    override val highlightEdge1Color = Color(0xFFF33939)
+    override val highlightEdge2Color = Color(0xFFCAE099)
+    override val highlightEdge3Color = Color(0xFF25BED2)
 
     override val highlightVertexCapture1Color = Color(0xFFEEF436)
     override val highlightVertexCapture2Color = Color(0xFFDAF96B)
@@ -161,9 +161,9 @@ object NaturePalette : BoardPalette {
     override val highlightVertexUpgrade2Color = Color(0xFFF9A46B)
     override val highlightVertexUpgrade3Color = Color(0xFFE0630F)
 
-    override val highlightRegionFirst = Color(0xFF48754D)
-    override val highlightRegionSecond = Color(0xFF5E9664)
-    override val highlightRegionThird = Color(0xFF365A3A)
+    override val highlightRegion1Color = Color(0xFFAD4E7F)
+    override val highlightRegion2Color = Color(0xFFE363DD)
+    override val highlightRegion3Color = Color(0xFFCB488C)
 }
 
 val availablePalettes = listOf(

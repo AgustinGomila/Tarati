@@ -96,11 +96,10 @@ class BoardAnimationViewModel : ViewModel() {
             _animatedPieces.value = mapOf(
                 move.to to animatedCob.copy(animationProgress = progress)
             )
+
             // Efecto de estela en el movimiento
-            if (_animateEffects.value) {
-                if (step == steps / 2) {
-                    animateSimul(createMoveHighlight(move.from, move.to))
-                }
+            if (_animateEffects.value && step == steps / 2) {
+                animateSimul(createMoveHighlight(move.from, move.to))
             }
             delay(stepDelay)
         }
@@ -156,11 +155,9 @@ class BoardAnimationViewModel : ViewModel() {
                     put(vertexId, animatedCob.copy(conversionProgress = progress))
                 }
                 // Efecto sobre piezas capturadas
-                if (_animateEffects.value) {
-                    if (step == steps / 2) {
-                        // Efectos especiales
-                        animateSimul(createCaptureHighlight(vertexId))
-                    }
+                if (_animateEffects.value && step == steps / 2) {
+                    // Efectos especiales
+                    animateSimul(createCaptureHighlight(vertexId))
                 }
                 delay(stepDelay)
             }
@@ -206,11 +203,9 @@ class BoardAnimationViewModel : ViewModel() {
                     _animatedPieces.value = _animatedPieces.value.toMutableMap().apply {
                         put(vertexId, animatedCob.copy(upgradeProgress = progress))
                     }
-                    if (step == steps / 3) {
-                        // Efectos sobre piezas mejoradas
-                        if (_animateEffects.value) {
-                            animateSimul(createUpgradeHighlight(vertexId))
-                        }
+                    // Efectos sobre piezas mejoradas
+                    if (_animateEffects.value && step == steps / 3) {
+                        animateSimul(createUpgradeHighlight(vertexId))
                     }
                     delay(stepDelay)
                 }

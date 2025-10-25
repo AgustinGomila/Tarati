@@ -37,9 +37,9 @@ fun rememberBoardColors(): BoardColors {
         whiteCobBorderColor = palette.whiteCobBorderColor,
         whiteCobColor = palette.whiteCobColor,
 
-        highlightEdge1Color = palette.highlightEdgeFirst,
-        highlightEdge2Color = palette.highlightEdgeSecond,
-        highlightEdge3Color = palette.highlightEdgeThird,
+        highlightEdge1Color = palette.highlightEdge1Color,
+        highlightEdge2Color = palette.highlightEdge2Color,
+        highlightEdge3Color = palette.highlightEdge3Color,
         highlightVertexCapture1Color = palette.highlightVertexCapture1Color,
         highlightVertexCapture2Color = palette.highlightVertexCapture2Color,
         highlightVertexCapture3Color = palette.highlightVertexCapture3Color,
@@ -49,8 +49,8 @@ fun rememberBoardColors(): BoardColors {
         highlightVertexUpgrade1Color = palette.highlightVertexUpgrade1Color,
         highlightVertexUpgrade2Color = palette.highlightVertexUpgrade2Color,
         highlightVertexUpgrade3Color = palette.highlightVertexUpgrade3Color,
-        highlightRegion1Color = palette.highlightRegionFirst,
-        highlightRegion2Color = palette.highlightRegionSecond,
-        highlightRegion3Color = palette.highlightRegionThird,
+        highlightRegion1Color = palette.highlightRegion1Color,
+        highlightRegion2Color = palette.highlightRegion2Color,
+        highlightRegion3Color = palette.highlightRegion3Color,
     )
 }

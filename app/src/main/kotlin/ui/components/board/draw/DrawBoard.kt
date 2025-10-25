@@ -107,22 +107,22 @@ fun DrawScope.drawBoardPatternTwoColors(
 
         // Intercalar entre color1 y color2
         val regionColor = if (index % 2 == 0) {
-            surfaceColor1.copy(alpha = 0.4f)
+            surfaceColor1
         } else {
-            surfaceColor2.copy(alpha = 0.4f)
+            surfaceColor2
         }
 
         drawPath(
             path = path,
             color = regionColor,
-            style = Fill
+            style = Fill,
         )
 
         // Borde sutil entre casillas
         drawPath(
             path = path,
-            color = borderColor.copy(alpha = 0.1f),
-            style = Stroke(width = 1f)
+            color = borderColor.copy(alpha = 0.2f),
+            style = Stroke(width = 1f),
         )
     }
 }
@@ -156,14 +156,14 @@ fun DrawScope.drawBoardPatternSingleColor(
         // Usar siempre el mismo color
         drawPath(
             path = path,
-            color = surfaceColor.copy(alpha = 0.4f),
+            color = surfaceColor,
             style = Fill
         )
 
         // Borde sutil entre casillas
         drawPath(
             path = path,
-            color = borderColor.copy(alpha = 0.1f),
+            color = borderColor.copy(alpha = 0.3f),
             style = Stroke(width = 1f)
         )
     }

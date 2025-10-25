@@ -146,25 +146,25 @@ fun PreviewSelectedCobDrawing(
 
 @Preview(group = "Cob", showBackground = true, widthDp = 500, heightDp = 200)
 @Composable
-fun PreviewAnimatedCobDrawingNature(
+fun PreviewUpgradedAnimatedCobDrawingNature(
     boardColors: BoardColors = getBoardColors(NaturePalette),
     color: CobColor = CobColor.WHITE
 ) {
-    PreviewAnimatedCobDrawingClassic(boardColors, color)
+    PreviewUpgradedAnimatedCobDrawingClassic(boardColors, color)
 }
 
 @Preview(group = "Cob", showBackground = true, widthDp = 500, heightDp = 200)
 @Composable
-fun PreviewAnimatedCobDrawingDark(
+fun PreviewUpgradedAnimatedCobDrawingDark(
     boardColors: BoardColors = getBoardColors(DarkPalette),
     color: CobColor = CobColor.WHITE
 ) {
-    PreviewAnimatedCobDrawingClassic(boardColors, color)
+    PreviewUpgradedAnimatedCobDrawingClassic(boardColors, color)
 }
 
 @Preview(group = "Cob", showBackground = true, widthDp = 500, heightDp = 200)
 @Composable
-fun PreviewAnimatedCobDrawingClassic(
+fun PreviewUpgradedAnimatedCobDrawingClassic(
     boardColors: BoardColors = getBoardColors(ClassicPalette),
     color: CobColor = CobColor.WHITE
 ) {
@@ -173,13 +173,13 @@ fun PreviewAnimatedCobDrawingClassic(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        PreviewAnimatedCobDrawing(boardColors, color)
-        PreviewAnimatedCobDrawing(boardColors, color.opponent())
+        PreviewUpgradedAnimatedCobDrawing(boardColors, color)
+        PreviewUpgradedAnimatedCobDrawing(boardColors, color.opponent())
     }
 }
 
 @Composable
-fun PreviewAnimatedCobDrawing(
+fun PreviewUpgradedAnimatedCobDrawing(
     boardColors: BoardColors = getBoardColors(ClassicPalette),
     color: CobColor = CobColor.WHITE
 ) {
@@ -265,7 +265,7 @@ fun PreviewConvertingCobDrawing(
                     vertexId = "A1",
                     animatedCob = AnimatedCob(
                         vertexId = "A1",
-                        cob = Cob(color, false),
+                        cob = Cob(color, true),
                         currentPos = "A1",
                         targetPos = "A1",
                         animationProgress = 1.0f,

@@ -1,4 +1,4 @@
-package com.agustin.tarati.ui.screens.main
+package com.agustin.tarati.ui.components.editor
 
 data class DistributionState(
     val isValid: Boolean,

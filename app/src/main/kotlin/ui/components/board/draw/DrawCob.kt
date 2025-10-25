@@ -46,7 +46,8 @@ fun DrawScope.drawCob(
             color = colors.selectionIndicatorColor,
             center = center,
             radius = baseRadius * 1.2f,
-            style = Stroke(width = 3f)
+            style = Stroke(width = 3f),
+            alpha = 0.7f,
         )
     }
 }
@@ -81,13 +82,11 @@ fun DrawScope.drawAnimatedCob(
     if (currentCob.isUpgraded) {
         val upgradeAlpha = animatedCob.upgradeProgress
         if (upgradeAlpha > 0f) {
-            val upgradeColor = invertedColor.copy(alpha = upgradeAlpha)
-
             // Punto central de upgrade
             drawCircle(
-                color = upgradeColor,
+                color = invertedColor.copy(alpha = upgradeAlpha),
                 center = center,
-                radius = baseRadius * 0.2f * upgradeAlpha
+                radius = baseRadius * 0.2f * upgradeAlpha,
             )
         }
     }
@@ -102,7 +101,8 @@ fun DrawScope.drawAnimatedCob(
             drawCircle(
                 color = colors.selectionIndicatorColor.copy(alpha = auraAlpha),
                 center = center,
-                radius = baseRadius * 1.3f
+                radius = baseRadius * 1.3f,
+                alpha = auraAlpha * 0.5f,
             )
         }
 
@@ -113,7 +113,8 @@ fun DrawScope.drawAnimatedCob(
                 color = invertedColor.copy(alpha = flashAlpha),
                 center = center,
                 radius = baseRadius * 1.1f,
-                style = Stroke(width = 2f)
+                style = Stroke(width = 2f),
+                alpha = flashAlpha,
             )
         }
     }

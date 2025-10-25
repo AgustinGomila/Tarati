@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
 import com.agustin.tarati.R
 import com.agustin.tarati.game.core.GameState
@@ -27,8 +28,34 @@ import com.agustin.tarati.game.tutorial.TutorialStep
 import com.agustin.tarati.game.tutorial.UpgradeStep
 import com.agustin.tarati.ui.components.board.animation.HighlightAnimation
 import com.agustin.tarati.ui.localization.localizedString
-import com.agustin.tarati.ui.screens.main.TutorialEvents
 import kotlinx.coroutines.delay
+
+
+data class TutorialEvents(
+    val onCompleted: () -> Unit = { },
+    val onFinishTutorial: () -> Unit = { },
+    val onSkipTutorial: () -> Unit = { },
+)
+
+@Composable
+fun CreateTutorialOverlay(
+    viewModel: TutorialViewModel,
+    boardSize: Size,
+    boardOrientation: BoardOrientation,
+    tutorialEvents: TutorialEvents,
+    updateGameState: (GameState) -> Unit,
+) {
+    if (boardSize == Size.Zero) return
+
+    TutorialOverlay(
+        viewModel = viewModel,
+        tutorialEvents = tutorialEvents,
+        updateGameState = updateGameState,
+        boardWidth = boardSize.width,
+        boardHeight = boardSize.height,
+        boardOrientation = boardOrientation,
+    )
+}
 
 @Composable
 fun TutorialOverlay(

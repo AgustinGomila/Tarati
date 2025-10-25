@@ -27,29 +27,29 @@ import com.agustin.tarati.ui.theme.DarkPalette
 import com.agustin.tarati.ui.theme.NaturePalette
 import com.agustin.tarati.ui.theme.TaratiTheme
 
-@Preview(group = "Edges", showBackground = true, widthDp = 300, heightDp = 500)
+@Preview(group = "Edges", showBackground = true, widthDp = 400, heightDp = 300)
 @Composable
 fun PreviewDrawEdgesNature(
     boardColors: BoardColors = getBoardColors(NaturePalette),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
+    boardOrientation: BoardOrientation = BoardOrientation.LANDSCAPE_WHITE
 ) {
     PreviewDrawEdges(boardColors, boardOrientation)
 }
 
-@Preview(group = "Edges", showBackground = true, widthDp = 300, heightDp = 500)
+@Preview(group = "Edges", showBackground = true, widthDp = 400, heightDp = 300)
 @Composable
 fun PreviewDrawEdgesDark(
     boardColors: BoardColors = getBoardColors(DarkPalette),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
+    boardOrientation: BoardOrientation = BoardOrientation.LANDSCAPE_WHITE
 ) {
     PreviewDrawEdges(boardColors, boardOrientation)
 }
 
-@Preview(group = "Edges", showBackground = true, widthDp = 300, heightDp = 500)
+@Preview(group = "Edges", showBackground = true, widthDp = 400, heightDp = 300)
 @Composable
 fun PreviewDrawEdgesClassic(
     boardColors: BoardColors = getBoardColors(ClassicPalette),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
+    boardOrientation: BoardOrientation = BoardOrientation.LANDSCAPE_WHITE
 ) {
     PreviewDrawEdges(boardColors, boardOrientation)
 }
@@ -64,7 +64,6 @@ fun PreviewDrawEdges(
             modifier = Modifier.size(300.dp),
             color = MaterialTheme.colorScheme.background
         ) {
-            FullBackground(boardColors = boardColors, boardOrientation = boardOrientation)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -73,7 +72,12 @@ fun PreviewDrawEdges(
                     drawEdges(
                         canvasSize = size,
                         orientation = boardOrientation,
-                        boardState = PreviewStates.emptyBoardState.copy(boardOrientation = boardOrientation),
+                        boardState = PreviewStates.emptyBoardState.copy(
+                            boardVisualState = PreviewStates.emptyBoardState.boardVisualState.copy(
+                                edgesVisibles = true
+                            ),
+                            boardOrientation = boardOrientation
+                        ),
                         colors = boardColors
                     )
                 }
@@ -90,7 +94,7 @@ fun PreviewDrawEdges(
 @Preview(group = "Edges", showBackground = true)
 @Composable
 fun PreviewEdgeHighlightsNature(
-    boardColors: BoardColors = getBoardColors(DarkPalette),
+    boardColors: BoardColors = getBoardColors(NaturePalette),
     boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
 ) {
     PreviewEdgeHighlights(boardColors, boardOrientation)
@@ -99,7 +103,7 @@ fun PreviewEdgeHighlightsNature(
 @Preview(group = "Edges", showBackground = true)
 @Composable
 fun PreviewEdgeHighlightsDark(
-    boardColors: BoardColors = getBoardColors(NaturePalette),
+    boardColors: BoardColors = getBoardColors(DarkPalette),
     boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
 ) {
     PreviewEdgeHighlights(boardColors, boardOrientation)
@@ -129,7 +133,6 @@ fun PreviewEdgeHighlights(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {
-                // Highlight con pulso
                 Surface(
                     modifier = Modifier.size(150.dp),
                     color = MaterialTheme.colorScheme.surface
@@ -143,7 +146,7 @@ fun PreviewEdgeHighlights(
                             drawEdgeHighlight(
                                 highlight = EdgeHighlight(
                                     from = "B1",
-                                    to = "D4",
+                                    to = "B4",
                                     pulse = true
                                 ),
                                 canvasSize = size,
@@ -151,41 +154,6 @@ fun PreviewEdgeHighlights(
                                 colors = boardColors
                             )
                         }
-                        Text(
-                            text = "Con Pulso",
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-
-                // Highlight sin pulso
-                Surface(
-                    modifier = Modifier.size(150.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp)
-                    ) {
-                        Canvas(modifier = Modifier.matchParentSize()) {
-                            drawEdgeHighlight(
-                                highlight = EdgeHighlight(
-                                    from = "C3",
-                                    to = "D4",
-                                    pulse = false
-                                ),
-                                canvasSize = size,
-                                orientation = boardOrientation,
-                                colors = boardColors
-                            )
-                        }
-                        Text(
-                            text = "Sin Pulso",
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            style = MaterialTheme.typography.labelSmall
-                        )
                     }
                 }
             }

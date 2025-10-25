@@ -1,4 +1,3 @@
-@file:Suppress("AssignedValueIsNeverRead")
 @file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.agustin.tarati.ui.components.sidebar
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -49,14 +49,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
+import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.CobColor.BLACK
 import com.agustin.tarati.game.core.CobColor.WHITE
@@ -65,6 +71,10 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
 import com.agustin.tarati.game.logic.getWinner
 import com.agustin.tarati.ui.localization.localizedString
+import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
+import com.agustin.tarati.ui.screens.main.MainScreenEvents
+import com.agustin.tarati.ui.screens.main.MainViewModel
+import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 
 data class SidebarGameState(
     val gameState: GameState,
@@ -89,6 +99,51 @@ interface SidebarEvents {
     fun onNewGame(color: CobColor)
     fun onEditBoard()
     fun onAboutClick()
+}
+
+@Composable
+fun SidebarContent(
+    navController: NavController,
+    gameState: GameState,
+    playerSide: CobColor,
+    moveIndex: Int,
+    history: List<Pair<Move, GameState>>,
+    evalConfig: EvaluationConfig,
+    aiEnabled: Boolean,
+    events: MainScreenEvents,
+    viewModel: MainViewModel,
+    settingsViewModel: SettingsViewModel
+) {
+    var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
+
+    val sidebarEvents = object : SidebarEvents {
+        override fun onMoveToCurrent() = viewModel.gameManager.moveToCurrentState()
+        override fun onUndo() = viewModel.gameManager.undoMove()
+        override fun onRedo() = viewModel.gameManager.redoMove()
+        override fun onDifficultyChange(difficulty: Difficulty) = settingsViewModel.setDifficulty(difficulty)
+        override fun onToggleAI() = viewModel.updateAIEnabled(!aiEnabled)
+        override fun onSettings() = navController.navigate(SettingsScreenDest.route)
+        override fun onNewGame(color: CobColor) = events.showNewGameDialog(color)
+        override fun onEditBoard() = viewModel.toggleEditing()
+        override fun onAboutClick() = events.showAboutDialog()
+    }
+
+    val sidebarGameState = SidebarGameState(
+        gameState = gameState,
+        playerSide = playerSide,
+        moveIndex = moveIndex,
+        moveHistory = history.map { it.first },
+        difficulty = evalConfig.difficulty,
+        isAIEnabled = aiEnabled,
+    )
+
+    Sidebar(
+        modifier = Modifier.systemBarsPadding(),
+        sidebarState = sidebarGameState,
+        uiState = sidebarUIState,
+        events = sidebarEvents,
+        onUIStateChange = { sidebarUIState = it }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,7 +1,8 @@
-package com.agustin.tarati.ui.screens.main
+package com.agustin.tarati.ui.components.editor
 
 import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.CobColor.WHITE
+import com.agustin.tarati.ui.screens.main.MainViewModel
 
 class EditEvents(private val viewModel: MainViewModel) {
     fun toggleEditColor() = viewModel.toggleEditColor()

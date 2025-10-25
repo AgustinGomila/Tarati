@@ -16,7 +16,7 @@ import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getPosibleCastling
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
-import com.agustin.tarati.ui.screens.main.PieceCounts
+import com.agustin.tarati.ui.components.editor.PieceCounts
 
 // Función de extensión para modificar piezas
 fun GameState.modifyCob(position: String, cob: Cob?): GameState {

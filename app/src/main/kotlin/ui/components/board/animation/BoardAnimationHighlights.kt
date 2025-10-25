@@ -57,15 +57,15 @@ fun createMoveHighlight(from: String, to: String): List<HighlightAnimation> {
                 to = to,
                 pulse = true,
                 duration = 600L,
-                startDelay = 100L
+                startDelay = 200L
             )
         ),
         HighlightAnimation.Vertex(
             VertexHighlight(
                 vertexId = to,
                 pulse = true,
-                duration = 400L,
-                startDelay = 300L
+                duration = 600L,
+                startDelay = 400L
             )
         )
     )

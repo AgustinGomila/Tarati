@@ -67,7 +67,7 @@ interface SettingsEvents {
 @Composable
 fun SettingsScreen(
     events: SettingsEvents,
-    navController: NavController
+    navController: NavController,
 ) {
     val viewModel: SettingsViewModel = viewModel()
     val settingsState by viewModel.settingsState.collectAsState()

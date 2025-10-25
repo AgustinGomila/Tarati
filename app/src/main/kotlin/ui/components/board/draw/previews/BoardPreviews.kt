@@ -36,41 +36,49 @@ import com.agustin.tarati.ui.theme.getBoardColors
 
 @Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
 @Composable
-fun PreviewBoardRendererEmpty(
-    selectionViewModel: BoardSelectionViewModel = viewModel(),
-    animationViewModel: BoardAnimationViewModel = viewModel(),
-    boardColors: BoardColors = getBoardColors(ClassicPalette),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
-) {
-    FullBackground(boardColors = boardColors, boardOrientation = boardOrientation)
-    TaratiTheme {
-        Box(
-            modifier = Modifier
-                .size(400.dp)
-        ) {
-            BoardRenderer(
-                modifier = Modifier.matchParentSize(),
-                playerSide = CobColor.WHITE,
-                boardState = PreviewStates.emptyBoardState.copy(boardOrientation = boardOrientation),
-                colors = boardColors,
-                tapEvents = tapEventsPreview,
-                selectViewModel = selectionViewModel,
-                animationViewModel = animationViewModel,
-                onBoardSizeChange = {},
-                onResetCompleted = {},
-                debug = false
-            )
-        }
-    }
+fun PreviewBoardRendererDarkWhite() {
+    PreviewBoardRenderer(boardColors = getBoardColors(DarkPalette), color = CobColor.WHITE)
+}
+
+
+@Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
+@Composable
+fun PreviewBoardRendererNatureWhite() {
+    PreviewBoardRenderer(boardColors = getBoardColors(NaturePalette), color = CobColor.WHITE)
 }
 
 @Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
 @Composable
-fun PreviewBoardRendererWithPieces(
+fun PreviewBoardRendererClassicWhite() {
+    PreviewBoardRenderer(boardColors = getBoardColors(ClassicPalette), color = CobColor.WHITE)
+}
+
+@Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
+@Composable
+fun PreviewBoardRendererDarkBlack() {
+    PreviewBoardRenderer(boardColors = getBoardColors(DarkPalette), color = CobColor.WHITE)
+}
+
+
+@Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
+@Composable
+fun PreviewBoardRendererNatureBlack() {
+    PreviewBoardRenderer(boardColors = getBoardColors(NaturePalette), color = CobColor.BLACK)
+}
+
+@Preview(group = "Board", showBackground = true, widthDp = 300, heightDp = 500)
+@Composable
+fun PreviewBoardRendererClassicBlack() {
+    PreviewBoardRenderer(boardColors = getBoardColors(ClassicPalette), color = CobColor.BLACK)
+}
+
+@Composable
+fun PreviewBoardRenderer(
     selectionViewModel: BoardSelectionViewModel = viewModel(),
     animationViewModel: BoardAnimationViewModel = viewModel(),
     boardColors: BoardColors = getBoardColors(ClassicPalette),
-    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE
+    boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
+    color: CobColor = CobColor.WHITE,
 ) {
     FullBackground(boardColors = boardColors, boardOrientation = boardOrientation)
     TaratiTheme {
@@ -80,7 +88,7 @@ fun PreviewBoardRendererWithPieces(
         ) {
             BoardRenderer(
                 modifier = Modifier.matchParentSize(),
-                playerSide = CobColor.WHITE,
+                playerSide = color,
                 boardState = PreviewStates.populatedBoardState.copy(boardOrientation = boardOrientation),
                 colors = boardColors,
                 tapEvents = tapEventsPreview,
