@@ -42,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -50,7 +49,6 @@ import com.agustin.tarati.R
 import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.AppTheme
-import com.agustin.tarati.ui.theme.TaratiTheme
 import com.agustin.tarati.ui.theme.availablePalettes
 
 interface SettingsEvents {
@@ -190,7 +188,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsCategory(@StringRes title: Int) {
+fun SettingsCategory(@StringRes title: Int) {
     Text(
         text = localizedString(title),
         style = MaterialTheme.typography.titleMedium,
@@ -201,7 +199,7 @@ private fun SettingsCategory(@StringRes title: Int) {
 }
 
 @Composable
-private fun LanguageSetting(
+fun LanguageSetting(
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit
 ) {
@@ -263,7 +261,7 @@ private fun LanguageSetting(
 }
 
 @Composable
-private fun ThemeSetting(
+fun ThemeSetting(
     theme: AppTheme,
     onThemeChange: (AppTheme) -> Unit
 ) {
@@ -283,7 +281,7 @@ private fun ThemeSetting(
 }
 
 @Composable
-private fun PaletteSetting(
+fun PaletteSetting(
     paletteName: String,
     onPaletteSelected: (String) -> Unit
 ) {
@@ -337,7 +335,7 @@ private fun PaletteSetting(
 }
 
 @Composable
-private fun ToggleSetting(
+fun ToggleSetting(
     icon: ImageVector,
     @StringRes title: Int,
     checked: Boolean,
@@ -356,7 +354,7 @@ private fun ToggleSetting(
 }
 
 @Composable
-private fun SettingItem(
+fun SettingItem(
     icon: ImageVector,
     @StringRes title: Int,
     @StringRes subtitle: Int,
@@ -398,129 +396,3 @@ private fun SettingItem(
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
     )
 }
-
-// region Previews
-
-@Preview(name = "Language Setting")
-@Composable
-fun LanguageSettingPreview() {
-    TaratiTheme {
-        Column {
-            LanguageSetting(
-                language = AppLanguage.SPANISH,
-                onLanguageChange = {}
-            )
-            LanguageSetting(
-                language = AppLanguage.ENGLISH,
-                onLanguageChange = {}
-            )
-        }
-    }
-}
-
-@Preview(name = "Theme Setting")
-@Composable
-fun ThemeSettingPreview() {
-    TaratiTheme {
-        Column {
-            ThemeSetting(
-                theme = AppTheme.MODE_AUTO,
-                onThemeChange = {}
-            )
-            ThemeSetting(
-                theme = AppTheme.MODE_NIGHT,
-                onThemeChange = {}
-            )
-        }
-    }
-}
-
-@Preview(name = "Palette Setting")
-@Composable
-fun PaletteSettingPreview() {
-    TaratiTheme {
-        PaletteSetting(
-            paletteName = "Default Palette",
-            onPaletteSelected = {}
-        )
-    }
-}
-
-@Preview(name = "Toggle Settings")
-@Composable
-fun ToggleSettingsPreview() {
-    TaratiTheme {
-        Column {
-            ToggleSetting(
-                icon = Icons.Default.Visibility,
-                title = R.string.board_labels,
-                checked = true,
-                onCheckedChange = {}
-            )
-            ToggleSetting(
-                icon = Icons.Default.Visibility,
-                title = R.string.board_vertices,
-                checked = false,
-                onCheckedChange = {}
-            )
-            ToggleSetting(
-                icon = Icons.Default.Animation,
-                title = R.string.animate_effects,
-                checked = true,
-                onCheckedChange = {}
-            )
-            ToggleSetting(
-                icon = Icons.Default.Visibility,
-                title = R.string.board_regions,
-                checked = false,
-                onCheckedChange = {}
-            )
-            ToggleSetting(
-                icon = Icons.Default.Visibility,
-                title = R.string.board_perimeter,
-                checked = false,
-                onCheckedChange = {}
-            )
-        }
-    }
-}
-
-@Preview(name = "Setting Item")
-@Composable
-fun SettingItemPreview() {
-    TaratiTheme {
-        Column {
-            SettingItem(
-                icon = Icons.Default.Language,
-                title = R.string.language,
-                subtitle = R.string.language,
-                trailingContent = {
-                    Text("ES", color = MaterialTheme.colorScheme.primary)
-                }
-            )
-            SettingItem(
-                icon = Icons.Default.DarkMode,
-                title = R.string.dark_theme,
-                subtitle = R.string.dark_theme,
-                trailingContent = {
-                    Switch(checked = true, onCheckedChange = {})
-                }
-            )
-        }
-    }
-}
-
-@Preview(name = "Settings Categories")
-@Composable
-fun SettingsCategoriesPreview() {
-    TaratiTheme {
-        Column {
-            SettingsCategory(title = R.string.general)
-            SettingsCategory(title = R.string.appearance)
-            SettingsCategory(title = R.string.board_display)
-            SettingsCategory(title = R.string.animations)
-        }
-    }
-}
-
-// endregion Previews

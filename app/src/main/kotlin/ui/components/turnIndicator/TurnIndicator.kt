@@ -165,6 +165,8 @@ fun DrawNewGameIcon(size: Dp = 60.dp, contentDescription: String) {
     }
 }
 
+// region Previews
+
 fun createPreviewIndicatorEvents(): IndicatorEvents = object : IndicatorEvents {
     override fun onTouch() = Unit
 }
@@ -225,3 +227,5 @@ fun TurnIndicatorPreview_AllStates() {
         }
     }
 }
+
+// endregion Previews
