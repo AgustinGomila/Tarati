@@ -70,7 +70,6 @@ fun MainScreenDialogs(
             matchState.gameResult != GameResult.UNDETERMINED &&
             winner != null
         ) {
-
             val message = buildGameOverMessage(matchState, winner)
             GameOverDialog(
                 gameOverMessage = message,

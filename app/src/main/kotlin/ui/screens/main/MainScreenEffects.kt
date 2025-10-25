@@ -43,8 +43,8 @@ import com.agustin.tarati.ui.components.topbar.TaratiTopBar
 import com.agustin.tarati.ui.components.turnIndicator.IndicatorEvents
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
-import com.agustin.tarati.ui.components.tutorial.CreateTutorialOverlay
 import com.agustin.tarati.ui.components.tutorial.TutorialEvents
+import com.agustin.tarati.ui.components.tutorial.TutorialOverlay
 import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
@@ -246,15 +246,15 @@ fun MainContent(
                     boardColors = getBoardColors(),
                     tutorial = {
                         if (isTutorialActive) {
-                            CreateTutorialOverlay(
-                                viewModel = tutorialViewModel,
+                            TutorialOverlay(
                                 boardSize = boardSize,
                                 boardOrientation = editBoardOrientation,
                                 tutorialEvents = TutorialEvents(
                                     onSkipTutorial = events::endTutorial,
                                     onFinishTutorial = events::resetTutorial
                                 ),
-                                updateGameState = viewModel.gameManager::updateGameState,
+                                viewModel = tutorialViewModel,
+                                updateGameState = viewModel.gameManager::updateGameState
                             )
                         }
                     },

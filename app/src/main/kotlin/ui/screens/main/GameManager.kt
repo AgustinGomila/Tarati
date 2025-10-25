@@ -11,23 +11,21 @@ import kotlinx.coroutines.flow.asStateFlow
 class GameManager {
     private val _gameStatus = MutableStateFlow(GameStatus.NO_PLAYING)
     val gameStatus: StateFlow<GameStatus> = _gameStatus.asStateFlow()
+    fun updateGameStatus(newStatus: GameStatus) {
+        _gameStatus.value = newStatus
+    }
 
     private val _gameState = MutableStateFlow(initialGameState())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
+    fun updateGameState(newState: GameState) {
+        _gameState.value = newState
+    }
 
     private val _history = MutableStateFlow(listOf<Pair<Move, GameState>>())
     val history: StateFlow<List<Pair<Move, GameState>>> = _history.asStateFlow()
 
     private val _moveIndex = MutableStateFlow(-1)
     val moveIndex: StateFlow<Int> = _moveIndex.asStateFlow()
-
-    fun updateGameStatus(newStatus: GameStatus) {
-        _gameStatus.value = newStatus
-    }
-
-    fun updateGameState(newState: GameState) {
-        _gameState.value = newState
-    }
 
     fun addMove(move: Move, nextState: GameState) {
         val newEntry = Pair(move, nextState)
@@ -55,8 +53,8 @@ class GameManager {
 
         if (targetIndex >= 0) {
             _moveIndex.value = targetIndex
-            val previousState = _history.value[targetIndex].second
-            updateGameState(previousState)
+            val undoState = _history.value[targetIndex].second
+            updateGameState(undoState)
         } else {
             // Si no hay suficientes movimientos, volver al estado inicial
             _moveIndex.value = -1
@@ -73,8 +71,8 @@ class GameManager {
         // Verificar que podemos avanzar
         if (targetIndex < _history.value.size) {
             _moveIndex.value = targetIndex
-            val nextState = _history.value[targetIndex].second
-            updateGameState(nextState)
+            val redoState = _history.value[targetIndex].second
+            updateGameState(redoState)
         }
     }
 
@@ -98,9 +96,9 @@ class GameManager {
     }
 
     // Reiniciar el historial
-    fun clearHistory() {
+    fun clearHistory(gameState: GameState = initialGameState()) {
         _history.value = emptyList()
         _moveIndex.value = -1
-        updateGameState(initialGameState())
+        updateGameState(gameState)
     }
 }

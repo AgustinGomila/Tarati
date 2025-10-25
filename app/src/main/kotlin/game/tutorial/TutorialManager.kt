@@ -22,6 +22,9 @@ class TutorialManager(
 
     private val _tutorialState = MutableStateFlow<TutorialState>(TutorialState.Idle)
     val tutorialState: StateFlow<TutorialState> = _tutorialState.asStateFlow()
+    private fun updateTutorialState(state: TutorialState) {
+        _tutorialState.value = state
+    }
 
     private val _steps = MutableStateFlow<List<TutorialStep>>(emptyList())
     private val _currentStepIndex = MutableStateFlow(0)
@@ -115,7 +118,7 @@ class TutorialManager(
     fun requestUserInteraction(expectedMove: List<Move> = listOf()) {
         val currentStep = getCurrentStep()
         if (currentStep != null) {
-            _tutorialState.value = TutorialState.WaitingForMove(currentStep, expectedMove)
+            updateTutorialState(TutorialState.WaitingForMove(currentStep, expectedMove))
         }
     }
 
@@ -146,15 +149,12 @@ class TutorialManager(
         step.onStepStart?.invoke()
 
         // Determinar el estado basado en el tipo de paso
-        _tutorialState.value = when (step) {
-            is InteractiveTutorialStep -> {
-                TutorialState.WaitingForMove(step, step.expectedMoves)
+        updateTutorialState(
+            when (step) {
+                is InteractiveTutorialStep -> TutorialState.WaitingForMove(step, step.expectedMoves)
+                else -> TutorialState.ShowingStep(step)
             }
-
-            else -> {
-                TutorialState.ShowingStep(step)
-            }
-        }
+        )
 
         // Iniciar animaciones del paso
         startStepAnimations(step)
@@ -191,13 +191,13 @@ class TutorialManager(
     fun endTutorial() {
         stopCurrentAnimations()
         autoAdvanceJob?.cancel()
-        _tutorialState.value = TutorialState.Completed
+        updateTutorialState(TutorialState.Completed)
     }
 
     fun closeTutorial() {
         stopCurrentAnimations()
         autoAdvanceJob?.cancel()
-        _tutorialState.value = TutorialState.Idle
+        updateTutorialState(TutorialState.Idle)
     }
 
     fun reset() {

@@ -161,7 +161,7 @@ fun MainScreen(
             }
         },
         onAIMove = { from, to ->
-            checkAndApplyMove(events, from, to, viewModel)
+            handleGameMove(events, from, to, viewModel)
         },
 
         isEditing = isEditing,
@@ -201,10 +201,9 @@ fun MainScreen(
             showAboutDialog = false
             events.startTutorial()
         },
-        showAboutDialog = showAboutDialog
-    ) {
-        showAboutDialog = false
-    }
+        showAboutDialog = showAboutDialog,
+        onAboutDismissed = { showAboutDialog = false },
+    )
 
     // UI Principal
     ModalNavigationDrawer(
@@ -241,14 +240,7 @@ fun MainScreen(
             onPieceMove = { from, to ->
                 when {
                     isTutorialActive.value -> handleTutorialMove(from, to, tutorialViewModel)
-                    else -> {
-                        checkAndApplyMove(
-                            events = events,
-                            from = from,
-                            to = to,
-                            viewModel = viewModel
-                        )
-                    }
+                    else -> handleGameMove(events, from, to, viewModel)
                 }
             },
             events = events,
@@ -260,7 +252,7 @@ fun MainScreen(
     }
 }
 
-fun checkAndApplyMove(
+fun handleGameMove(
     events: MainScreenEvents,
     from: String,
     to: String,
@@ -277,11 +269,10 @@ fun checkAndApplyMove(
     events.applyMove(from, to, gameState)
 }
 
-// Función auxiliar para movimientos del tutorial
 private fun handleTutorialMove(
     from: String,
     to: String,
-    tutorialViewModel: TutorialViewModel
+    tutorialViewModel: TutorialViewModel,
 ) {
     tutorialViewModel.onMoveAttempted(
         from = from,

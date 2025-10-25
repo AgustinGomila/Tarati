@@ -12,7 +12,7 @@ class HighlightService(private val animationViewModel: BoardAnimationViewModel) 
     }
 
     fun animateHighlights(highlights: List<HighlightAnimation>) {
-        animationViewModel.animate(highlights)
+        animationViewModel.animateSerie(highlights)
     }
 
     fun stopHighlights() {

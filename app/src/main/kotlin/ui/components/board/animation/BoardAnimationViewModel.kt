@@ -99,7 +99,7 @@ class BoardAnimationViewModel : ViewModel() {
 
             // Efecto de estela en el movimiento
             if (_animateEffects.value && step == steps / 2) {
-                animateSimul(createMoveHighlight(move.from, move.to))
+                animateParallel(createMoveHighlight(move.from, move.to))
             }
             delay(stepDelay)
         }
@@ -113,7 +113,7 @@ class BoardAnimationViewModel : ViewModel() {
                 highlights.add(createRegionHighlight(it))
             }
 
-            animateSimul(highlights)
+            animateSerie(highlights)
         }
 
         // Completar movimiento
@@ -157,7 +157,7 @@ class BoardAnimationViewModel : ViewModel() {
                 // Efecto sobre piezas capturadas
                 if (_animateEffects.value && step == steps / 2) {
                     // Efectos especiales
-                    animateSimul(createCaptureHighlight(vertexId))
+                    animateParallel(createCaptureHighlight(vertexId))
                 }
                 delay(stepDelay)
             }
@@ -205,7 +205,7 @@ class BoardAnimationViewModel : ViewModel() {
                     }
                     // Efectos sobre piezas mejoradas
                     if (_animateEffects.value && step == steps / 3) {
-                        animateSimul(createUpgradeHighlight(vertexId))
+                        animateParallel(createUpgradeHighlight(vertexId))
                     }
                     delay(stepDelay)
                 }
@@ -226,7 +226,7 @@ class BoardAnimationViewModel : ViewModel() {
         }
     }
 
-    fun animateSimul(highlights: List<HighlightAnimation>): Job {
+    fun animateParallel(highlights: List<HighlightAnimation>): Job {
         return viewModelScope.launch {
             _currentHighlights.value = highlights
 
@@ -345,7 +345,7 @@ class BoardAnimationViewModel : ViewModel() {
                 a.duration == b.duration
     }
 
-    fun animate(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
+    fun animateSerie(highlights: List<HighlightAnimation>, source: String = "unknown"): Job {
         return viewModelScope.launch {
             val newGroup = AnimationGroup(
                 highlights = highlights,

@@ -2,9 +2,9 @@ package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
+import com.agustin.tarati.game.ai.TaratiAI.gameHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
-import com.agustin.tarati.game.ai.TaratiAI.gameHistory
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.CobColor.BLACK
 import com.agustin.tarati.game.core.CobColor.WHITE

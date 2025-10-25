@@ -13,7 +13,7 @@ class AnimationCoordinator(
 
             is AnimationEvent.HighlightEvent -> {
                 val source = event.source ?: "unknown"
-                animationViewModel.animate(event.highlights, source)
+                animationViewModel.animateSerie(event.highlights, source)
             }
 
             AnimationEvent.StopHighlights -> animationViewModel.stopHighlights()

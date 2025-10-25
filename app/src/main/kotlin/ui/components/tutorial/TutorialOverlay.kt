@@ -38,37 +38,17 @@ data class TutorialEvents(
 )
 
 @Composable
-fun CreateTutorialOverlay(
-    viewModel: TutorialViewModel,
+fun TutorialOverlay(
     boardSize: Size,
     boardOrientation: BoardOrientation,
     tutorialEvents: TutorialEvents,
+    viewModel: TutorialViewModel,
     updateGameState: (GameState) -> Unit,
 ) {
     if (boardSize == Size.Zero) return
 
-    TutorialOverlay(
-        viewModel = viewModel,
-        tutorialEvents = tutorialEvents,
-        updateGameState = updateGameState,
-        boardWidth = boardSize.width,
-        boardHeight = boardSize.height,
-        boardOrientation = boardOrientation,
-    )
-}
-
-@Composable
-fun TutorialOverlay(
-    viewModel: TutorialViewModel,
-    tutorialEvents: TutorialEvents,
-    updateGameState: (GameState) -> Unit,
-    boardWidth: Float,
-    boardHeight: Float,
-    boardOrientation: BoardOrientation,
-    modifier: Modifier = Modifier
-) {
-    val coordinateMapper = remember(boardWidth, boardHeight, boardOrientation) {
-        TutorialCoordinateMapper(boardWidth, boardHeight, boardOrientation)
+    val coordinateMapper = remember(boardSize.width, boardSize.height, boardOrientation) {
+        TutorialCoordinateMapper(boardSize.width, boardSize.height, boardOrientation)
     }
 
     val state by viewModel.tutorialState.collectAsState()
@@ -92,7 +72,7 @@ fun TutorialOverlay(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         when (state) {
             is TutorialState.ShowingStep,
             is TutorialState.WaitingForMove -> {
