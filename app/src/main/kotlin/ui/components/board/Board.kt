@@ -23,6 +23,7 @@ import com.agustin.tarati.ui.components.board.draw.BoardRenderer
 import com.agustin.tarati.ui.components.board.draw.drawBoardBackground
 import com.agustin.tarati.ui.helpers.endGameState
 import com.agustin.tarati.ui.helpers.midGameState
+import com.agustin.tarati.ui.screens.settings.BoardVisualState
 import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.ClassicPalette
 import com.agustin.tarati.ui.theme.DarkPalette
@@ -35,14 +36,10 @@ data class BoardState(
     val gameState: GameState,
     val lastMove: Move? = null,
     val boardOrientation: BoardOrientation = BoardOrientation.PORTRAIT_WHITE,
-    val labelsVisible: Boolean = true,
-    val verticesVisible: Boolean = true,
-    val edgesVisible: Boolean = true,
+    val boardVisualState: BoardVisualState,
     val newGame: Boolean = false,
     val aiEnabled: Boolean = true,
     val isEditing: Boolean = false,
-    val regionsVisible: Boolean = true,
-    val perimeterVisible: Boolean = true,
 )
 
 interface BoardEvents {
@@ -79,8 +76,8 @@ fun Board(
                 canvasSize = size,
                 orientation = boardState.boardOrientation,
                 colors = boardColors,
-                regionsVisible = boardState.regionsVisible,
-                perimeterVisible = boardState.perimeterVisible
+                regionsVisible = boardState.boardVisualState.regionsVisibles,
+                perimeterVisible = boardState.boardVisualState.perimeterVisible
             )
         }
 
@@ -130,9 +127,7 @@ data class BoardPreviewConfig(
     val gameState: GameState,
     val playerSide: Color = WHITE,
     val orientation: BoardOrientation,
-    val labelsVisible: Boolean = true,
-    val verticesVisible: Boolean = true,
-    val edgesVisible: Boolean = true,
+    val boardVisualState: BoardVisualState,
     val isEditing: Boolean = false,
     val darkTheme: Boolean = false,
     val boardColors: BoardColors,
@@ -154,9 +149,7 @@ fun BoardPreview(
                 aiEnabled = false,
                 lastMove = null,
                 boardOrientation = previewConfig.orientation,
-                labelsVisible = previewConfig.labelsVisible,
-                verticesVisible = previewConfig.verticesVisible,
-                edgesVisible = previewConfig.edgesVisible,
+                boardVisualState = previewConfig.boardVisualState,
                 isEditing = previewConfig.isEditing,
             ),
             boardColors = rememberBoardColors(),
@@ -191,8 +184,10 @@ fun BoardPreview_PortraitWhite() {
             orientation = BoardOrientation.PORTRAIT_WHITE,
             gameState = initialGameState(BLACK),
             playerSide = BLACK,
-            edgesVisible = false,
-            verticesVisible = false,
+            boardVisualState = BoardVisualState(
+                edgesVisibles = false,
+                verticesVisibles = false,
+            ),
             boardColors = rememberBoardColors(),
         )
     )
@@ -208,6 +203,7 @@ fun BoardPreview_PortraitBlack() {
             orientation = BoardOrientation.PORTRAIT_WHITE,
             gameState = initialGameState(WHITE),
             playerSide = WHITE,
+            boardVisualState = BoardVisualState(),
             boardColors = rememberBoardColors(),
         )
     )
@@ -223,7 +219,7 @@ fun BoardPreview_LandscapeBlack() {
             orientation = BoardOrientation.LANDSCAPE_BLACK,
             gameState = midGameState(),
             playerSide = BLACK,
-            edgesVisible = false,
+            boardVisualState = BoardVisualState(edgesVisibles = false),
             boardColors = rememberBoardColors(),
         )
     )
@@ -254,7 +250,7 @@ fun BoardPreview_Custom() {
             orientation = BoardOrientation.LANDSCAPE_WHITE,
             gameState = exampleGameState,
             playerSide = WHITE,
-            verticesVisible = false,
+            boardVisualState = BoardVisualState(verticesVisibles = false),
             boardColors = rememberBoardColors()
         ),
         viewModel = vm,
@@ -277,9 +273,11 @@ fun BoardPreview_BlackPlayer() {
                 orientation = BoardOrientation.PORTRAIT_BLACK,
                 gameState = exampleGameState,
                 playerSide = BLACK,
-                labelsVisible = false,
-                edgesVisible = false,
-                verticesVisible = false,
+                boardVisualState = BoardVisualState(
+                    labelsVisibles = false,
+                    edgesVisibles = false,
+                    verticesVisibles = false,
+                ),
                 boardColors = rememberBoardColors()
             ),
             viewModel = vm,
@@ -302,9 +300,8 @@ fun BoardPreview_Landscape_BlackPlayer() {
             BoardPreviewConfig(
                 orientation = BoardOrientation.LANDSCAPE_BLACK,
                 gameState = exampleGameState,
-                labelsVisible = false,
+                boardVisualState = BoardVisualState(labelsVisibles = false, edgesVisibles = false),
                 playerSide = WHITE,
-                edgesVisible = false,
                 boardColors = rememberBoardColors()
             ),
             viewModel = vm,
@@ -328,6 +325,7 @@ fun BoardPreview_Landscape() {
                 orientation = BoardOrientation.LANDSCAPE_WHITE,
                 gameState = exampleGameState,
                 playerSide = BLACK,
+                boardVisualState = BoardVisualState(),
                 boardColors = rememberBoardColors()
             ),
             viewModel = vm,
@@ -352,7 +350,7 @@ fun BoardPreview_Landscape_Editing() {
                 gameState = exampleGameState,
                 isEditing = true,
                 playerSide = BLACK,
-                edgesVisible = false,
+                boardVisualState = BoardVisualState(edgesVisibles = false),
                 boardColors = rememberBoardColors()
             ),
             viewModel = vm,

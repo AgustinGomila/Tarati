@@ -69,12 +69,12 @@ class SettingsViewModelTest {
         assertEquals("Initial theme should be AUTO", AppTheme.MODE_AUTO, state.appTheme)
         assertEquals("Initial difficulty should be DEFAULT", Difficulty.DEFAULT, state.difficulty)
         assertEquals("Initial language should be SPANISH", AppLanguage.SPANISH, state.language)
-        assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
-        assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
-        assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
-        assertTrue("Initial regions should be visible", state.boardState.regionsVisibles)
-        assertTrue("Initial perimeter should be visible", state.boardState.perimeterVisible)
-        assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
+        assertFalse("Initial labels should be hidden", state.boardVisualState.labelsVisibles)
+        assertTrue("Initial vertices should be visible", state.boardVisualState.verticesVisibles)
+        assertFalse("Initial edges should be hidden", state.boardVisualState.edgesVisibles)
+        assertTrue("Initial regions should be visible", state.boardVisualState.regionsVisibles)
+        assertTrue("Initial perimeter should be visible", state.boardVisualState.perimeterVisible)
+        assertTrue("Initial animate effects should be enabled", state.boardVisualState.animateEffects)
     }
 
     @Test
@@ -220,13 +220,13 @@ class SettingsViewModelTest {
     fun initialState_includesAllBoardStateProperties() = runTest {
         val state = viewModel.settingsState.value
 
-        // Verificar todas las propiedades del BoardState
-        assertFalse("Initial labels should be hidden", state.boardState.labelsVisibles)
-        assertTrue("Initial vertices should be visible", state.boardState.verticesVisibles)
-        assertFalse("Initial edges should be hidden", state.boardState.edgesVisibles)
-        assertTrue("Initial regions should be visible", state.boardState.regionsVisibles)
-        assertTrue("Initial perimeter should be visible", state.boardState.perimeterVisible)
-        assertTrue("Initial animate effects should be enabled", state.boardState.animateEffects)
+        // Verificar todas las propiedades del BoardVisualState
+        assertFalse("Initial labels should be hidden", state.boardVisualState.labelsVisibles)
+        assertTrue("Initial vertices should be visible", state.boardVisualState.verticesVisibles)
+        assertFalse("Initial edges should be hidden", state.boardVisualState.edgesVisibles)
+        assertTrue("Initial regions should be visible", state.boardVisualState.regionsVisibles)
+        assertTrue("Initial perimeter should be visible", state.boardVisualState.perimeterVisible)
+        assertTrue("Initial animate effects should be enabled", state.boardVisualState.animateEffects)
     }
 
     @Test

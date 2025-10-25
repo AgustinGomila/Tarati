@@ -99,6 +99,7 @@ import com.agustin.tarati.ui.helpers.PreviewConfig
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.navigation.ScreenDestinations.SettingsScreenDest
+import com.agustin.tarati.ui.screens.settings.BoardVisualState
 import com.agustin.tarati.ui.screens.settings.SettingsViewModel
 import com.agustin.tarati.ui.theme.BoardColors
 import com.agustin.tarati.ui.theme.TaratiTheme
@@ -112,7 +113,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     navController: NavController,
     viewModel: MainViewModel = viewModel(),
-    settingsViewModel: SettingsViewModel = viewModel()
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     // Estados y ViewModels
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -151,12 +152,7 @@ fun MainScreen(
     // Configuración
     val settingsState by settingsViewModel.settingsState.collectAsState()
     val evalConfig = EvaluationConfig.getByDifficulty(settingsState.difficulty)
-    val labelsVisibles = settingsState.boardState.labelsVisibles
-    val edgesVisibles = settingsState.boardState.edgesVisibles
-    val verticesVisibles = settingsState.boardState.verticesVisibles
-    val regionsVisibles = settingsState.boardState.regionsVisibles
-    val perimeterVisible = settingsState.boardState.perimeterVisible
-    val animateEffects = settingsState.boardState.animateEffects
+    val boardVisualState = settingsState.boardVisualState
 
     // Estados locales
     var lastMove by remember { mutableStateOf<Move?>(null) }
@@ -220,7 +216,7 @@ fun MainScreen(
         evalConfig = evalConfig,
         aiEnabled = aiEnabled,
         isEditing = isEditing,
-        animateEffects = animateEffects,
+        animateEffects = boardVisualState.animateEffects,
 
         isTutorialActive = isTutorialActive.value,
         tutorialState = tutorialState,
@@ -303,11 +299,6 @@ fun MainScreen(
             lastMove = lastMove,
             isTutorialActive = isTutorialActive.value,
             isAIThinking = isAIThinking,
-            labelsVisibles = labelsVisibles,
-            edgesVisibles = edgesVisibles,
-            verticesVisibles = verticesVisibles,
-            regionsVisibles = regionsVisibles,
-            perimeterVisible = perimeterVisible,
             pieceCounts = pieceCounts,
             onEditPiece = viewModel::editPiece,
             onPieceMove = { from, to ->
@@ -325,6 +316,7 @@ fun MainScreen(
             },
             events = events,
             viewModel = viewModel,
+            boardVisualState = boardVisualState,
             animationViewModel = animationViewModel,
             tutorialViewModel = tutorialViewModel
         )
@@ -531,11 +523,7 @@ data class CreateBoardState(
     val isAIThinking: Boolean,
     val boardOrientation: BoardOrientation,
     val editBoardOrientation: BoardOrientation,
-    val labelsVisible: Boolean,
-    val verticesVisible: Boolean,
-    val edgesVisible: Boolean,
-    val regionsVisible: Boolean,
-    val perimeterVisible: Boolean,
+    val boardVisualState: BoardVisualState
 )
 
 @Composable
@@ -544,6 +532,7 @@ fun CreateBoard(
     state: CreateBoardState,
     events: BoardEvents,
     boardAnimationViewModel: BoardAnimationViewModel = viewModel(),
+    boardVisualState: BoardVisualState,
     boardColors: BoardColors,
     tutorial: @Composable () -> Unit,
     content: @Composable () -> Unit,
@@ -559,11 +548,7 @@ fun CreateBoard(
             state.isEditing -> state.editBoardOrientation
             else -> state.boardOrientation
         },
-        labelsVisible = state.labelsVisible,
-        verticesVisible = state.verticesVisible,
-        edgesVisible = state.edgesVisible,
-        regionsVisible = state.regionsVisible,
-        perimeterVisible = state.perimeterVisible,
+        boardVisualState = boardVisualState,
         isEditing = state.isEditing
     )
 
@@ -1013,9 +998,11 @@ fun EditingModePreviewContent(
             lastMove = null,
             aiEnabled = aiEnabled,
             boardOrientation = boardOrientation,
-            labelsVisible = false,
-            verticesVisible = true,
-            edgesVisible = true,
+            boardVisualState = BoardVisualState(
+                labelsVisibles = false,
+                verticesVisibles = true,
+                edgesVisibles = true,
+            ),
             isEditing = isEditing,
         )
 
@@ -1079,11 +1066,7 @@ private fun MainScreenPreviewContent(
         var playerSide by remember { mutableStateOf(config.playerSide) }
         var isEditing by remember { mutableStateOf(config.isEditing) }
         var isTutorial by remember { mutableStateOf(config.isTutorialActive) }
-        var labelsVisible by remember { mutableStateOf(config.labelsVisible) }
-        var verticesVisible by remember { mutableStateOf(config.verticesVisible) }
-        var edgesVisible by remember { mutableStateOf(config.edgesVisible) }
-        var regionsVisible by remember { mutableStateOf(config.regionsVisible) }
-        var perimeterVisible by remember { mutableStateOf(config.perimeterVisible) }
+        var boardVisualState by remember { mutableStateOf(config.boardVisualState) }
 
         // Estado UI para el Sidebar
         var sidebarUIState by remember { mutableStateOf(SidebarUIState()) }
@@ -1118,11 +1101,7 @@ private fun MainScreenPreviewContent(
             isAIThinking = false,
             boardOrientation = toBoardOrientation(config.landScape, playerSide),
             editBoardOrientation = toBoardOrientation(config.landScape, playerSide),
-            labelsVisible = labelsVisible,
-            verticesVisible = verticesVisible,
-            edgesVisible = edgesVisible,
-            regionsVisible = regionsVisible,
-            perimeterVisible = perimeterVisible,
+            boardVisualState = boardVisualState
         )
 
         val createBoardEvents = createPreviewBoardEvents(config.debug)
@@ -1176,6 +1155,7 @@ private fun MainScreenPreviewContent(
                             state = createBoardState,
                             events = createBoardEvents,
                             boardColors = boardColors,
+                            boardVisualState = boardVisualState,
                             tutorial = { },
                             content = {
                                 EditControlsPreview(

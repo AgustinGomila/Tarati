@@ -20,7 +20,7 @@ fun DrawScope.drawEdges(
     boardState: BoardState,
     colors: BoardColors
 ) {
-    val edgesVisible = boardState.edgesVisible
+    val edgesVisible = boardState.boardVisualState.edgesVisibles
 
     if (edgesVisible) {
         edges.forEach { (from, to) ->

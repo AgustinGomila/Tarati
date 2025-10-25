@@ -5,7 +5,7 @@ import com.agustin.tarati.ui.localization.AppLanguage
 import com.agustin.tarati.ui.theme.AppTheme
 import com.agustin.tarati.ui.theme.availablePalettes
 
-data class BoardState(
+data class BoardVisualState(
     val labelsVisibles: Boolean = false,
     val verticesVisibles: Boolean = true,
     val edgesVisibles: Boolean = false,
@@ -18,6 +18,6 @@ data class SettingsState(
     val appTheme: AppTheme = AppTheme.MODE_AUTO,
     val difficulty: Difficulty = Difficulty.DEFAULT,
     val language: AppLanguage = AppLanguage.SPANISH,
-    val boardState: BoardState = BoardState(),
+    val boardVisualState: BoardVisualState = BoardVisualState(),
     val palette: String = availablePalettes.first().name
 )

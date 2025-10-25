@@ -31,9 +31,7 @@ fun NavGraph(
         }
 
         composable(SettingsScreenDest.route) {
-            SettingsScreen(
-                events = settingsEvents, navController = navController
-            )
+            SettingsScreen(events = settingsEvents, navController = navController)
         }
     }
 }

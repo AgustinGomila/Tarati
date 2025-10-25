@@ -36,6 +36,7 @@ import com.agustin.tarati.ui.components.turnIndicator.TurnIndicator
 import com.agustin.tarati.ui.components.turnIndicator.TurnIndicatorState
 import com.agustin.tarati.ui.components.tutorial.TutorialViewModel
 import com.agustin.tarati.ui.localization.LocalizedText
+import com.agustin.tarati.ui.screens.settings.BoardVisualState
 import com.agustin.tarati.ui.theme.getBoardColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -157,11 +158,7 @@ fun MainContent(
     lastMove: Move?,
     isTutorialActive: Boolean,
     isAIThinking: Boolean,
-    labelsVisibles: Boolean,
-    edgesVisibles: Boolean,
-    verticesVisibles: Boolean,
-    regionsVisibles: Boolean,
-    perimeterVisible: Boolean,
+    boardVisualState: BoardVisualState,
     pieceCounts: PieceCounts,
     onEditPiece: (String) -> Unit,
     onPieceMove: (String, String) -> Unit,
@@ -225,11 +222,7 @@ fun MainContent(
                         isAIThinking = isAIThinking,
                         boardOrientation = boardOrientation,
                         editBoardOrientation = editBoardOrientation,
-                        labelsVisible = labelsVisibles,
-                        edgesVisible = edgesVisibles,
-                        verticesVisible = verticesVisibles,
-                        regionsVisible = regionsVisibles,
-                        perimeterVisible = perimeterVisible,
+                        boardVisualState = boardVisualState,
                     ),
                     events = object : BoardEvents {
                         override fun onMove(from: String, to: String) = onPieceMove(from, to)
@@ -237,6 +230,7 @@ fun MainContent(
                         override fun onResetCompleted() = Unit
                     },
                     boardAnimationViewModel = animationViewModel,
+                    boardVisualState = boardVisualState,
                     boardColors = getBoardColors(),
                     tutorial = {
                         if (isTutorialActive) {

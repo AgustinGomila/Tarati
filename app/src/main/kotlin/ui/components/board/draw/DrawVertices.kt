@@ -24,8 +24,8 @@ fun DrawScope.drawVertices(
 ) {
     val gameState = boardState.gameState
     val orientation = boardState.boardOrientation
-    val labelsVisible = boardState.labelsVisible
-    val verticesVisible = boardState.verticesVisible
+    val labelsVisible = boardState.boardVisualState.labelsVisibles
+    val verticesVisible = boardState.boardVisualState.verticesVisibles
 
     if (verticesVisible) {
         vertices.forEach { vertexId ->

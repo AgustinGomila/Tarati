@@ -9,6 +9,7 @@ import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.logic.modifyCob
 import com.agustin.tarati.game.logic.withTurn
+import com.agustin.tarati.ui.screens.settings.BoardVisualState
 
 /**
  * Estados de juego predefinidos para previews
@@ -51,10 +52,6 @@ data class PreviewConfig(
     val landScape: Boolean = false,
     val isEditing: Boolean = false,
     val isTutorialActive: Boolean = false,
-    val labelsVisible: Boolean = true,
-    val verticesVisible: Boolean = true,
-    val edgesVisible: Boolean = true,
-    val regionsVisible: Boolean = true,
-    val perimeterVisible: Boolean = true,
+    val boardVisualState: BoardVisualState = BoardVisualState(),
     val debug: Boolean = false
 )

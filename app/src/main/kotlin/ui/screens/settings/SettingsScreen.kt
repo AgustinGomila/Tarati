@@ -130,7 +130,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Visibility,
                     title = R.string.board_labels,
-                    checked = settingsState.boardState.labelsVisibles,
+                    checked = settingsState.boardVisualState.labelsVisibles,
                     onCheckedChange = { visible ->
                         viewModel.setLabelsVisibility(visible)
                         events.onLabelsVisibilityChange(visible)
@@ -139,7 +139,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Visibility,
                     title = R.string.board_vertices,
-                    checked = settingsState.boardState.verticesVisibles,
+                    checked = settingsState.boardVisualState.verticesVisibles,
                     onCheckedChange = { visible ->
                         viewModel.setVerticesVisibility(visible)
                         events.onVerticesVisibilityChange(visible)
@@ -148,7 +148,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Visibility,
                     title = R.string.board_edges,
-                    checked = settingsState.boardState.edgesVisibles,
+                    checked = settingsState.boardVisualState.edgesVisibles,
                     onCheckedChange = { visible ->
                         viewModel.setEdgesVisibility(visible)
                         events.onEdgesVisibilityChange(visible)
@@ -157,7 +157,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Visibility,
                     title = R.string.board_regions,
-                    checked = settingsState.boardState.regionsVisibles,
+                    checked = settingsState.boardVisualState.regionsVisibles,
                     onCheckedChange = { visible ->
                         viewModel.setRegionsVisibility(visible)
                         events.onRegionsVisibilityChange(visible)
@@ -166,7 +166,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Visibility,
                     title = R.string.board_perimeter,
-                    checked = settingsState.boardState.perimeterVisible,
+                    checked = settingsState.boardVisualState.perimeterVisible,
                     onCheckedChange = { visible ->
                         viewModel.setPerimeterVisibility(visible)
                         events.onPerimeterVisibilityChange(visible)
@@ -177,7 +177,7 @@ fun SettingsScreen(
                 ToggleSetting(
                     icon = Icons.Default.Animation,
                     title = R.string.animate_effects,
-                    checked = settingsState.boardState.animateEffects,
+                    checked = settingsState.boardVisualState.animateEffects,
                     onCheckedChange = { animate ->
                         viewModel.setAnimateEffects(animate)
                         events.onAnimateEffectsChange(animate)
