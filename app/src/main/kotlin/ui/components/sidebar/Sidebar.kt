@@ -63,9 +63,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.Difficulty
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.getColorStringResource
@@ -75,7 +75,7 @@ import com.agustin.tarati.ui.localization.localizedString
 
 data class SidebarGameState(
     val gameState: GameState,
-    val playerSide: Color,
+    val playerSide: CobColor,
     val moveIndex: Int,
     val moveHistory: List<Move>,
     val difficulty: Difficulty,
@@ -93,7 +93,7 @@ interface SidebarEvents {
     fun onDifficultyChange(difficulty: Difficulty)
     fun onToggleAI()
     fun onSettings()
-    fun onNewGame(color: Color)
+    fun onNewGame(color: CobColor)
     fun onEditBoard()
     fun onAboutClick()
 }
@@ -197,7 +197,7 @@ private fun SidebarHeader(onSettings: () -> Unit) {
 }
 
 @Composable
-private fun GameStatusCard(gameState: GameState, playerSide: Color) {
+private fun GameStatusCard(gameState: GameState, playerSide: CobColor) {
     val winner = gameState.getWinner()
     val relevantSide = winner ?: gameState.currentTurn
 
@@ -249,8 +249,8 @@ private fun GameStatusCard(gameState: GameState, playerSide: Color) {
 
 @Composable
 private fun GameControlsSection(
-    playerSide: Color,
-    onNewGame: (color: Color) -> Unit,
+    playerSide: CobColor,
+    onNewGame: (color: CobColor) -> Unit,
     onEditBoard: () -> Unit,
 ) {
     Column(
@@ -301,7 +301,7 @@ private fun GameControlsSection(
 
 @Composable
 private fun ColorChoiceButton(
-    color: Color,
+    color: CobColor,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -340,7 +340,7 @@ private fun ColorChoiceButton(
 
 @Composable
 private fun AIConfigurationCard(
-    playerSide: Color,
+    playerSide: CobColor,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     difficulty: Difficulty,
@@ -664,7 +664,7 @@ class PreviewSidebarEvents : SidebarEvents {
     override fun onDifficultyChange(difficulty: Difficulty) {}
     override fun onToggleAI() {}
     override fun onSettings() {}
-    override fun onNewGame(color: Color) {}
+    override fun onNewGame(color: CobColor) {}
     override fun onEditBoard() {}
     override fun onAboutClick() {}
 }

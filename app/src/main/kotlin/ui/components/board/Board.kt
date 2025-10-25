@@ -9,9 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.createGameState
@@ -59,7 +59,7 @@ interface TapEvents {
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    playerSide: Color,
+    playerSide: CobColor,
     boardState: BoardState,
     boardColors: BoardColors,
     events: BoardEvents,
@@ -125,7 +125,7 @@ fun tapEvents(selectViewModel: BoardSelectionViewModel, events: BoardEvents): Ta
 
 data class BoardPreviewConfig(
     val gameState: GameState,
-    val playerSide: Color = WHITE,
+    val playerSide: CobColor = WHITE,
     val orientation: BoardOrientation,
     val boardVisualState: BoardVisualState,
     val isEditing: Boolean = false,

@@ -1,6 +1,6 @@
 package com.agustin.tarati.game.logic
 
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 
 enum class BoardOrientation {
     PORTRAIT_WHITE,  // 0° - Blanco en la parte inferior
@@ -13,11 +13,11 @@ fun BoardOrientation.isPortrait(): Boolean {
     return this == BoardOrientation.PORTRAIT_WHITE || this == BoardOrientation.PORTRAIT_BLACK
 }
 
-fun toBoardOrientation(landScape: Boolean, playerSide: Color): BoardOrientation {
+fun toBoardOrientation(landScape: Boolean, playerSide: CobColor): BoardOrientation {
     return when {
-        landScape && playerSide == Color.BLACK -> BoardOrientation.LANDSCAPE_BLACK
-        landScape && playerSide == Color.WHITE -> BoardOrientation.LANDSCAPE_WHITE
-        !landScape && playerSide == Color.BLACK -> BoardOrientation.PORTRAIT_BLACK
+        landScape && playerSide == CobColor.BLACK -> BoardOrientation.LANDSCAPE_BLACK
+        landScape && playerSide == CobColor.WHITE -> BoardOrientation.LANDSCAPE_WHITE
+        !landScape && playerSide == CobColor.BLACK -> BoardOrientation.PORTRAIT_BLACK
         else -> BoardOrientation.PORTRAIT_WHITE
     }
 }

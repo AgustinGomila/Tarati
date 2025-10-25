@@ -2,7 +2,7 @@ package com.agustin.tarati.game.logic
 
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameBoard.normalizedPositions
 import com.agustin.tarati.game.core.GameState
 import org.junit.Assert.assertEquals
@@ -16,8 +16,8 @@ class BoardLogicTest {
     @Test
     fun applyMoveToBoard_movesCobToNewPosition() {
         val initialState = GameState(
-            cobs = mapOf("C1" to Cob(Color.WHITE, false)),
-            currentTurn = Color.WHITE
+            cobs = mapOf("C1" to Cob(CobColor.WHITE, false)),
+            currentTurn = CobColor.WHITE
         )
 
         val newState = applyMoveToBoard(initialState, "C1", "B1")
@@ -32,15 +32,15 @@ class BoardLogicTest {
         )
         assertEquals(
             "Cob should retain color",
-            Color.WHITE, newState.cobs["B1"]!!.color
+            CobColor.WHITE, newState.cobs["B1"]!!.color
         )
     }
 
     @Test
     fun applyMoveToBoard_upgradesWhiteInBlackHomeBase() {
         val initialState = GameState(
-            cobs = mapOf("C6" to Cob(Color.WHITE, false)),
-            currentTurn = Color.WHITE
+            cobs = mapOf("C6" to Cob(CobColor.WHITE, false)),
+            currentTurn = CobColor.WHITE
         )
 
         // C7 is in black home base
@@ -57,8 +57,8 @@ class BoardLogicTest {
     @Test
     fun applyMoveToBoard_upgradesBlackInWhiteHomeBase() {
         val initialState = GameState(
-            cobs = mapOf("C2" to Cob(Color.BLACK, false)),
-            currentTurn = Color.BLACK
+            cobs = mapOf("C2" to Cob(CobColor.BLACK, false)),
+            currentTurn = CobColor.BLACK
         )
 
         // C1 is in white home base
@@ -76,10 +76,10 @@ class BoardLogicTest {
     fun applyMoveToBoard_flipsAdjacentOpponentCobs() {
         val initialState = GameState(
             cobs = mapOf(
-                "C1" to Cob(Color.WHITE, false),
-                "C2" to Cob(Color.BLACK, false) // Adjacent to C1
+                "C1" to Cob(CobColor.WHITE, false),
+                "C2" to Cob(CobColor.BLACK, false) // Adjacent to C1
             ),
-            currentTurn = Color.WHITE
+            currentTurn = CobColor.WHITE
         )
 
         val newState = applyMoveToBoard(initialState, "C1", "B1")
@@ -88,7 +88,7 @@ class BoardLogicTest {
         assertNotNull("Cob should still exist at C2", flippedCob)
         assertEquals(
             "Adjacent black cob should flip to white",
-            Color.WHITE, flippedCob!!.color
+            CobColor.WHITE, flippedCob!!.color
         )
     }
 
@@ -96,10 +96,10 @@ class BoardLogicTest {
     fun applyMoveToBoard_doesNotFlipSameColorCobs() {
         val initialState = GameState(
             cobs = mapOf(
-                "C1" to Cob(Color.WHITE, false),
-                "C2" to Cob(Color.WHITE, false) // Same color, adjacent to C1
+                "C1" to Cob(CobColor.WHITE, false),
+                "C2" to Cob(CobColor.WHITE, false) // Same color, adjacent to C1
             ),
-            currentTurn = Color.WHITE
+            currentTurn = CobColor.WHITE
         )
 
         val newState = applyMoveToBoard(initialState, "C1", "B1")
@@ -108,15 +108,15 @@ class BoardLogicTest {
         assertNotNull("Cob should still exist at C2", sameColorCob)
         assertEquals(
             "Same color cob should not flip",
-            Color.WHITE, sameColorCob!!.color
+            CobColor.WHITE, sameColorCob!!.color
         )
     }
 
     @Test
     fun applyMoveToBoard_returnsOriginalStateWhenFromNotFound() {
         val initialState = GameState(
-            cobs = mapOf("C1" to Cob(Color.WHITE, false)),
-            currentTurn = Color.WHITE
+            cobs = mapOf("C1" to Cob(CobColor.WHITE, false)),
+            currentTurn = CobColor.WHITE
         )
 
         val newState = applyMoveToBoard(initialState, "C2", "B1") // C2 doesn't exist

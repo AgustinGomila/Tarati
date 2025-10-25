@@ -6,9 +6,9 @@ import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
 import com.agustin.tarati.game.logic.getWinner
@@ -384,7 +384,7 @@ class TournamentRunner {
     }
 
     private data class TestGameResult(
-        val winner: Color?,
+        val winner: CobColor?,
         val moves: Int,
         val timeout: Boolean
     )

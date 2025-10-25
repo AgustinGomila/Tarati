@@ -1,7 +1,7 @@
 package com.agustin.tarati.ui.screens.main
 
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.WHITE
 
 class EditEvents(private val viewModel: MainViewModel) {
     fun toggleEditColor() = viewModel.toggleEditColor()
@@ -13,9 +13,9 @@ class EditEvents(private val viewModel: MainViewModel) {
 }
 
 data class EditColorState(
-    val playerSide: Color = WHITE,
-    val editColor: Color = WHITE,
-    val editTurn: Color = WHITE
+    val playerSide: CobColor = WHITE,
+    val editColor: CobColor = WHITE,
+    val editTurn: CobColor = WHITE
 )
 
 data class EditActionState(

@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -337,7 +338,7 @@ private fun PaletteSetting(
 
 @Composable
 private fun ToggleSetting(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     @StringRes title: Int,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -356,7 +357,7 @@ private fun ToggleSetting(
 
 @Composable
 private fun SettingItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     @StringRes title: Int,
     @StringRes subtitle: Int,
     trailingContent: @Composable () -> Unit = {}

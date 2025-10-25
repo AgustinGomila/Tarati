@@ -5,8 +5,8 @@ import com.agustin.tarati.game.ai.TaratiAI.evalConfig
 import com.agustin.tarati.game.ai.TaratiAI.evaluateBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.isForwardMove
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState

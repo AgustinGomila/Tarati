@@ -2,8 +2,8 @@ package com.agustin.tarati.game.tutorial
 
 import com.agustin.tarati.R
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.absoluteCenterToBridgeEdges
 import com.agustin.tarati.game.core.GameBoard.bridgeEdges
 import com.agustin.tarati.game.core.GameBoard.bridgeVertices

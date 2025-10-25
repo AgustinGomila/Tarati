@@ -1,9 +1,9 @@
 package com.agustin.tarati.ui.helpers
 
 import androidx.compose.material3.DrawerValue
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
@@ -27,7 +27,7 @@ fun midGameState(): GameState {
     }
 }
 
-fun endGameState(turn: Color): GameState {
+fun endGameState(turn: CobColor): GameState {
     return createGameState {
         setTurn(turn)
         // Pocas piezas restantes
@@ -48,7 +48,7 @@ fun customGameState(): GameState {
 data class PreviewConfig(
     val darkTheme: Boolean = false,
     val drawerStateValue: DrawerValue = DrawerValue.Closed,
-    val playerSide: Color = WHITE,
+    val playerSide: CobColor = WHITE,
     val landScape: Boolean = false,
     val isEditing: Boolean = false,
     val isTutorialActive: Boolean = false,

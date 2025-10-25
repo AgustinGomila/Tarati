@@ -3,7 +3,7 @@ package com.agustin.tarati.ui.screens.main
 import androidx.lifecycle.ViewModel
 import com.agustin.tarati.BuildConfig
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.cleanGameState
@@ -27,9 +27,9 @@ class MainViewModel() : ViewModel() {
         _aIEnabled.value = newAIEnabled
     }
 
-    private val _playerSide = MutableStateFlow(Color.WHITE)
-    val playerSide: StateFlow<Color> = _playerSide.asStateFlow()
-    fun updatePlayerSide(newSide: Color) {
+    private val _playerSide = MutableStateFlow(CobColor.WHITE)
+    val playerSide: StateFlow<CobColor> = _playerSide.asStateFlow()
+    fun updatePlayerSide(newSide: CobColor) {
         _playerSide.value = newSide
     }
 
@@ -39,11 +39,11 @@ class MainViewModel() : ViewModel() {
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 
-    private val _editColor = MutableStateFlow(Color.WHITE)
-    val editColor: StateFlow<Color> = _editColor.asStateFlow()
+    private val _editColor = MutableStateFlow(CobColor.WHITE)
+    val editColor: StateFlow<CobColor> = _editColor.asStateFlow()
 
-    private val _editTurn = MutableStateFlow(Color.WHITE)
-    val editTurn: StateFlow<Color> = _editTurn.asStateFlow()
+    private val _editTurn = MutableStateFlow(CobColor.WHITE)
+    val editTurn: StateFlow<CobColor> = _editTurn.asStateFlow()
 
     private val _editBoardOrientation = MutableStateFlow(BoardOrientation.PORTRAIT_WHITE)
     val editBoardOrientation: StateFlow<BoardOrientation> = _editBoardOrientation.asStateFlow()
@@ -59,7 +59,7 @@ class MainViewModel() : ViewModel() {
             // Al entrar en edición, actualizar el turno de edición al turno actual del juego
             _editTurn.value = gameManager.gameState.value.currentTurn
             // Resetear color de edición a blanco
-            _editColor.value = Color.WHITE
+            _editColor.value = CobColor.WHITE
         }
     }
 
@@ -121,12 +121,12 @@ class MainViewModel() : ViewModel() {
         gameManager.updateGameState(currentState.copy(cobs = mutableCobs.toMap()))
     }
 
-    private fun canPlacePiece(color: Color, currentCounts: PieceCounts): Boolean {
+    private fun canPlacePiece(color: CobColor, currentCounts: PieceCounts): Boolean {
         val totalPieces = currentCounts.white + currentCounts.black
         if (totalPieces >= 8) return false
 
-        val newWhiteCount = if (color == Color.WHITE) currentCounts.white + 1 else currentCounts.white
-        val newBlackCount = if (color == Color.BLACK) currentCounts.black + 1 else currentCounts.black
+        val newWhiteCount = if (color == CobColor.WHITE) currentCounts.white + 1 else currentCounts.white
+        val newBlackCount = if (color == CobColor.BLACK) currentCounts.black + 1 else currentCounts.black
 
         return isValidDistribution(newWhiteCount, newBlackCount)
     }
@@ -170,7 +170,7 @@ class MainViewModel() : ViewModel() {
         gameManager.updateGameStatus(GameStatus.NO_PLAYING)
     }
 
-    fun startGame(playerSide: Color) {
+    fun startGame(playerSide: CobColor) {
         endEditing()
         updatePlayerSide(playerSide)
         setGame(initialGameState())

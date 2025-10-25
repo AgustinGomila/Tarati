@@ -2,7 +2,7 @@ package com.agustin.tarati.ui.components.board.behaviors
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.PointerInputScope
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameBoard.findClosestVertex
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
@@ -15,7 +15,7 @@ suspend fun PointerInputScope.tapGestures(
     visualWidth: Float,
     gameState: GameState,
     aiEnabled: Boolean,
-    playerSide: Color,
+    playerSide: CobColor,
     from: String?,
     orientation: BoardOrientation,
     editorMode: Boolean,
@@ -51,7 +51,7 @@ suspend fun PointerInputScope.tapGestures(
 
 fun handleTap(
     gameState: GameState,
-    playerSide: Color,
+    playerSide: CobColor,
     aiEnabled: Boolean,
     from: String?,
     to: String,
@@ -157,7 +157,7 @@ fun movePiece(
 
 fun selectPiece(
     gameState: GameState,
-    playerSide: Color,
+    playerSide: CobColor,
     aiEnabled: Boolean,
     from: String,
     onSelected: (from: String, valid: List<String>) -> Unit,

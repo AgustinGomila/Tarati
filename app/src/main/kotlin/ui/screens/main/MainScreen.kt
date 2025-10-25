@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -67,9 +68,9 @@ import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.AIThinkingViewModel
 import com.agustin.tarati.game.ai.Difficulty
 import com.agustin.tarati.game.ai.EvaluationConfig
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.Move
@@ -253,7 +254,7 @@ fun MainScreen(
             events.stopGame()
         },
         showNewGameDialog = showNewGameDialog,
-        attemptNewGameColor = attemptNewGameColor,
+        attemptNewGameCobColor = attemptNewGameColor,
         onNewGameConfirmed = {
             showNewGameDialog = false
             events.startNewGame(it)
@@ -346,7 +347,7 @@ fun checkAndApplyMove(
 fun SidebarContent(
     navController: NavController,
     gameState: GameState,
-    playerSide: Color,
+    playerSide: CobColor,
     moveIndex: Int,
     history: List<Pair<Move, GameState>>,
     evalConfig: EvaluationConfig,
@@ -364,7 +365,7 @@ fun SidebarContent(
         override fun onDifficultyChange(difficulty: Difficulty) = settingsViewModel.setDifficulty(difficulty)
         override fun onToggleAI() = viewModel.updateAIEnabled(!aiEnabled)
         override fun onSettings() = navController.navigate(SettingsScreenDest.route)
-        override fun onNewGame(color: Color) = events.showNewGameDialog(color)
+        override fun onNewGame(color: CobColor) = events.showNewGameDialog(color)
         override fun onEditBoard() = viewModel.toggleEditing()
         override fun onAboutClick() = events.showAboutDialog()
     }
@@ -518,7 +519,7 @@ private fun DrawerState.turnState(scope: CoroutineScope) {
 data class CreateBoardState(
     val gameState: GameState,
     val lastMove: Move?,
-    val playerSide: Color,
+    val playerSide: CobColor,
     val aiEnabled: Boolean,
     val isEditing: Boolean,
     val isTutorialActive: Boolean,
@@ -712,7 +713,7 @@ fun RotateBoardButton(onClick: () -> Unit) {
 }
 
 @Composable
-fun backgroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
+fun backgroundColor(currentColor: CobColor): Color {
     return when (currentColor) {
         WHITE -> MaterialTheme.colorScheme.surface
         BLACK -> MaterialTheme.colorScheme.onSurface
@@ -720,7 +721,7 @@ fun backgroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
 }
 
 @Composable
-fun foregroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
+fun foregroundColor(currentColor: CobColor): Color {
     return when (currentColor) {
         WHITE -> MaterialTheme.colorScheme.onSurface
         BLACK -> MaterialTheme.colorScheme.surface
@@ -728,7 +729,7 @@ fun foregroundColor(currentColor: Color): androidx.compose.ui.graphics.Color {
 }
 
 @Composable
-fun TurnToggleButton(currentTurn: Color, onTurnToggle: () -> Unit) {
+fun TurnToggleButton(currentTurn: CobColor, onTurnToggle: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(8.dp)
@@ -767,7 +768,7 @@ fun TurnToggleButton(currentTurn: Color, onTurnToggle: () -> Unit) {
 }
 
 @Composable
-fun PlayerSideToggleButton(playerSide: Color, onPlayerSideToggle: () -> Unit) {
+fun PlayerSideToggleButton(playerSide: CobColor, onPlayerSideToggle: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(8.dp)
@@ -874,7 +875,7 @@ fun RotateButton(onRotate: () -> Unit) {
 }
 
 @Composable
-fun ColorToggleButton(currentColor: Color, onColorToggle: () -> Unit) {
+fun ColorToggleButton(currentColor: CobColor, onColorToggle: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(8.dp)
@@ -1434,7 +1435,7 @@ fun BottomControlsPreview() {
 private fun createPreviewSidebarEvents(
     currentIsEditing: Boolean,
     onGameStateUpdate: (GameState) -> Unit,
-    onPlayerSideUpdate: (Color) -> Unit,
+    onPlayerSideUpdate: (CobColor) -> Unit,
     onEditingUpdate: (Boolean) -> Unit,
     debug: Boolean
 ): SidebarEvents = object : SidebarEvents {
@@ -1453,7 +1454,7 @@ private fun createPreviewSidebarEvents(
         if (debug) println("Settings clicked")
     }
 
-    override fun onNewGame(color: Color) {
+    override fun onNewGame(color: CobColor) {
         onPlayerSideUpdate(color)
         onGameStateUpdate(initialGameState())
         if (debug) println("New game with side: $color")

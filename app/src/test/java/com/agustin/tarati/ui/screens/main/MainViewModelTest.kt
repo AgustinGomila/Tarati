@@ -1,7 +1,7 @@
 package com.agustin.tarati.ui.screens.main
 
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.cleanGameState
@@ -32,22 +32,22 @@ class MainViewModelTest {
     fun initialGameState_hasCorrectSetup() {
         val gameState = initialGameState()
 
-        assertEquals("Initial turn should be WHITE", Color.WHITE, gameState.currentTurn)
+        assertEquals("Initial turn should be WHITE", CobColor.WHITE, gameState.currentTurn)
         assertEquals("Should have 8 cobs total", 8, gameState.cobs.size)
         assertEquals(
             "Should have 4 white cobs",
             4,
-            gameState.cobs.values.count { it.color == Color.WHITE })
+            gameState.cobs.values.count { it.color == CobColor.WHITE })
         assertEquals(
             "Should have 4 black cobs",
             4,
-            gameState.cobs.values.count { it.color == Color.BLACK })
+            gameState.cobs.values.count { it.color == CobColor.BLACK })
 
         // Verify specific positions
-        assertTrue("C1 should have white cob", gameState.cobs["C1"]?.color == Color.WHITE)
-        assertTrue("C7 should have black cob", gameState.cobs["C7"]?.color == Color.BLACK)
-        assertTrue("D1 should have white cob", gameState.cobs["D1"]?.color == Color.WHITE)
-        assertTrue("D3 should have black cob", gameState.cobs["D3"]?.color == Color.BLACK)
+        assertTrue("C1 should have white cob", gameState.cobs["C1"]?.color == CobColor.WHITE)
+        assertTrue("C7 should have black cob", gameState.cobs["C7"]?.color == CobColor.BLACK)
+        assertTrue("D1 should have white cob", gameState.cobs["D1"]?.color == CobColor.WHITE)
+        assertTrue("D3 should have black cob", gameState.cobs["D3"]?.color == CobColor.BLACK)
     }
 
     @Test
@@ -55,22 +55,22 @@ class MainViewModelTest {
         val gameState = cleanGameState()
 
         assertTrue("Clean state should have no cobs", gameState.cobs.isEmpty())
-        assertEquals("Turn should be WHITE by default", Color.WHITE, gameState.currentTurn)
+        assertEquals("Turn should be WHITE by default", CobColor.WHITE, gameState.currentTurn)
     }
 
     @Test
     fun cleanGameState_withCustomTurn() {
-        val gameState = cleanGameState(Color.BLACK)
+        val gameState = cleanGameState(CobColor.BLACK)
 
         assertTrue("Clean state should have no cobs", gameState.cobs.isEmpty())
-        assertEquals("Turn should be BLACK", Color.BLACK, gameState.currentTurn)
+        assertEquals("Turn should be BLACK", CobColor.BLACK, gameState.currentTurn)
     }
 
     @Test
     fun updateGameState_changesState() {
         val newState = GameState(
-            cobs = mapOf("A1" to Cob(Color.WHITE, true)),
-            currentTurn = Color.BLACK
+            cobs = mapOf("A1" to Cob(CobColor.WHITE, true)),
+            currentTurn = CobColor.BLACK
         )
 
         viewModel.gameManager.updateGameState(newState)
@@ -98,9 +98,9 @@ class MainViewModelTest {
 
     @Test
     fun updatePlayerSide_changesPlayerSide() {
-        viewModel.updatePlayerSide(Color.BLACK)
+        viewModel.updatePlayerSide(CobColor.BLACK)
 
-        assertEquals("Player side should be BLACK", Color.BLACK, viewModel.playerSide.value)
+        assertEquals("Player side should be BLACK", CobColor.BLACK, viewModel.playerSide.value)
     }
 
     @Test
@@ -115,7 +115,7 @@ class MainViewModelTest {
         assertTrue("Initial AI should be enabled", viewModel.aIEnabled.value)
         assertEquals(
             "Initial player side should be WHITE",
-            Color.WHITE, viewModel.playerSide.value
+            CobColor.WHITE, viewModel.playerSide.value
         )
     }
 }

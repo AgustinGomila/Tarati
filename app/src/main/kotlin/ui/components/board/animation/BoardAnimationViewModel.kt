@@ -4,7 +4,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameBoard.BoardRegion
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
@@ -30,12 +30,12 @@ data class AnimatedCob(
     val upgradeProgress: Float = 1f,
     val conversionProgress: Float = 1f,
     val isConverting: Boolean = false,
-    val targetColor: Color? = null
+    val targetColor: CobColor? = null
 )
 
 data class VisualGameState(
     val cobs: Map<String, Cob> = emptyMap(),
-    val currentTurn: Color? = null
+    val currentTurn: CobColor? = null
 )
 
 private data class AnimationGroup(

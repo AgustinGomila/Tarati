@@ -3,7 +3,7 @@ package com.agustin.tarati.ui.screens.main
 import androidx.compose.material3.DrawerState
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
 import com.agustin.tarati.game.core.initialGameState
@@ -22,7 +22,7 @@ class MainScreenEvents(
     private val highlightService: HighlightService,
     private val viewModel: MainViewModel,
     private val tutorialViewModel: TutorialViewModel,
-    private val onShowNewGameDialog: (color: Color) -> Unit,
+    private val onShowNewGameDialog: (color: CobColor) -> Unit,
     private val onShowAboutDialog: () -> Unit,
 ) {
 
@@ -51,7 +51,7 @@ class MainScreenEvents(
         viewModel.stopGame()
     }
 
-    fun startNewGame(playerSide: Color) {
+    fun startNewGame(playerSide: CobColor) {
         clearBoard()
         tutorialViewModel.closeTutorial()
 
@@ -85,7 +85,7 @@ class MainScreenEvents(
         clearBoard()
     }
 
-    fun showNewGameDialog(color: Color) {
+    fun showNewGameDialog(color: CobColor) {
         onShowNewGameDialog(color)
     }
 

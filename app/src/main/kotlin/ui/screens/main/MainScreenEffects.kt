@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
 import com.agustin.tarati.game.ai.EvaluationConfig
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.GameStatus
 import com.agustin.tarati.game.core.Move
@@ -48,7 +48,7 @@ fun MainScreenEffects(
     isLandscape: Boolean,
 
     gameState: GameState,
-    playerSide: Color,
+    playerSide: CobColor,
     gameStatus: GameStatus,
     onGameOver: () -> Unit,
 

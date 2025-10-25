@@ -35,7 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameResult
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.MatchState
@@ -54,9 +54,9 @@ fun MainScreenDialogs(
     onGameOverDismissed: () -> Unit,
 
     showNewGameDialog: Boolean,
-    onNewGameConfirmed: (color: Color) -> Unit,
+    onNewGameConfirmed: (color: CobColor) -> Unit,
     onNewGameDismissed: () -> Unit,
-    attemptNewGameColor: Color,
+    attemptNewGameCobColor: CobColor,
 
     showAboutDialog: Boolean,
     onShowTutorial: () -> Unit,
@@ -82,7 +82,7 @@ fun MainScreenDialogs(
 
     if (showNewGameDialog && !isAnimating) {
         NewGameDialog(
-            onConfirmed = { onNewGameConfirmed(attemptNewGameColor) },
+            onConfirmed = { onNewGameConfirmed(attemptNewGameCobColor) },
             onDismissed = onNewGameDismissed,
         )
     }
@@ -325,7 +325,7 @@ fun NewGameDialog(onConfirmed: () -> Unit, onDismissed: () -> Unit = { }) {
 }
 
 @Composable
-fun buildGameOverMessage(matchState: MatchState, winner: Color): String {
+fun buildGameOverMessage(matchState: MatchState, winner: CobColor): String {
     val context = LocalContext.current
     return when (matchState.gameResult) {
         GameResult.TRIPLE -> {

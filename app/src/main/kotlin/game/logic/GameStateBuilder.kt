@@ -1,7 +1,7 @@
 package com.agustin.tarati.game.logic
 
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.cleanGameState
 
@@ -14,12 +14,12 @@ class GameStateBuilder(initialState: GameState = cleanGameState()) {
         return this
     }
 
-    fun setTurn(turn: Color): GameStateBuilder {
+    fun setTurn(turn: CobColor): GameStateBuilder {
         state = state.copy(currentTurn = turn)
         return this
     }
 
-    fun setCob(position: String, color: Color, isUpgraded: Boolean = false): GameStateBuilder {
+    fun setCob(position: String, color: CobColor, isUpgraded: Boolean = false): GameStateBuilder {
         state = state.modifyCob(position, color, isUpgraded)
         return this
     }

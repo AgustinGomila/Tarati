@@ -1,7 +1,7 @@
 package com.agustin.tarati.game.core
 
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.edges
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition

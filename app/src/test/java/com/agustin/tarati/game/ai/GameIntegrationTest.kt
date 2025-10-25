@@ -3,7 +3,7 @@ package com.agustin.tarati.game.ai
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameBoard.isValidMove
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.isGameOver
@@ -19,8 +19,8 @@ class GameIntegrationTest {
         // Start with initial state
         var state = GameState(
             mapOf(
-                "C1" to Cob(Color.WHITE, false), "C7" to Cob(Color.BLACK, false)
-            ), currentTurn = Color.WHITE
+                "C1" to Cob(CobColor.WHITE, false), "C7" to Cob(CobColor.BLACK, false)
+            ), currentTurn = CobColor.WHITE
         )
 
         // White makes a move
@@ -29,7 +29,7 @@ class GameIntegrationTest {
 
         // Apply white move
         state = applyMoveToBoard(state, whiteMove.move!!.from, whiteMove.move.to)
-        state = state.copy(currentTurn = Color.BLACK)
+        state = state.copy(currentTurn = CobColor.BLACK)
 
         // Black makes a move
         val blackMove = getNextBestMove(state, Difficulty.MIN)
@@ -37,7 +37,7 @@ class GameIntegrationTest {
 
         // Apply black move
         state = applyMoveToBoard(state, blackMove.move!!.from, blackMove.move.to)
-        state = state.copy(currentTurn = Color.WHITE)
+        state = state.copy(currentTurn = CobColor.WHITE)
 
         // Game should not be over yet
         assertFalse(
@@ -49,11 +49,11 @@ class GameIntegrationTest {
     fun aiDepthPerformance() {
         val state = GameState(
             mapOf(
-                "C1" to Cob(Color.WHITE, false),
-                "C2" to Cob(Color.WHITE, false),
-                "C7" to Cob(Color.BLACK, false),
-                "C8" to Cob(Color.BLACK, false)
-            ), currentTurn = Color.WHITE
+                "C1" to Cob(CobColor.WHITE, false),
+                "C2" to Cob(CobColor.WHITE, false),
+                "C7" to Cob(CobColor.BLACK, false),
+                "C8" to Cob(CobColor.BLACK, false)
+            ), currentTurn = CobColor.WHITE
         )
 
         // Test different depths

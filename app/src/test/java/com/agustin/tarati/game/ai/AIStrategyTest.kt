@@ -8,8 +8,8 @@ import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.quickEvaluate
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.ai.TaratiAI.setEvaluationConfig
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.centerVertices

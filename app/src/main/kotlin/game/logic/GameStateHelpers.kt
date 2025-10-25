@@ -2,9 +2,9 @@ package com.agustin.tarati.game.logic
 
 import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.BoardRegion
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
 import com.agustin.tarati.game.core.GameBoard.isValidMove
@@ -23,7 +23,7 @@ fun GameState.modifyCob(position: String, cob: Cob?): GameState {
     return this.modifyCob(position, cob?.color, cob?.isUpgraded)
 }
 
-fun GameState.modifyCob(position: String, color: Color? = null, isUpgraded: Boolean? = null): GameState {
+fun GameState.modifyCob(position: String, color: CobColor? = null, isUpgraded: Boolean? = null): GameState {
     val newCobs = cobs.toMutableMap()
 
     if (color == null && isUpgraded == null) {
@@ -52,7 +52,7 @@ fun GameState.moveCob(from: String, to: String): GameState {
 }
 
 // Función para cambiar el turno
-fun GameState.withTurn(newTurn: Color): GameState {
+fun GameState.withTurn(newTurn: CobColor): GameState {
     return this.copy(currentTurn = newTurn)
 }
 
@@ -80,7 +80,7 @@ fun GameState.isGameOver(): Boolean {
             this.hasTripleRepetition()
 }
 
-fun GameState.getWinner(): Color? {
+fun GameState.getWinner(): CobColor? {
     return getMatchState().winner
 }
 
@@ -205,11 +205,11 @@ fun GameState.isEmptyBoard(): Boolean {
     return this.cobs.isEmpty()
 }
 
-fun GameState.isInitialState(playerSide: Color): Boolean {
+fun GameState.isInitialState(playerSide: CobColor): Boolean {
     return this == initialGameState(playerSide)
 }
 
-fun GameState.findClosedRegion(to: String, color: Color): BoardRegion? {
+fun GameState.findClosedRegion(to: String, color: CobColor): BoardRegion? {
     return vertexToRegions[to]?.firstOrNull { region ->
         region.vertices.all { vertex -> cobs[vertex]?.color == color }
     }

@@ -1,9 +1,9 @@
 package com.agustin.tarati.game.ai
 
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
@@ -65,7 +65,7 @@ object TaratiAI {
         realGameHistory.clear()
     }
 
-    fun recordRealMove(gameState: GameState, moveBy: Color): Color? {
+    fun recordRealMove(gameState: GameState, moveBy: CobColor): CobColor? {
         val hash = gameState.hashBoard()
         val count = (realGameHistory[hash] ?: 0) + 1
         realGameHistory[hash] = count
@@ -342,7 +342,7 @@ object TaratiAI {
         )
     }
 
-    private fun leadsToWinningPosition(gameState: GameState, movingPlayer: Color): Boolean {
+    private fun leadsToWinningPosition(gameState: GameState, movingPlayer: CobColor): Boolean {
         if (gameState.getAllMovesForTurn().isEmpty()) {
             return gameState.getWinner() == movingPlayer
         }
@@ -499,7 +499,7 @@ object TaratiAI {
         }
     }
 
-    private fun countThreatsToUpgraded(gameState: GameState, vertex: String, enemyColor: Color): Int {
+    private fun countThreatsToUpgraded(gameState: GameState, vertex: String, enemyColor: CobColor): Int {
         val adjacent = adjacencyMap[vertex] ?: emptyList()
         return adjacent.count {
             val enemy = gameState.cobs[it]
@@ -535,12 +535,12 @@ object TaratiAI {
         return if (vertex in enemyBase) cob.copy(isUpgraded = true) else cob
     }
 
-    private fun flipCastlingCobs(mutable: MutableMap<String, Cob>, color: Color) {
+    private fun flipCastlingCobs(mutable: MutableMap<String, Cob>, color: CobColor) {
         val targetVertex = if (color == WHITE) WHITE_CASTLING_VERTEX else BLACK_CASTLING_VERTEX
         mutable[targetVertex]?.let { mutable[targetVertex] = it.copy(color = color) }
     }
 
-    private fun flipAdjacentCobs(mutable: MutableMap<String, Cob>, vertex: String, color: Color) {
+    private fun flipAdjacentCobs(mutable: MutableMap<String, Cob>, vertex: String, color: CobColor) {
         edges.forEach { (a, b) ->
             val adjacent = if (a == vertex) b else if (b == vertex) a else null
             adjacent?.let { adj ->

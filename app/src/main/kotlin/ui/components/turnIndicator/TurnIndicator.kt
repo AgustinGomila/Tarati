@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.agustin.tarati.R
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.ui.localization.LocalizedText
 import com.agustin.tarati.ui.localization.localizedString
 import com.agustin.tarati.ui.theme.BoardColors
@@ -48,15 +48,15 @@ interface IndicatorEvents {
 fun TurnIndicator(
     modifier: Modifier = Modifier,
     state: TurnIndicatorState,
-    currentTurn: Color,
+    currentTurn: CobColor,
     size: Dp = 60.dp,
     boardColors: BoardColors,
     indicatorEvents: IndicatorEvents,
 ) {
     // Determinar color, icono y comportamiento según el estado
     val color = when (currentTurn) {
-        Color.WHITE -> boardColors.whiteCobColor
-        Color.BLACK -> boardColors.blackCobColor
+        CobColor.WHITE -> boardColors.whiteCobColor
+        CobColor.BLACK -> boardColors.blackCobColor
     }
 
     val (indicatorColor, isClickable, contentDescription) = when (state) {
@@ -187,7 +187,7 @@ fun TurnIndicatorPreview_AllStates() {
 
             TurnIndicator(
                 state = TurnIndicatorState.AI_THINKING,
-                currentTurn = Color.BLACK,
+                currentTurn = CobColor.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
                 indicatorEvents = createPreviewIndicatorEvents()
@@ -197,7 +197,7 @@ fun TurnIndicatorPreview_AllStates() {
 
             TurnIndicator(
                 state = TurnIndicatorState.HUMAN_TURN,
-                currentTurn = Color.WHITE,
+                currentTurn = CobColor.WHITE,
                 size = 80.dp,
                 boardColors = boardColors,
                 indicatorEvents = createPreviewIndicatorEvents()
@@ -207,7 +207,7 @@ fun TurnIndicatorPreview_AllStates() {
 
             TurnIndicator(
                 state = TurnIndicatorState.HUMAN_TURN,
-                currentTurn = Color.BLACK,
+                currentTurn = CobColor.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
                 indicatorEvents = createPreviewIndicatorEvents()
@@ -217,7 +217,7 @@ fun TurnIndicatorPreview_AllStates() {
 
             TurnIndicator(
                 state = TurnIndicatorState.NEUTRAL,
-                currentTurn = Color.BLACK,
+                currentTurn = CobColor.BLACK,
                 size = 80.dp,
                 boardColors = boardColors,
                 indicatorEvents = createPreviewIndicatorEvents()

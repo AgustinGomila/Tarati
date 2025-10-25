@@ -4,8 +4,8 @@ package com.agustin.tarati.game.core
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.GameBoard.BLACK_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.WHITE_CASTLING_VERTEX
 import com.agustin.tarati.game.core.GameBoard.adjacencyMap
@@ -87,7 +87,7 @@ object GameBoard {
     val edges: List<Pair<String, String>> =
         whiteDomesticEdges + blackDomesticEdges + bridgeEdges + circumferenceEdges + bridgeToCircumferenceEdges + absoluteCenterToBridgeEdges
 
-    val homeBases: Map<Color, List<String>> = mapOf(
+    val homeBases: Map<CobColor, List<String>> = mapOf(
         WHITE to listOf("C1", "C2", "D1", "D2"),
         BLACK to listOf("C7", "C8", "D3", "D4")
     )
@@ -242,7 +242,7 @@ object GameBoard {
         return closestVertex
     }
 
-    fun isForwardMove(color: Color, from: String, to: String): Boolean {
+    fun isForwardMove(color: CobColor, from: String, to: String): Boolean {
         val boardCenter = VERTEX_WIDTH to VERTEX_WIDTH
         val vWidth = VERTEX_WIDTH
         val fromPos = getPosition(from, boardCenter, vWidth)
@@ -315,7 +315,7 @@ object GameBoard {
         }
     }
 
-    fun getCastlingMoves(color: Color, from: String): Move? {
+    fun getCastlingMoves(color: CobColor, from: String): Move? {
         return if (color == WHITE) {
             when (from) {
                 "C2" -> return Move("C2", "C1")
@@ -353,8 +353,8 @@ fun GameState.getPosibleCastling(from: String, cob: Cob): Move? {
     else move
 }
 
-fun Move.isCastling(cobColor: Color): Boolean {
-    return when (cobColor) {
+fun Move.isCastling(color: CobColor): Boolean {
+    return when (color) {
         WHITE -> from in listOf("C1", "C2") && to in listOf("C1", "C2")
         BLACK -> from in listOf("C7", "C8") && to in listOf("C7", "C8")
     }

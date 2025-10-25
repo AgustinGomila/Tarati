@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.agustin.tarati.game.core.Cob
-import com.agustin.tarati.game.core.Color
+import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameBoard.getVisualPosition
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.logic.BoardOrientation
@@ -43,7 +43,7 @@ import kotlin.math.roundToInt
 @Composable
 fun BoardRenderer(
     modifier: Modifier = Modifier,
-    playerSide: Color,
+    playerSide: CobColor,
     boardState: BoardState,
     colors: BoardColors,
     tapEvents: TapEvents,

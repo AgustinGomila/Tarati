@@ -6,8 +6,8 @@ import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
 import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
-import com.agustin.tarati.game.core.Color.BLACK
-import com.agustin.tarati.game.core.Color.WHITE
+import com.agustin.tarati.game.core.CobColor.BLACK
+import com.agustin.tarati.game.core.CobColor.WHITE
 import com.agustin.tarati.game.core.createGameState
 import com.agustin.tarati.game.core.initialGameState
 import com.agustin.tarati.game.core.opponent
