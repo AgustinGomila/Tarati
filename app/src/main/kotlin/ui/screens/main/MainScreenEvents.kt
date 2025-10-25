@@ -3,6 +3,7 @@ package com.agustin.tarati.ui.screens.main
 import androidx.compose.material3.DrawerState
 import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
+import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.GameState
 import com.agustin.tarati.game.core.Move
@@ -32,6 +33,8 @@ class MainScreenEvents(
         val nextState = newBoardState.copy(currentTurn = gameState.currentTurn.opponent())
 
         animationCoordinator.handleEvent(AnimationEvent.MoveEvent(move, gameState, nextState))
+
+        recordRealMove(nextState, gameState.currentTurn)
 
         viewModel.gameManager.addMove(move, nextState)
         viewModel.gameManager.updateGameState(nextState)

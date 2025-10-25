@@ -34,7 +34,8 @@ object TaratiAI {
     val evalConfig: EvaluationConfig get() = globalConfigRef.get()
 
     // Historial de posiciones reales
-    val realGameHistory = mutableMapOf<String, Int>()
+    private val _realGameHistory = mutableMapOf<String, Int>()
+    val gameHistory by lazy { _realGameHistory }
 
     // Tabla de transposición con LRU
     private val transpositionTable: LinkedHashMap<String, TranspositionEntry> =
@@ -62,19 +63,19 @@ object TaratiAI {
     }
 
     private fun clearPositionHistory() {
-        realGameHistory.clear()
+        _realGameHistory.clear()
     }
 
     fun recordRealMove(gameState: GameState, moveBy: CobColor): CobColor? {
         val hash = gameState.hashBoard()
-        val count = (realGameHistory[hash] ?: 0) + 1
-        realGameHistory[hash] = count
+        val count = (_realGameHistory[hash] ?: 0) + 1
+        _realGameHistory[hash] = count
         return if (count >= 3) moveBy else null
     }
 
     fun getRepetitionCount(gameState: GameState): Int {
         val hash = gameState.hashBoard()
-        return realGameHistory[hash] ?: 0
+        return _realGameHistory[hash] ?: 0
     }
 
     fun getNextBestMove(

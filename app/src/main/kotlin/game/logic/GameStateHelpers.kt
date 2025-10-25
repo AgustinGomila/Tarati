@@ -1,6 +1,6 @@
 package com.agustin.tarati.game.logic
 
-import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
+import com.agustin.tarati.game.ai.TaratiAI.gameHistory
 import com.agustin.tarati.game.core.Cob
 import com.agustin.tarati.game.core.CobColor
 import com.agustin.tarati.game.core.CobColor.BLACK
@@ -88,7 +88,7 @@ fun GameState.getMatchState(): MatchState {
     val whiteCobs = this.cobs.values.count { it.color == WHITE }
     val blackCobs = this.cobs.values.count { it.color == BLACK }
 
-    var matchState = MatchState(this, GameResult.PLAYING, null, realGameHistory)
+    var matchState = MatchState(this, GameResult.PLAYING, null, gameHistory)
 
     if (!this.isGameOver()) return matchState
 
@@ -120,12 +120,12 @@ fun GameState.getMatchState(): MatchState {
 
 fun GameState.hasTripleRepetition(): Boolean {
     val hash = this.hashBoard()
-    return (realGameHistory[hash] ?: 0) >= 3
+    return (gameHistory[hash] ?: 0) >= 3
 }
 
 fun GameState.checkIfWouldCauseRepetition(): Boolean {
     val hash = this.hashBoard()
-    val currentCount = realGameHistory[hash] ?: 0
+    val currentCount = gameHistory[hash] ?: 0
     return (currentCount + 1) >= 3
 }
 

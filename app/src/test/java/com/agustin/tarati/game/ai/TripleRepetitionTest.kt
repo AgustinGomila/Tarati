@@ -4,7 +4,7 @@ import com.agustin.tarati.game.ai.TaratiAI.applyMoveToBoard
 import com.agustin.tarati.game.ai.TaratiAI.clearAIHistory
 import com.agustin.tarati.game.ai.TaratiAI.getNextBestMove
 import com.agustin.tarati.game.ai.TaratiAI.getRepetitionCount
-import com.agustin.tarati.game.ai.TaratiAI.realGameHistory
+import com.agustin.tarati.game.ai.TaratiAI.gameHistory
 import com.agustin.tarati.game.ai.TaratiAI.recordRealMove
 import com.agustin.tarati.game.core.CobColor.BLACK
 import com.agustin.tarati.game.core.CobColor.WHITE
@@ -364,7 +364,7 @@ class TripleRepetitionTest {
 
     @Test
     fun testTripleRepetition_RealGameHistoryPersistence() {
-        // Verificar que realGameHistory mantiene los registros entre llamadas
+        // Verificar que gameHistory mantiene los registros entre llamadas
         val gameState = createGameState {
             setTurn(WHITE)
             setCob("C1", WHITE, false)
@@ -374,25 +374,25 @@ class TripleRepetitionTest {
         clearAIHistory()
 
         // Verificar que inicialmente está vacío
-        assertTrue("History should be empty after clear", realGameHistory.isEmpty())
+        assertTrue("History should be empty after clear", gameHistory.isEmpty())
 
         // Primera registro
         val loser1 = recordRealMove(gameState, WHITE)
         assertNull("Should not detect repetition first time", loser1)
-        assertEquals("History should have one entry", 1, realGameHistory.size)
-        assertEquals("State should have count 1", 1, realGameHistory[gameState.hashBoard()])
+        assertEquals("History should have one entry", 1, gameHistory.size)
+        assertEquals("State should have count 1", 1, gameHistory[gameState.hashBoard()])
 
         // Segundo registro
         val loser2 = recordRealMove(gameState, WHITE)
         assertNull("Should not detect repetition second time", loser2)
-        assertEquals("History should still have one entry", 1, realGameHistory.size)
-        assertEquals("State should have count 2", 2, realGameHistory[gameState.hashBoard()])
+        assertEquals("History should still have one entry", 1, gameHistory.size)
+        assertEquals("State should have count 2", 2, gameHistory[gameState.hashBoard()])
 
         // Tercer registro - debería detectar
         val loser3 = recordRealMove(gameState, WHITE)
         assertEquals("Should detect triple repetition", WHITE, loser3)
-        assertEquals("History should still have one entry", 1, realGameHistory.size)
-        assertEquals("State should have count 3", 3, realGameHistory[gameState.hashBoard()])
+        assertEquals("History should still have one entry", 1, gameHistory.size)
+        assertEquals("State should have count 3", 3, gameHistory[gameState.hashBoard()])
 
         // Verificar que isGameOver detecta la triple repetición
         assertTrue("Game should be over due to triple repetition", gameState.isGameOver())
@@ -429,7 +429,7 @@ class TripleRepetitionTest {
         recordRealMove(state1, WHITE)
 
         // Verificar que state2 tiene count 2 (porque son el mismo estado)
-        assertEquals("state2 should have count 2", 2, realGameHistory[hash2] ?: 0)
+        assertEquals("state2 should have count 2", 2, gameHistory[hash2] ?: 0)
     }
 
     @Test
@@ -449,7 +449,7 @@ class TripleRepetitionTest {
 
         println("=== Step by Step Debug ===")
         println("Initial state hash: ${initialState.hashBoard()}")
-        println("Initial realGameHistory size: ${realGameHistory.size}")
+        println("Initial gameHistory size: ${gameHistory.size}")
 
         // Primer movimiento: WHITE C1 -> B2
         val move1From = "C1"
@@ -461,8 +461,8 @@ class TripleRepetitionTest {
         println("State after move 1 hash: ${stateAfterMove1WithTurn.hashBoard()}")
 
         recordRealMove(stateAfterMove1WithTurn, WHITE)
-        println("realGameHistory after move 1: ${realGameHistory.size} entries")
-        realGameHistory.forEach { (hash, count) ->
+        println("gameHistory after move 1: ${gameHistory.size} entries")
+        gameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
         }
 
@@ -479,8 +479,8 @@ class TripleRepetitionTest {
         println("State after move 2 hash: ${stateAfterMove2WithTurn.hashBoard()}")
 
         recordRealMove(stateAfterMove2WithTurn, BLACK)
-        println("realGameHistory after move 2: ${realGameHistory.size} entries")
-        realGameHistory.forEach { (hash, count) ->
+        println("gameHistory after move 2: ${gameHistory.size} entries")
+        gameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
         }
 
@@ -497,8 +497,8 @@ class TripleRepetitionTest {
         println("State after move 3 hash: ${stateAfterMove3WithTurn.hashBoard()}")
 
         recordRealMove(stateAfterMove3WithTurn, WHITE)
-        println("realGameHistory after move 3: ${realGameHistory.size} entries")
-        realGameHistory.forEach { (hash, count) ->
+        println("gameHistory after move 3: ${gameHistory.size} entries")
+        gameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
         }
 
@@ -517,14 +517,14 @@ class TripleRepetitionTest {
         println("Are they equal? ${stateAfterMove4WithTurn.hashBoard() == initialState.hashBoard()}")
 
         val loser4 = recordRealMove(stateAfterMove4WithTurn, BLACK)
-        println("realGameHistory after move 4: ${realGameHistory.size} entries")
-        realGameHistory.forEach { (hash, count) ->
+        println("gameHistory after move 4: ${gameHistory.size} entries")
+        gameHistory.forEach { (hash, count) ->
             println("  Hash: $hash, Count: $count")
         }
 
         // Verificar si debería haber triple repetición
         val currentHash = stateAfterMove4WithTurn.hashBoard()
-        val count = realGameHistory[currentHash] ?: 0
+        val count = gameHistory[currentHash] ?: 0
         println("Current state count: $count")
 
         if (loser4 != null) {
