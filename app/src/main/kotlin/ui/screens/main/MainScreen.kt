@@ -209,30 +209,32 @@ fun MainScreen(
         drawerState = drawerState,
         isLandscape = isLandscape,
 
-        playerSide = playerSide,
         gameState = gameState,
+        playerSide = playerSide,
         gameStatus = gameStatus,
+        onGameOver = { showGameOverDialog = true },
 
-        evalConfig = evalConfig,
-        aiEnabled = aiEnabled,
-        isEditing = isEditing,
         animateEffects = boardVisualState.animateEffects,
-
-        isTutorialActive = isTutorialActive.value,
-        tutorialState = tutorialState,
-
-        aiThinkingDependencies = listOf(gameStatus, gameState.currentTurn, aiEnabled, playerSide, isEditing),
         animationViewModel = animationViewModel,
 
-        onBoardOrientationChanged = { boardOrientation = it },
-        onAIMove = { from, to -> checkAndApplyMove(events, from, to, viewModel) },
-        onTutorialEnd = events::resetTutorial,
-        onGameOver = { showGameOverDialog = true },
+        aiEnabled = aiEnabled,
+        evalConfig = evalConfig,
+        aiThinkingDependencies = listOf(gameStatus, gameState.currentTurn, aiEnabled, playerSide, isEditing),
         calculateAIMove = { gameState, move ->
             scope.launch {
                 aiThinkingViewModel.calculateAIMove(gameState, move, debug = true)
             }
         },
+        onAIMove = { from, to ->
+            checkAndApplyMove(events, from, to, viewModel)
+        },
+
+        isEditing = isEditing,
+        onBoardOrientationChanged = { boardOrientation = it },
+
+        isTutorialActive = isTutorialActive.value,
+        tutorialState = tutorialState,
+        onTutorialEnd = events::resetTutorial,
 
         debug = viewModel.isDebug
     )

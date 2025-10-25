@@ -47,30 +47,29 @@ fun MainScreenEffects(
     drawerState: DrawerState,
     isLandscape: Boolean,
 
-    playerSide: Color,
     gameState: GameState,
+    playerSide: Color,
     gameStatus: GameStatus,
+    onGameOver: () -> Unit,
 
-    evalConfig: EvaluationConfig,
-    aiEnabled: Boolean,
-    isEditing: Boolean,
     animateEffects: Boolean,
+    animationViewModel: BoardAnimationViewModel,
 
-    isTutorialActive: Boolean,
-    tutorialState: TutorialState,
-
+    aiEnabled: Boolean,
+    evalConfig: EvaluationConfig,
     aiThinkingDependencies: List<Any?>,
     calculateAIMove: (
         gameState: GameState,
         onMoveFound: (String, String) -> Unit,
     ) -> Unit,
-
-    animationViewModel: BoardAnimationViewModel,
-
-    onBoardOrientationChanged: (BoardOrientation) -> Unit,
     onAIMove: (String, String) -> Unit,
+
+    isEditing: Boolean,
+    onBoardOrientationChanged: (BoardOrientation) -> Unit,
+
+    isTutorialActive: Boolean,
+    tutorialState: TutorialState,
     onTutorialEnd: () -> Unit,
-    onGameOver: () -> Unit,
 
     debug: Boolean
 ) {
